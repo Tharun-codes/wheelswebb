@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WheelsWeb | Login
+  </title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <section class="car-panel">
+      <div class="road-container">
+        <div class="road">
+          <div class="road-line"></div>
+          <div class="road-line"></div>
+          <div class="road-line"></div>
+        </div>
+        <div class="car-container">
+          <div class="css-car">
+            <div class="car-body">
+              <div class="car-roof"></div>
+              <div class="car-main"></div>
+              <div class="car-window"></div>
+              <div class="car-headlight"></div>
+              <div class="car-taillight"></div>
+            </div>
+            <div class="wheel wheel-front"></div>
+            <div class="wheel wheel-back"></div>
+          </div>
+        </div>
+      </div>
+      <div class="brand-info">
+        <div class="brand-pill">WheelsWeb</div>
+        <h1>Drive Your Business Forward</h1>
+        <p>Advanced auto finance management with real-time insights and seamless customer experience.</p>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card">
+        <p class="eyebrow">Welcome back</p>
+        <h2>Sign in to continue</h2>
+
+        <label class="input-field">
+          <span>Username</span>
+      <input type="text" id="username" placeholder="Username" />
+        </label>
+
+        <label class="input-field">
+          <span>Password</span>
+<input type="password" id="password" placeholder="Password" />        </label>
+
+        <button class="primary-btn" onclick="login()">Login</button>
+
+        <p id="error" aria-live="polite"></p>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/script.js"></script>
+</body>
+</html>

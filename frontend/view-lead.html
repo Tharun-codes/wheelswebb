@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>View Leads | WheelsWeb</title>
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.6;
+    }
+    
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+    
+    h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 24px;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+    }
+    
+    .toolbar .spacer {
+      flex: 1;
+      min-width: 20px;
+    }
+    
+    .toolbar > div {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 200px;
+    }
+    
+    .toolbar label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 4px;
+      display: block;
+    }
+    
+    input.search {
+      padding: 12px 16px;
+      width: 320px;
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+      background: #ffffff;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    input.search:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+      transform: translateY(-1px);
+    }
+    
+    table.leads {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    table.leads th {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      color: #374151;
+      font-weight: 600;
+      padding: 16px;
+      text-align: left;
+      border-bottom: 2px solid #e2e8f0;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    
+    table.leads td {
+      text-align: left;
+      padding: 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1f293b;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+    
+    table.leads tbody tr {
+      transition: all 0.2s ease;
+    }
+    
+    table.leads tbody tr:hover {
+      background: #f8fafc;
+      transform: scale(1.01);
+    }
+    
+    table.leads tbody tr:hover td {
+      border-bottom-color: #e2e8f0;
+    }
+    
+    .actions a, .actions button {
+      margin-right: 12px;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    
+    .actions a {
+      color: #3b82f6;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      display: inline-block;
+    }
+    
+    .actions a:hover {
+      background: #3b82f6;
+      color: white;
+      transform: translateY(-1px);
+    }
+    
+    .actions button {
+      background: #ffffff;
+      color: #ef4444;
+      border: 1px solid #ef4444;
+      padding: 6px 12px;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    
+    .actions button:hover {
+      background: #ef4444;
+      color: white;
+      transform: translateY(-1px);
+    }
+    
+    .pagination {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 24px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .pagination button {
+      padding: 10px 16px;
+      border: 2px solid #e5e7eb;
+      background: #ffffff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pagination button:hover:not(:disabled) {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+      transform: translateY(-1px);
+    }
+    
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .pagination div {
+      padding: 10px 16px;
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 500;
+      background: #f1f5f9;
+      border-radius: 6px;
+    }
+    
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal {
+      background: #ffffff;
+      padding: 32px;
+      width: 900px;
+      max-width: 95%;
+      border-radius: 16px;
+      max-height: 80vh;
+      overflow: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .empty-state {
+      padding: 60px 40px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 2px dashed #cbd5e1;
+      margin: 40px 0;
+    }
+    
+    mark {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main {
+        padding: 16px;
+        margin: 16px;
+      }
+      
+      .toolbar {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+      
+      .toolbar > div {
+        min-width: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      input.search {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      
+      table.leads {
+        font-size: 12px;
+      }
+      
+      table.leads th, table.leads td {
+        padding: 12px 8px;
+      }
+      
+      .actions a, .actions button {
+        margin-right: 8px;
+        margin-bottom: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">WheelsWeb</div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard.html" class="nav-item">Overview</a>
+      <a href="/new-lead.html" class="nav-item">Start New Application</a>
+      <a href="/view-lead.html" class="nav-item active">View Leads</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <h2 id="pageHeading">All Leads</h2>
+
+    <div class="toolbar">
+      <input id="searchInput" class="search" placeholder="Search" />
+      <select id="filterStage">
+        <option value="">All Stages</option>
+      </select>
+      <select id="rowsPerPage">
+        <option value="10">10 / page</option>
+        <option value="25">25 / page</option>
+        <option value="50">50 / page</option>
+      </select>
+      <div class="spacer"></div>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+
+    <table id="leadsTable" class="leads">
+      <thead>
+        <tr>
+          <th>Loan ID</th>     
+          <th>Name</th>
+          <th>Mobile</th>
+          <th>Loan Amount</th>
+          <th>DSA / Bank</th>
+          <th>Stage</th>
+          <th>Updated</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="emptyState" class="empty-state hidden">No leads found — try creating a new lead.</div>
+
+    <div class="pagination" id="pagination"></div>
+
+    <!-- Modal for lead details -->
+    <div id="leadModalBackdrop" class="modal-backdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 id="modalTitle">Lead Details</h3>
+          <button onclick="closeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;">×</button>
+        </div>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/view-lead.js"></script>
+</body>
+</html>

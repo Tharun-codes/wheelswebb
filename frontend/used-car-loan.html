@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+<title>Used Car Loan | WheelsWeb</title>
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <style>
+    .section { margin: 30px 0; }
+    .section h3 { margin-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    label { font-weight: 600; }
+    input, select, textarea { padding: 8px; width: 100%; }
+    textarea { grid-column: span 3; }
+    button { padding: 12px 20px; font-size: 16px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+    button.ghost-btn { padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #d3d7de; background: #f3f5f8; cursor: pointer; }
+    button.ghost-btn:hover { background: #e5e9f0; }
+    .hidden { display: none !important; }
+    .inline-field { display: flex; align-items: center; gap: 8px; }
+    .icon-btn { padding: 8px 12px; border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 18px; line-height: 1; transition: background 0.2s ease; }
+    .icon-btn.compact { padding: 6px 10px; font-size: 16px; }
+    .icon-btn.plus-state { background: #24a148; }
+    .icon-btn.plus-state:hover { background: #198038; }
+    .cibil-section .icon-btn.plus-state,
+    .cibil-section .icon-btn.minus-state {
+      background: #1172eb;
+    }
+    .cibil-section .icon-btn.plus-state:hover,
+    .cibil-section .icon-btn.minus-state:hover {
+      background: #0d5ec4;
+    }
+    .icon-btn.minus-state { background: #da1e28; }
+    .icon-btn.minus-state:hover { background: #a2191f; }
+    .cibil-section .grid { align-items: center; }
+    .cibil-display { padding: 12px; border: 1px solid #c8ccd5; border-radius: 8px; font-weight: 600; text-align: center; background: #f7f8fa; }
+    .cibil-display.red { background: #fdecea; color: #a2191f; border-color: #f1a7a1; }
+    .cibil-display.yellow { background: #fff4d6; color: #a87100; border-color: #f3c76a; }
+    .cibil-display.green { background: #e7f6e7; color: #0f7b0f; border-color: #7cd67c; }
+    .cibil-color-options { display: flex; gap: 10px; }
+    .cibil-color-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+    .cibil-color-btn[data-color="red"] { background: #da1e28; }
+    .cibil-color-btn[data-color="yellow"] { background: #f1c21b; }
+    .cibil-color-btn[data-color="green"] { background: #20a34a; }
+    .cibil-color-btn.active { box-shadow: 0 0 0 3px rgba(0,0,0,0.1); border-color: #111; }
+    .obligation-wrapper { display: flex; align-items: center; gap: 6px; border: 1px solid #c8ccd5; border-radius: 8px; padding: 6px 10px; background: #fdfdfd; }
+    .obligation-wrapper span { font-weight: 600; color: #4f5665; }
+    .obligation-wrapper input { border: none; padding: 0; }
+    .obligation-wrapper input:focus { outline: none; }
+    .obligation-wrapper input { flex: 1; }
+    .helper-text { color: #5f6576; font-size: 14px; margin: 8px 0 0; }
+    .additional-applicants { display: flex; flex-direction: column; gap: 20px; }
+    .additional-applicant-block { border: 1px solid #e1e5ee; border-radius: 12px; padding: 20px; background: #fafbff; }
+    .additional-applicant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .additional-applicant-header h4 { margin: 0; font-size: 18px; color: #1f232a; }
+    .sub-section { margin-bottom: 18px; }
+    .sub-section:last-of-type { margin-bottom: 0; }
+    .sub-section h5 { margin-bottom: 8px; font-size: 15px; color: #3d4554; }
+        .hidden {
+      display: none;
+    }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-field label {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">WheelsWeb</div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard.html">Overview</a>
+    <a href="/new-lead.html" class="active">Start New Application</a>
+    <a href="/view-cases.html">View All Cases</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+  <form id="leadForm">
+
+    <!-- BASIC -->
+    <div class="section grid">
+      <div>
+        <label>Loan Type</label>
+        <input id="loanType" value="used-car-loan" readonly />
+      </div>
+      <div>
+        <label>Loan Id</label>
+        <input id="loanId" readonly />
+      </div>
+      <div>
+        <label>Date & Time</label>
+        <input id="dateTime" readonly />
+      </div>
+      <div>
+        <label>Source</label>
+        <select id="source">
+          <option>Self</option><option>Dealer</option><option>Bank</option><option>Walk-In</option><option>Telecall</option><option>Online</option><option>NC Customer</option><option>UC Customer</option><option>Others</option>
+        </select>
+      </div>
+      
+      <div>
+        <label>Case Dealer</label>
+        <input id="basicCaseDealer" required data-uppercase data-alphabets />
+      </div>
+      <div>
+        <label>Ref Name / Mob No</label>
+        <input id="basicRefNameMobile" required />
+      </div>
+    </div>
+
+<div class="section">
+  <h3>Vehicle Information</h3>
+
+  <div class="grid">
+
+    <div class="form-field">
+      <label for="rcNo">RC NO *</label>
+      <input id="rcNo"  required data-uppercase />
+    </div>
+
+    <div class="form-field">
+      <label for="vehicle">VEHICLE / VARIANT *</label>
+      <input id="vehicle" required data-uppercase />
+    </div>
+
+    <div class="form-field">
+      <label for="osNo">O. S NO *</label>
+      <select id="osNo" required>
+        <option value="">O. S NO *</option>
+        <option>None</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="mfgMonth">MFG MONTH *</label>
+      <select id="mfgMonth" required>
+        <option value="">MFG MONTH *</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="mfgYear">MFG YEAR *</label>
+      <select id="mfgYear" required>
+        <option value="">MFG YEAR *</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="vehicleAge">VEHICLE AGE</label>
+      <input id="vehicleAge" readonly />
+    </div>
+
+    <div class="form-field">
+      <label for="kilometreReading">ODOMETRE READING *</label>
+      <input id="kilometreReading" required data-numbers />
+    </div>
+
+    <div class="form-field">
+      <label for="vehicleOwnerContact">VEHICLE VALUATION MOBILE NO *</label>
+      <input id="vehicleOwnerContact" required data-numbers maxlength="10" />
+    </div>
+
+    <div class="form-field">
+      <label for="vehicleLocation">VEHICLE LOCATION *</label>
+      <input id="vehicleLocation" required data-uppercase />
+    </div>
+
+  </div>
+</div>
+
+
+    <!-- LOAN -->
+<div class="section">
+  <h3>Loan</h3>
+
+  <div class="grid">
+
+    <div class="form-field">
+      <label for="loanNature">TYPE *</label>
+      <select id="loanNature" required>
+        <option value="">TYPE *</option>
+        <option>Sale & Purchase</option>
+        <option>Refinance</option>
+        <option>BT Topup</option>
+        <option>Refinance HP</option>
+        <option>Refinance Without HP</option>
+        <option>Int BT</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="loanAmount">LOAN AMOUNT *</label>
+      <input id="loanAmount" type="number" required />
+    </div>
+
+    <div class="form-field">
+      <label for="loanTenure">TENURE *</label>
+      <select id="loanTenure" required>
+        <option value="">TENURE *</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- BT Fields -->
+  <div id="btFields" class="grid hidden">
+
+    <div class="form-field">
+      <label for="prevFinanceName">PREVIOUS FINANCE NAME *</label>
+      <input
+        id="prevFinanceName"
+       
+        data-bt-required="true"
+        data-uppercase
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="btTenure">BT TENURE (MONTHS) *</label>
+      <input
+        id="btTenure"
+        type="number"
+        min="1"
+       
+        data-bt-required="true"
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="emiPaid">NO OF EMI PAID *</label>
+      <select id="emiPaid" data-bt-required="true">
+        <option value="">NO OF EMI PAID *</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="btPrincipalOs">BT PRINCIPLE OS *</label>
+      <input
+        id="btPrincipalOs"
+        type="number"
+        min="0"
+       
+        data-bt-required="true"
+      />
+    </div>
+
+  </div>
+</div>
+
+
+<!-- PROFILE -->
+<div class="section">
+  <h3>Applicant Profile</h3>
+
+  <div class="grid">
+
+    <div class="form-field">
+      <label for="name">NAME *</label>
+      <input id="name" required data-uppercase data-alphabets />
+    </div>
+
+    <div class="form-field">
+      <label for="gender">GENDER *</label>
+      <select id="gender" required>
+        <option value="">GENDER *</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Rather Not To Say</option>
+        <option>None</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="pan">PAN NO *</label>
+      <input id="pan" required data-uppercase maxlength="10" />
+    </div>
+
+
+
+
+
+
+
+
+    
+    <!-- Mobile + Add Button -->
+    <div class="form-field">
+      <label for="mobile">MOBILE NO *</label>
+      <div class="inline-field">
+        <input id="mobile" required data-numbers maxlength="10" />
+        <button
+          type="button"
+          id="addAltNoBtn"
+          class="icon-btn plus-state"
+          aria-label="Add alternate number"
+        >
+          +
+        </button>
+      </div>
+    </div>
+
+    <div class="form-field hidden" id="extraAltMobileContainer">
+      <label for="extraAltMobile">ALT NO</label>
+      <input id="extraAltMobile" data-numbers maxlength="10" />
+    </div>
+
+    <div class="form-field">
+      <label for="email">EMAIL ID *</label>
+      <input id="email" required />
+    </div>
+
+    <div class="form-field">
+      <label for="MaritalStatus">MARITAL STATUS *</label>
+      <select id="MaritalStatus" required>
+        <option value="">MARITAL STATUS *</option>
+        <option>None</option>
+        <option>Single</option>
+        <option>Married</option>
+        <option>Divorced</option>
+      </select>
+    </div>
+
+    <!-- Spouse Name -->
+    <div id="spouseNameField" class="form-field hidden">
+      <label for="spouseName">SPOUSE NAME *</label>
+      <input id="spouseName" data-uppercase data-alphabets />
+    </div>
+
+    <div class="form-field">
+      <label for="fatherName">FATHER NAME *</label>
+      <input id="fatherName" required data-uppercase data-alphabets />
+    </div>
+
+    <div class="form-field">
+      <label for="motherName">MOTHER NAME *</label>
+      <input id="motherName" required data-uppercase data-alphabets />
+    </div>
+
+  </div>
+</div>
+
+
+    <!-- CIBIL SNAPSHOT -->
+    <div class="section cibil-section">
+      <div class="section-header">
+        <h3>CIBIL DETAILS</h3>
+        <button
+          type="button"
+          id="cibilToggleBtn"
+          class="icon-btn plus-state compact"
+          aria-expanded="false"
+          aria-controls="cibilDetails"
+        >
+          +
+        </button>
+      </div>
+
+      <div id="cibilDetails" class="grid hidden">
+
+        <div class="form-field">
+          <label>CIBIL SCORE</label>
+          <div id="cibilDisplay" class="cibil-display">Not Entered</div>
+          <input type="hidden" id="cibilScore" />
+        </div>
+
+        <div class="form-field">
+          <label>UPDATE SCORE</label>
+          <button
+            type="button"
+            id="cibilPromptBtn"
+            class="ghost-btn"
+            style="width: 100%;"
+          >
+            Click Here
+          </button>
+        </div>
+
+        <div class="form-field">
+          <label>INDICATOR</label>
+          <div class="cibil-color-options">
+            <button type="button" class="cibil-color-btn" data-color="red" aria-label="Mark CIBIL Red"></button>
+            <button type="button" class="cibil-color-btn" data-color="yellow" aria-label="Mark CIBIL Yellow"></button>
+            <button type="button" class="cibil-color-btn" data-color="green" aria-label="Mark CIBIL Green"></button>
+          </div>
+          <input type="hidden" id="cibilIndicator" />
+        </div>
+
+      </div>
+    </div>
+
+
+<!-- CURRENT ADDRESS -->
+<div class="section">
+  <h3>Current Address</h3>
+
+  <div class="grid">
+
+    <div class="form-field">
+      <label for="currentAddressProof">ADDRESS PROOF *</label>
+      <select id="currentAddressProof" required>
+        <option value="">ADDRESS PROOF *</option>
+        <option>Aadhaar</option>
+        <option>Voter ID</option>
+        <option>Gas Bill</option>
+        <option>EB Bill</option>
+        <option>Tax Paid Receipt</option>
+        <option>Rent Agreements</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="currentLandmark">LAND MARK *</label>
+      <input id="currentLandmark" required data-uppercase />
+    </div>
+
+    <div class="form-field">
+      <label for="currentPincode">PIN CODE *</label>
+      <input id="currentPincode" required data-numbers maxlength="6" />
+    </div>
+
+    <div class="form-field">
+      <label for="currentDistrict">DISTRICT *</label>
+      <input id="currentDistrict" required data-uppercase data-alphabets />
+    </div>
+
+    <div class="form-field hidden">
+      <label for="currentPinDropdown">SELECT PIN CODE</label>
+      <select id="currentPinDropdown">
+        <option value="">Select PIN Code</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="currentOhpRelation">OHP OWNER RELATION *</label>
+      <select id="currentOhpRelation" required>
+        <option value="">OHP OWNER RELATION *</option>
+        <option>SPOUSE</option>
+        <option>SELF-OWNED</option>
+        <option>PARANTEL</option>
+        <option>RENTED</option>
+      </select>
+    </div>
+
+  </div>
+</div>
+
+<!-- PERMANENT ADDRESS -->
+<div class="section">
+  <div class="section-header">
+    <h3>Permanent Address</h3>
+
+    <label style="display:flex;align-items:center;gap:8px;font-weight:500;">
+      <input type="checkbox" id="copyPermanentFromCurrent" />
+      Same as Current Address
+    </label>
+  </div>
+
+  <div class="grid">
+
+    <div class="form-field">
+      <label for="permanentAddressProof">ADDRESS PROOF *</label>
+      <select id="permanentAddressProof" required>
+        <option value="">ADDRESS PROOF *</option>
+        <option>Aadhaar</option>
+        <option>Voter ID</option>
+        <option>Gas Bill</option>
+        <option>EB Bill</option>
+        <option>Tax Paid Receipt</option>
+        <option>Rent Agreements</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="permanentLandmark">LAND MARK *</label>
+      <input id="permanentLandmark" required data-uppercase />
+    </div>
+
+    <div class="form-field">
+      <label for="permanentPincode">PIN CODE *</label>
+      <input id="permanentPincode" required data-numbers maxlength="6" />
+    </div>
+
+    <div class="form-field">
+      <label for="permanentDistrict">DISTRICT *</label>
+      <input id="permanentDistrict" required data-uppercase data-alphabets />
+    </div>
+
+    <div class="form-field hidden">
+      <label for="permanentPinDropdown">SELECT PIN</label>
+      <select id="permanentPinDropdown">
+        <option value="">Select PIN</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="permanentOhpRelation">OHP OWNER RELATION *</label>
+      <select id="permanentOhpRelation" required>
+        <option value="">OHP OWNER RELATION *</option>
+        <option>SPOUSE</option>
+        <option>SELF-OWNED</option>
+        <option>PARANTEL</option>
+        <option>RENTED</option>
+      </select>
+    </div>
+
+  </div>
+</div>
+
+<!-- EMPLOYMENT & OFFICE -->
+<div class="section">
+  <h3>Employment & Office</h3>
+
+  <div class="grid">
+
+    <div class="form-field">
+      <label for="employmentCustomerProfile">CUSTOMER PROFILE *</label>
+      <select id="employmentCustomerProfile" required>
+        <option value="">CUSTOMER PROFILE *</option>
+        <option>Self-Employed</option>
+        <option>Salaried</option>
+        <option>ITR</option>
+        <option>Agriculture</option>
+        <option>Pension</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="businessName">BUSINESS / OFFICE / DESIGNATION NAME *</label>
+      <input
+        id="businessName"
+       
+        required
+        data-uppercase
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="monthlyIncome">MONTHLY INCOME *</label>
+      <input
+        id="monthlyIncome"
+        type="number"
+       
+        required
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="businessProof">BUSINESS PROOF *</label>
+      <select id="businessProof" required>
+        <option value="">BUSINESS PROOF *</option>
+        <option>NIP</option>
+        <option>Pay slips</option>
+        <option>RTC</option>
+        <option>GST</option>
+        <option>ITR</option>
+        <option>License</option>
+        <option>Pension Statements</option>
+      </select>
+    </div>
+
+    <div class="form-field" style="grid-column: span 3;">
+      <label for="officeFullAddress">FULL ADDRESS *</label>
+      <textarea
+        id="officeFullAddress"
+       
+        required
+      ></textarea>
+    </div>
+
+  </div>
+</div>
+
+<!-- REF CONTACT -->
+<div class="section">
+  <h3>Ref Contact</h3>
+
+  <div class="grid" style="grid-template-columns: repeat(2, 1fr);">
+
+    <div class="form-field">
+      <label for="refMob1">MOBILE NO *</label>
+      <input id="refMob1" required data-numbers maxlength="10" />
+    </div>
+
+    <div class="form-field">
+      <label for="refName1">NAME *</label>
+      <input id="refName1" required data-uppercase data-alphabets />
+    </div>
+
+    <div class="form-field">
+      <label for="refMob2">MOBILE NO</label>
+      <input id="refMob2" data-numbers maxlength="10" />
+    </div>
+
+    <div class="form-field">
+      <label for="refName2">NAME</label>
+      <input id="refName2" data-uppercase data-alphabets />
+    </div>
+
+  </div>
+</div>
+<!-- ADDITIONAL APPLICANTS -->
+<div class="section" id="additionalApplicantsSection">
+  <div class="section-header">
+    <h3>Additional Applicants</h3>
+    <button
+      type="button"
+      id="addAdditionalApplicantBtn"
+      class="icon-btn plus-state compact"
+    >
+      + Add Applicant
+    </button>
+  </div>
+
+  <p class="helper-text">
+    Use this to capture Co-Applicant / Guarantor information.
+    Each additional applicant includes profile, address,
+    employment, and reference details.
+  </p>
+
+  <div
+    id="additionalApplicantsContainer"
+    class="additional-applicants"
+  ></div>
+</div>
+
+<!-- NOMINEE -->
+<div class="section">
+  <h3>Nominee Information</h3>
+
+  <div class="grid">
+
+    <div class="form-field">
+      <label for="nomineeName">NOMINEE NAME *</label>
+      <input
+        id="nomineeName"
+       
+        required
+        data-uppercase
+        data-alphabets
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="nomineeDob">NOMINEE DATE OF BIRTH *</label>
+      <input
+        id="nomineeDob"
+        type="date"
+       
+        required
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="nomineeRelationship">RELATIONSHIP *</label>
+      <select id="nomineeRelationship" required>
+        <option value="">RELATIONSHIP *</option>
+        <option>None</option>
+        <option>Spouse</option>
+        <option>Father</option>
+        <option>Mother</option>
+        <option>Brother</option>
+        <option>Sister</option>
+        <option>Son</option>
+        <option>Daughter</option>
+        <option>Grand Father</option>
+        <option>Grand Mother</option>
+      </select>
+    </div>
+
+  </div>
+</div>
+
+
+    <!-- BANK / FINANCE -->
+    <div class="section">
+      <h3>Bank / Finance Information</h3>
+      <div class="grid">
+
+<select id="loanDsa" required>
+          <option value="">DSA *</option>
+          <option value="Wheels Web">Wheels Web</option>
+          <option value="Girnar Software Pvt Ltd">Girnar Software Pvt Ltd</option>
+          <option value="Kuwy">Kuwy</option>
+          <option value="Cars24">Cars24</option>
+          <option value="Tractor Junction">Tractor Junction</option>
+          <option value="Cars Adda">Cars Adda</option>
+          <option value="Others">Others</option>
+        </select>
+
+        <select id="bankFinance" required>
+          <option value="">BANK / FINANCE *</option>
+          <option>NONE</option>
+          <optgroup label="Banks (Public & Private)">
+            <option>Axis Bank</option>
+            <option>Bank of Baroda</option>
+            <option>Bank of India</option>
+            <option>Bank of Maharashtra</option>
+            <option>Canara Bank</option>
+            <option>Central Bank of India</option>
+            <option>City Union Bank</option>
+            <option>Csb Bank</option>
+            <option>Dcb Bank</option>
+            <option>Dhanlaxmi Bank</option>
+            <option>Hdfc Bank</option>
+            <option>Icici Bank</option>
+            <option>Idbi Bank</option>
+            <option>Idfc First Bank</option>
+            <option>Indian Bank</option>
+            <option>Indian Overseas Bank</option>
+            <option>Indusind Bank</option>
+            <option>Jammu & Kashmir Bank</option>
+            <option>Karnataka Bank</option>
+            <option>Karur Vysya Bank</option>
+            <option>Kotak Mahindra Bank</option>
+            <option>Punjab & Sind Bank</option>
+            <option>Punjab National Bank</option>
+            <option>Rbl Bank</option>
+            <option>Saraswat Co-operative Bank Ltd</option>
+            <option>South Indian Bank</option>
+            <option>State Bank of India</option>
+            <option>Tamilnad Mercantile Bank</option>
+            <option>The Federal Bank Ltd</option>
+            <option>Uco Bank</option>
+            <option>Union Bank of India</option>
+            <option>Yes Bank</option>
+          </optgroup>
+          <optgroup label="Non-Banking Financial Companies (NBFCs) & Fintechs">
+            <option>Aditya Birla Finance Ltd.</option>
+            <option>Ambit Finvest</option>
+            <option>Bajaj Finance Ltd.</option>
+            <option>Bajaj Finserv</option>
+            <option>Cholamandalam</option>
+            <option>Cholamandalam Investment & Finance</option>
+            <option>Girnar</option>
+            <option>Hdb Finance</option>
+            <option>Hero finance</option>
+            <option>Ikf Finance</option>
+            <option>Indostar Capital Finance Ltd</option>
+            <option>Iti Finance (Fortune)</option>
+            <option>Kogta</option>
+            <option>L&t Finance Ltd.</option>
+            <option>Loans24</option>
+            <option>Mahindra</option>
+            <option>Mahindra & Mahindra Financial Services</option>
+            <option>Manappuram</option>
+            <option>Muthoot Capital</option>
+            <option>Muthoot Finance Ltd.</option>
+            <option>Muthoot Money</option>
+            <option>Piramal</option>
+            <option>Poonawalla Fincorp</option>
+            <option>Power Finance Corporation Ltd</option>
+            <option>Shriram Finance Ltd</option>
+            <option>Shriram Transport Finance</option>
+            <option>Sk Finance</option>
+            <option>Suneet Finman</option>
+            <option>Tata Capital</option>
+            <option>Toyota Finance</option>
+            <option>Trillion Loans</option>
+            <option>Tvs Credit</option>
+            <option>Vasthu</option>
+          </optgroup>
+          <optgroup label="Small Finance Banks (SFBs)">
+            <option>Au</option>
+            <option>Bandhan Bank</option>
+            <option>Equitas</option>
+            <option>Esaf Small Finance Bank Ltd</option>
+            <option>Jana Small Finance Bank</option>
+            <option>Suryoday Small Finance Bank Ltd</option>
+          </optgroup>
+        </select>
+        <div class="form-field">
+          <label for="bankBranch">BRANCH *</label>
+          <input id="bankBranch" required data-uppercase />
+        </div>
+        <div class="form-field">
+          <label for="loginExecutive">LOAN ASSIGNED *</label>
+          <input id="loginExecutive" required data-uppercase data-alphabets />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Remarks</h3>
+      <textarea id="remarks" rows="4"></textarea>
+    </div>
+
+    <select id="loanStage" required>
+      <option value="">STAGE *</option>
+      <option>Lead</option><option>Pitched</option><option>Login</option><option>Sanction</option><option>Rejected</option><option>Disbursed</option><option>Loan Cancelled</option>
+    </select>
+
+    <!-- DISBURSED LOAN INFORMATION -->
+    <div id="disbursedFields" class="section hidden">
+  <h3>Loan Information</h3>
+
+  <div class="grid">
+
+    <div class="form-field">
+      <label for="disbursedDate">DISBURSEMENT DATE</label>
+      <input id="disbursedDate" type="date" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedLoanAcNo">LOAN AC NO</label>
+      <input id="disbursedLoanAcNo" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedTenure">TENURE</label>
+      <select id="disbursedTenure">
+        <option value="">TENURE</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedIrr">IRR</label>
+      <input id="disbursedIrr" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedEmiAmount">EMI AMOUNT</label>
+      <input id="disbursedEmiAmount" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedEmiDate">EMI DATE</label>
+      <select id="disbursedEmiDate">
+        <option value="">EMI DATE</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedSanctionLoanAmount">SANCTION LOAN AMOUNT</label>
+      <input id="disbursedSanctionLoanAmount" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedLoanInsuranceCharges">LOAN INSURANCE CHARGES</label>
+      <input id="disbursedLoanInsuranceCharges" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedMotorInsurance">MOTOR INSURANCE</label>
+      <input id="disbursedMotorInsurance" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedTotalLoanAmount">TOTAL LOAN AMOUNT</label>
+      <input id="disbursedTotalLoanAmount" type="number" readonly />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedPfCharges">PF CHARGES</label>
+      <input id="disbursedPfCharges" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedDocumentationCharges">DOCUMENTATION CHARGES</label>
+      <input id="disbursedDocumentationCharges" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedOtherCharges">OTHER CHARGES</label>
+      <input id="disbursedOtherCharges" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedRtoCharges">RTO CHARGES</label>
+      <input id="disbursedRtoCharges" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedChallanFineCharges">CHALLAN / FINE CHARGES</label>
+      <input id="disbursedChallanFineCharges" type="number" />
+    </div>
+
+    <div class="form-field">
+      <label for="disbursedNetLoanAmount">NET LOAN AMOUNT</label>
+      <input id="disbursedNetLoanAmount" type="number" readonly />
+    </div>
+
+    <!-- RTO DOCUMENTS -->
+    <div class="form-field" style="grid-column: span 3;">
+      <label>RTO DOCUMENTS</label>
+      <div class="multi-select-container">
+        <div class="multi-select-display" id="rtoDocsDisplay">
+          <span class="multi-select-placeholder">Select RTO Documents...</span>
+        </div>
+        <div class="multi-select-dropdown" id="rtoDocsDropdown"></div>
+        <input type="hidden" id="disbursedRtoDocs" />
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div id="utrFields" class="section hidden">
+  <h3>UTR Information</h3>
+
+  <div id="paymentContainer"></div>
+
+  <div style="margin-top: 15px; display: flex; gap: 10px;">
+    <button type="button" id="addPaymentBtn" class="icon-btn plus-state">
+      + Add Payment
+    </button>
+    <button
+      type="button"
+      id="removePaymentBtn"
+      class="icon-btn minus-state hidden"
+    >
+      − Remove Payment
+    </button>
+  </div>
+</div>
+
+
+    <div id="motorInsuranceFields" class="section hidden">
+      <h3>Motor Insurance</h3>
+
+      <div class="grid">
+
+        <div class="form-field">
+          <label for="motorPolicyNumber">POLICY NUMBER</label>
+          <input id="motorPolicyNumber" />
+        </div>
+
+        <div class="form-field">
+          <label for="motorInsuranceCompany">INSURANCE COMPANY</label>
+          <input id="motorInsuranceCompany" />
+        </div>
+
+        <div class="form-field">
+          <label for="motorIdvValue">IDV VALUE</label>
+          <input id="motorIdvValue" type="number" />
+        </div>
+
+        <div class="form-field">
+          <label for="motorInsuranceExpiry">INSURANCE EXPIRY DATE</label>
+          <input id="motorInsuranceExpiry" type="date" />
+        </div>
+
+        <div class="form-field">
+          <label for="motorInsuranceValidity">VALIDITY (DAYS)</label>
+          <input id="motorInsuranceValidity" readonly />
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- PDD STATUS -->
+    <div id="pddStatusFields" class="section hidden">
+      <h3>PDD Status</h3>
+
+      <div class="grid">
+        <div class="form-field">
+          <label for="pddStatus">SELECT PDD STATUS</label>
+          <select id="pddStatus">
+            <option value="">SELECT PDD STATUS</option>
+            <option>Hypothecation Cancelled</option>
+            <option>CC Issued</option>
+            <option>Hypothecation Done</option>
+            <option>Name Transfered</option>
+            <option>RC Card Recieved</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <br><br>
+
+    <button type="submit">Submit Lead</button>
+  </form>
+</main>
+</div>
+
+
+
+<script src="/js/used-car-loan.js"></script>
+
+
+</body>
+</html>

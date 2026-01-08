@@ -1,0 +1,364 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+body {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(140deg, #eff5ff 0%, #f6fbff 45%, #eef5ff 100%);
+  color: #0f172a;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background: #111c44;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+  gap: 32px;
+  box-shadow: 18px 0 35px rgba(15, 23, 42, 0.08);
+}
+
+.logo {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+
+.logout {
+  margin-top: auto;
+  padding: 16px 0 0;
+  text-align: center;
+  cursor: pointer;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f87171;
+  font-weight: 500;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filters input,
+.filters select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #dbe2f3;
+  background: #fff;
+  color: #1e293b;
+  min-width: 140px;
+}
+
+.filters button {
+  padding: 10px 24px;
+  background: linear-gradient(120deg, #4f46e5, #6366f1);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filters button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 25px rgba(99, 102, 241, 0.3);
+}
+
+/* Cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 25px 55px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card h4 {
+  color: #475569;
+  font-weight: 600;
+}
+
+.amount {
+  font-size: 30px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Chart */
+.chart {
+  background: #fff;
+  padding: 28px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 25px 45px rgba(15, 23, 42, 0.07);
+  max-width: 640px;
+}
+
+.bar {
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  margin-top: 24px;
+}
+
+.bar-fill {
+  background: linear-gradient(160deg, #22d3ee, #6366f1);
+  width: 90px;
+  height: 85%;
+  color: white;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12px;
+  border-radius: 24px;
+  font-weight: 600;
+  box-shadow: 0 20px 35px rgba(99, 102, 241, 0.35);
+}
+
+@media (max-width: 960px) {
+  body {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar nav {
+    display: flex;
+    gap: 12px;
+  }
+
+  .logout {
+    border-top: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding: 24px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filters {
+    width: 100%;
+  }
+
+  .filters input,
+  .filters select,
+  .filters button {
+    flex: 1;
+    min-width: unset;
+  }
+}
+.sidebar-nav a {
+  display: block;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  color: #cbd5f5;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateX(4px);
+}
+
+.sidebar-nav a.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* Specific styles for admin menu items to ensure alignment */
+#adminUsersMenu,
+#assignEmployeesMenu {
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+  background: rgba(255,255,255,0.08) !important;
+  border-radius: 12px !important;
+  color: #cbd5f5 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease !important;
+}
+
+#adminUsersMenu:hover,
+#assignEmployeesMenu:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  transform: translateX(4px) !important;
+}
+form {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 700px;
+}
+
+h3 {
+  margin-top: 25px;
+  color: #334155;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+label {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+input, select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.submit-btn {
+  margin-top: 20px;
+  padding: 12px;
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Multi-Select Styles */
+.multi-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.multi-select-display {
+  min-height: 42px; /* Match standard input height usually */
+  padding: 6px 10px;
+  border-radius: 6px; /* Matching existing inputs */
+  border: 1px solid #ccc; /* Matching existing inputs */
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.multi-select-placeholder {
+  color: #757575;
+}
+
+.multi-select-tag {
+  background-color: #24a148; /* Green bg as requested */
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.multi-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-top: 4px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.multi-select-dropdown.active {
+  display: block;
+}
+
+.multi-select-option {
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.multi-select-option:hover {
+  background-color: #f1f5f9;
+}
+
+.multi-select-option.selected {
+  background-color: #dafbe1; /* Light green bg for selected item in list */
+  color: #1e7e34;
+  font-weight: 500;
+}
+
+.multi-select-option.selected::after {
+  content: '✓';
+  color: #1e7e34;
+}
+

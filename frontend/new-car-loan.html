@@ -1,0 +1,431 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+<title>Used Car Loan | WheelsWeb</title>
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <style>
+    .section { margin: 30px 0; }
+    .section h3 { margin-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    label { font-weight: 600; }
+    input, select, textarea { padding: 8px; width: 100%; }
+    textarea { grid-column: span 3; }
+    button { padding: 12px 20px; font-size: 16px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+    button.ghost-btn { padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #d3d7de; background: #f3f5f8; cursor: pointer; }
+    button.ghost-btn:hover { background: #e5e9f0; }
+    .hidden { display: none !important; }
+    .inline-field { display: flex; align-items: center; gap: 8px; }
+    .icon-btn { padding: 8px 12px; border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 18px; line-height: 1; transition: background 0.2s ease; }
+    .icon-btn.compact { padding: 6px 10px; font-size: 16px; }
+    .icon-btn.plus-state { background: #24a148; }
+    .icon-btn.plus-state:hover { background: #198038; }
+    .cibil-section .icon-btn.plus-state,
+    .cibil-section .icon-btn.minus-state {
+      background: #1172eb;
+    }
+    .cibil-section .icon-btn.plus-state:hover,
+    .cibil-section .icon-btn.minus-state:hover {
+      background: #0d5ec4;
+    }
+    .icon-btn.minus-state { background: #da1e28; }
+    .icon-btn.minus-state:hover { background: #a2191f; }
+    .cibil-section .grid { align-items: center; }
+    .cibil-display { padding: 12px; border: 1px solid #c8ccd5; border-radius: 8px; font-weight: 600; text-align: center; background: #f7f8fa; }
+    .cibil-display.red { background: #fdecea; color: #a2191f; border-color: #f1a7a1; }
+    .cibil-display.yellow { background: #fff4d6; color: #a87100; border-color: #f3c76a; }
+    .cibil-display.green { background: #e7f6e7; color: #0f7b0f; border-color: #7cd67c; }
+    .cibil-color-options { display: flex; gap: 10px; }
+    .cibil-color-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+    .cibil-color-btn[data-color="red"] { background: #da1e28; }
+    .cibil-color-btn[data-color="yellow"] { background: #f1c21b; }
+    .cibil-color-btn[data-color="green"] { background: #20a34a; }
+    .cibil-color-btn.active { box-shadow: 0 0 0 3px rgba(0,0,0,0.1); border-color: #111; }
+    .obligation-wrapper { display: flex; align-items: center; gap: 6px; border: 1px solid #c8ccd5; border-radius: 8px; padding: 6px 10px; background: #fdfdfd; }
+    .obligation-wrapper span { font-weight: 600; color: #4f5665; }
+    .obligation-wrapper input { border: none; padding: 0; }
+    .obligation-wrapper input:focus { outline: none; }
+    .obligation-wrapper input { flex: 1; }
+    .helper-text { color: #5f6576; font-size: 14px; margin: 8px 0 0; }
+    .additional-applicants { display: flex; flex-direction: column; gap: 20px; }
+    .additional-applicant-block { border: 1px solid #e1e5ee; border-radius: 12px; padding: 20px; background: #fafbff; }
+    .additional-applicant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .additional-applicant-header h4 { margin: 0; font-size: 18px; color: #1f232a; }
+    .sub-section { margin-bottom: 18px; }
+    .sub-section:last-of-type { margin-bottom: 0; }
+    .sub-section h5 { margin-bottom: 8px; font-size: 15px; color: #3d4554; }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">WheelsWeb</div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard.html">Overview</a>
+    <a href="/new-lead.html" class="active">Start New Application</a>
+    <a href="/view-cases.html">View All Cases</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+  <form id="leadForm">
+
+    <!-- BASIC -->
+    <div class="section grid">
+      <div>
+        <label>Loan ID</label>
+        <input id="loanId" readonly />
+      </div>
+      <div>
+        <label>Date & Time</label>
+        <input id="dateTime" readonly />
+      </div>
+      <div>
+        <label>Source</label>
+        <select id="source">
+          <option>Self</option><option>Dealer</option><option>Bank</option><option>Walk-In</option><option>Telecall</option><option>Online</option><option>Others</option>
+        </select>
+      </div>
+      
+      <div>
+        <label>Case Dealer</label>
+        <input id="basicCaseDealer" placeholder="Case Dealer *" required data-uppercase />
+      </div>
+      <div>
+        <label>Ref Name / Mob No</label>
+        <input id="basicRefNameMobile" placeholder="Ref Name and Mob No *" required />
+      </div>
+    </div>
+
+    <!-- VEHICLE -->
+    <div class="section">
+      <h3>Vehicle Information</h3>
+      <div class="grid">
+        <input id="rcNo" placeholder="RC NO *" required />
+        <input id="vehicle" placeholder="VEHICLE / VARIANT *" required />
+          <select id="osNo" required>
+          <option value="">O. S NO *</option>
+          <option>None</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+        </select>
+        <select id="mfgMonth" required>
+          <option value="">MFG MONTH *</option>
+        </select>
+        <select id="mfgYear" required>
+          <option value="">MFG YEAR *</option>
+        </select>
+        <input id="vehicleAge" placeholder="VEHICLE AGE" readonly />
+      
+        <input id="kilometreReading" placeholder="ODOMETRE READING *" required />
+        <input id="vehicleOwnerContact" placeholder="VEHICLE VALUATION CONTACT NO *" required />
+        <input id="vehicleLocation" placeholder="VEHICLE LOCATION *" required />
+      </div>
+    </div>
+
+    <!-- LOAN -->
+    <div class="section">
+      <h3>Loan</h3>
+      <div class="grid">
+        
+        <select id="loanType" required>
+          <option value="">TYPE *</option>
+          <option>Sale & Purchase</option><option>Refinance</option><option>BT Topup</option><option>Refinance HP</option><option>Refinance Without HP</option><option>Int BT</option>
+        </select>
+        <input id="loanAmount" type="number" placeholder="LOAN AMOUNT *" required />
+        <select id="loanTenure" required>
+          <option value="">TENURE *</option>
+        </select>
+      </div>
+      <div id="btFields" class="grid hidden">
+        <input id="prevFinanceName" placeholder="PREVIOUS FINANCE NAME *" data-bt-required="true" data-uppercase />
+        <input id="btTenure" type="number" min="1" placeholder="BT TENURE (MONTHS) *" data-bt-required="true" />
+        <select id="emiPaid" data-bt-required="true">
+          <option value="">NO OF EMI PAID *</option>
+        </select>
+        <input id="btPrincipalOs" type="number" min="0" placeholder="BT PRINCIPLE OS *" data-bt-required="true" />
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="section">
+      <h3>Applicant Profile</h3>
+      <div class="grid">
+        
+        <input id="name" placeholder="NAME *" required data-uppercase />
+        <select id="gender" required>
+          <option value="">GENDER *</option>
+          <option>Male</option><option>Female</option><option>Rather Not To Say</option><otpion>none</otpion>
+        </select>
+
+        
+        <input id="pan" placeholder="PAN NO *" required />
+        <div class="inline-field">
+          <input id="mobile" placeholder="MOBILE NO *" required />
+          <button type="button" id="addAltNoBtn" class="icon-btn plus-state" aria-label="Add alternate number">+</button>
+        </div>
+        <input id="extraAltMobile" class="hidden" placeholder="ALT NO" />
+
+        <input id="email" placeholder="EMAIL ID *" required />
+        <select id="MaritalStatus" required>
+          <option value="">MARITAL STATUS *</option>
+          <option >None</option><option>Single</option><option>Married</option><option>Divorced</option>
+        </select>
+        <div id="spouseNameField" class="hidden">
+          <input id="spouseName" placeholder="SPOUSE NAME *" data-uppercase />
+        </div>
+         <input id="fatherName" placeholder="FATHER NAME *" required data-uppercase />
+        <input id="motherName" placeholder="MOTHER NAME *" required data-uppercase />
+       
+       
+      </div>
+    </div>
+
+    <!-- CIBIL SNAPSHOT -->
+    <div class="section cibil-section">
+      <div class="section-header">
+        <h3>CIBIL DETAILS</h3>
+        <button type="button" id="cibilToggleBtn" class="icon-btn plus-state compact" aria-expanded="false" aria-controls="cibilDetails">+</button>
+      </div>
+      <div id="cibilDetails" class="grid hidden">
+        <div>
+          <label>CIBIL Score</label>
+          <div id="cibilDisplay" class="cibil-display">Not Entered</div>
+          <input type="hidden" id="cibilScore" />
+        </div>
+        <div>
+          <label>Update Score</label>
+          <button type="button" id="cibilPromptBtn" class="ghost-btn" style="width: 100%;">Click Here</button>
+        </div>
+        <div>
+          <label>Indicator</label>
+          <div class="cibil-color-options">
+            <button type="button" class="cibil-color-btn" data-color="red" aria-label="Mark CIBIL Red"></button>
+            <button type="button" class="cibil-color-btn" data-color="yellow" aria-label="Mark CIBIL Yellow"></button>
+            <button type="button" class="cibil-color-btn" data-color="green" aria-label="Mark CIBIL Green"></button>
+          </div>
+          <input type="hidden" id="cibilIndicator" />
+        </div>
+      </div>
+    </div>
+
+    <!-- CURRENT ADDRESS -->
+    <div class="section">
+      <h3>Current Address</h3>
+      <div class="grid">
+        <select id="currentAddressProof" required>
+          <option value="">ADDRESS PROOF *</option>
+          <option>Aadhaar</option><option>Voter ID</option><option>Gas Bill</option><option>EB Bill</option><option>Tax Paid Receipt</option><option>Rent Agreements</option>
+        </select>
+        <input id="currentLandmark" placeholder="LAND MARK *" required />
+        <input id="currentPincode" placeholder="PIN CODE *" required />
+
+        <select id="currentOhpRelation" required>
+          <option value="">OHP OWNER RELATION *</option>
+          <option>SPOUSE</option><option>SELF-OWNED</option><option>PARANTEL</option><option>RENTED</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PERMANENT ADDRESS -->
+    <div class="section">
+      <div class="section-header">
+        <h3>Permanent Address</h3>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:500;">
+          <input type="checkbox" id="copyPermanentFromCurrent" />
+        </label>
+      </div>
+      <div class="grid">
+        <select id="permanentAddressProof" required>
+          <option value="">ADDRESS PROOF *</option>
+          <option>Aadhaar</option><option>Voter ID</option><option>Gas Bill</option><option>EB Bill</option><option>Tax Paid Receipt</option><option>Rent Agreements</option>
+        </select>
+        <input id="permanentLandmark" placeholder="LAND MARK *" required />
+        <input id="permanentPincode" placeholder="PIN CODE *" required />
+        <select id="permanentOhpRelation" required>
+          <option value="">OHP OWNER RELATION *</option>
+          <option>SPOUSE</option><option>SELF-OWNED</option><option>PARANTEL</option><option>RENTED</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- EMPLOYMENT & OFFICE -->
+    <div class="section">
+      <h3>Employment & Office</h3>
+      <div class="grid">
+        <select id="employmentCustomerProfile" required>
+          <option value="">CUSTOMER PROFILE *</option>
+          <option>Self-Employed</option><option>Salaried</option><option>ITR</option><option>Agriculture</option><option>Pension</option>
+        </select>
+        <input id="businessName" placeholder="BUSINESS / OFFICE / DESIGNATION NAME *" required />
+        <input id="monthlyIncome" type="number" placeholder="MONTHLY INCOME *" required />
+        <select id="businessProof" required>
+          <option value="">BUSINESS PROOF *</option>
+          <option>NIP</option><option>Pay slips</option><option>RTC</option><option>GST</option><option>ITR</option><option>License</option><option>Pension Statements</option>
+        </select>
+        </select>
+        <textarea id="officeFullAddress" placeholder="FULL ADDRESS *" required></textarea>
+      </div>
+    </div>
+
+    <!-- REF CONTACT -->
+    <div class="section">
+      <h3>Ref Contact</h3>
+      <div class="grid" style="grid-template-columns: repeat(2, 1fr);">
+        <input id="refMob1" placeholder="MOBILE NO  *" required />
+        <input id="refName1" placeholder="NAME  *" required data-uppercase />
+        <input id="refMob2" placeholder="MOBILE NO  *" />
+        <input id="refName2" placeholder="NAME  *" data-uppercase />
+      </div>
+    </div>
+
+    <!-- ADDITIONAL APPLICANTS -->
+    <div class="section" id="additionalApplicantsSection">
+      <div class="section-header">
+        <h3>Additional Applicants</h3>
+        <button type="button" id="addAdditionalApplicantBtn" class="icon-btn plus-state compact">+ Add Applicant</button>
+      </div>
+      <p class="helper-text">
+        Use this to capture Co-Applicant / Guarantor information. Each additional applicant includes profile, address, employment, and reference details.
+      </p>
+      <div id="additionalApplicantsContainer" class="additional-applicants"></div>
+    </div>
+
+    <!-- NOMINEE -->
+    <div class="section">
+      <h3>Nominee Information</h3>
+      <div class="grid">
+        <input id="nomineeName" placeholder="NOMINEE NAME *" required data-uppercase />
+        <input id="nomineeDob" type="date" placeholder="NOMINEE DATE OF BIRTH *" required />
+        <select id="nomineeRelationship" required>
+          <option value="">RELATIONSHIP *</option>
+          <option>None</option><option>Spouse</option><option>Father</option><option>Mother</option><option>Brother</option><option>Sister</option><option>Son</option><option>Daughter</option><option>Grand Father</option><option>Grand Mother</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- BANK / FINANCE -->
+    <div class="section">
+      <h3>Bank / Finance Information</h3>
+      <div class="grid">
+
+<select id="loanDsa" required>
+          <option value="">DSA *</option>
+          <option value="Wheels Web">Wheels Web</option>
+          <option value="Girnar Software Pvt Ltd">Girnar Software Pvt Ltd</option>
+          <option value="Kuwy">Kuwy</option>
+          <option value="Cars24">Cars24</option>
+          <option value="Tractor Junction">Tractor Junction</option>
+          <option value="Cars Adda">Cars Adda</option>
+          <option value="Others">Others</option>
+        </select>
+
+        <select id="bankFinance" required>
+          <option value="">BANK / FINANCE *</option>
+          <option>NONE</option><option>AXIS BANK</option><option>Piramal</option><option>Mahindra Finance</option><option>Poonawalla Fincorp</option><option>IDFC First Bank (Urban & Rural)</option><option>HDFC Bank</option><option>HDB FINANCE</option><option>Bajaj Finserv</option><option>ICICI Bank</option><option>YES BANK LTD</option><option>Tata Capital</option><option>TVS Credit</option><option>Muthoot Capital</option><option>INDUSIND Bank</option><option>EQUITAS SMALL FINANCE BANK</option><option>Toyota Financial</option><option>Manappuram Finance Limited</option><option>AU FINANCE</option><option>Cholamandalam Investment And Finance Company</option><option>Saraswat Co-operative Bank</option><option>Kotak Mahindra</option><option>Bandhan Bank</option><option>Kogta Financier</option><option>Muthoot Money</option><option>Fortune Finance</option><option>Ambit Finvest Private Limited</option><option>IKF Finance (White Board Cars)</option><option>Mahaveer Finance</option><option>Indostar Finance</option><option>Vaasthu Finance</option><option>Praveen Capital</option>
+        </select>
+        <input id="bankBranch" placeholder="BRANCH *" required />
+        <input id="loginExecutive" placeholder="LOGIN ASSIGNED *" required data-uppercase />
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Remarks</h3>
+      <textarea id="remarks" rows="4" placeholder="Enter any additional remarks here..."></textarea>
+    </div>
+
+    <select id="loanStage" required>
+      <option value="">STAGE *</option>
+      <option>Lead</option><option>Pitched</option><option>Login</option><option>Sanction</option><option>Rejected</option><option>Disbursed</option><option>Loan Cancelled</option>
+    </select>
+
+    <!-- DISBURSED LOAN INFORMATION -->
+    <div id="disbursedFields" class="section hidden">
+      <h3>Loan Information</h3>
+      <div class="grid">
+        <input id="disbursedDate" type="date" title="DISBURSEMENT DATE" />
+        <input id="disbursedLoanAcNo" placeholder="LOAN AC NO" />
+        <select id="disbursedTenure">
+          <option value="">TENURE</option>
+        </select>
+        <input id="disbursedIrr" placeholder="IRR" />
+        <input id="disbursedEmiAmount" type="number" placeholder="EMI AMOUNT" />
+        <select id="disbursedEmiDate">
+          <option value="">EMI DATE</option>
+        </select>
+        <input id="disbursedSanctionLoanAmount" type="number" placeholder="SANCTION LOAN AMOUNT" />
+        <input id="disbursedLoanInsuranceCharges" type="number" placeholder="LOAN INSURANCE CHARGES" />
+        <input id="disbursedMotorInsurance" type="number" placeholder="MOTOR INSURANCE" />
+        <input id="disbursedTotalLoanAmount" type="number" placeholder="TOTAL LOAN AMOUNT" readonly />
+        <input id="disbursedPfCharges" type="number" placeholder="PF CHARGES" />
+        <input id="disbursedDocumentationCharges" type="number" placeholder="DOCUMENTATION CHARGES" />
+        <input id="disbursedOtherCharges" type="number" placeholder="OTHER CHARGES" />
+        <input id="disbursedRtoCharges" type="number" placeholder="RTO CHARGES" />
+        <input id="disbursedChallanFineCharges" type="number" placeholder="CHALLAN / FINE CHARGES" />
+        <input id="disbursedNetLoanAmount" type="number" placeholder="NET LOAN AMOUNT" readonly />
+        
+        <!-- RTO Documents Multi-Select -->
+        <div class="multi-select-container" style="grid-column: span 3;">
+          <label style="display:block; margin-bottom: 5px; font-weight: 600;">RTO Documents</label>
+          <div class="multi-select-display" id="rtoDocsDisplay">
+            <span class="multi-select-placeholder">Select RTO Documents...</span>
+          </div>
+          <div class="multi-select-dropdown" id="rtoDocsDropdown">
+            <!-- Options populated by JS -->
+          </div>
+          <input type="hidden" id="disbursedRtoDocs" />
+        </div>
+      </div>
+    </div>
+
+    <!-- UTR INFORMATION -->
+    <div id="utrFields" class="section hidden">
+      <h3>UTR Information</h3>
+      <div id="paymentContainer"></div>
+      <div style="margin-top: 15px; display: flex; gap: 10px;">
+        <button type="button" id="addPaymentBtn" class="icon-btn plus-state" style="font-size: 14px; padding: 8px 16px;">+ Add Payment</button>
+        <button type="button" id="removePaymentBtn" class="icon-btn minus-state hidden" style="font-size: 14px; padding: 8px 16px;">- Remove Payment</button>
+      </div>
+    </div>
+
+    <!-- MOTOR INSURANCE -->
+    <div id="motorInsuranceFields" class="section hidden">
+      <h3>Motor Insurance</h3>
+      <div class="grid">
+        <input id="motorPolicyNumber" placeholder="POLICY NUMBER" />
+        <input id="motorInsuranceCompany" placeholder="INSURANCE COMPANY" />
+        <input id="motorIdvValue" type="number" placeholder="IDV VALUE" />
+        <input id="motorInsuranceExpiry" type="date" placeholder="INSURANCE EXPIRY DATE" />
+        <input id="motorInsuranceValidity" placeholder="VALIDITY (DAYS)" readonly />
+      </div>
+    </div>
+
+    <!-- PDD STATUS -->
+    <div id="pddStatusFields" class="section hidden">
+      <h3>PDD Status</h3>
+      <div class="grid">
+        <select id="pddStatus">
+          <option value="">SELECT PDD STATUS</option>
+          <option>Hypothecation Cancelled</option>
+          <option>CC Issued</option>
+          <option>Hypothecation Done</option>
+          <option>Name Transfered</option>
+          <option>RC Card Recieved</option>
+        </select>
+      </div>
+    </div>
+
+    <br><br>
+
+    <button type="submit">Submit Lead</button>
+  </form>
+</main>
+</div>
+
+<script src="/js/used-car-loan.js"></script>
+</body>
+</html>

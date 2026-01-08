@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WheelsWeb | Dashboard</title>
+  <link rel="stylesheet" href="/css/dashboard.css?v=3" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">WheelsWeb</div>
+
+<nav class="sidebar-nav">
+  <a class="active" href="/dashboard.html">Overview</a>
+  <a href="/new-lead.html">Start New Application</a>
+  <a href="/view-cases.html">View All Cases</a>
+  
+  <!-- ADMIN ONLY -->
+  <a href="/admin-users.html" id="adminUsersMenu" style="display:none">
+    User Management
+  </a>
+  
+  <!-- ADMIN ONLY -->
+  <a href="/assign-employees.html" id="assignEmployeesMenu" style="display:none">
+    Assign Employees
+  </a>
+</nav>
+
+
+    <div class="logout" onclick="logout()">Logout</div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Header -->
+    <header class="header">
+      <h2>Business Performance</h2>
+
+      <div class="filters">
+        <input type="date" />
+        <input type="date" />
+        <select>
+          <option>Product Type</option>
+          <option>New Car</option>
+          <option>Used Car</option>
+        </select>
+        <button>Search</button>
+      </div>
+    </header>
+
+    <!-- Cards -->
+    <section class="cards">
+      <div class="card">
+        <h4>Total Disbursed Amount</h4>
+          <p class="amount">₹ <span id="totalAmount">0</span></p>
+      </div>
+
+      <div class="card">
+        <h4>Total Disbursed Cases</h4>
+          <p class="amount"><span id="totalCases">0</span></p>
+      </div>
+    </section>
+
+    <!-- Chart Placeholder -->
+    <section class="chart">
+      <h4>Business Type Distribution</h4>
+      <div id="businessTypeBar" class="bar">
+        <!-- JS will populate bars here -->
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

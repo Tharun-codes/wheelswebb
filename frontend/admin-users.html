@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin - User Management</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <div class="admin-header">
+        <div class="admin-title">
+          <h1>Users</h1>
+          <div class="admin-subtitle">View, create and manage application users</div>
+        </div>
+
+        <div class="admin-actions">
+          <input id="userSearch" class="search-input" placeholder="Search by username or role" />
+          <button class="btn-primary" id="openCreateBtn">Create User</button>
+        </div>
+      </div>
+
+      <table class="users-table" aria-describedby="users-list">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Last Login</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Create / Edit Modal -->
+    <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <h3 id="modalTitle">Create User</h3>
+        <div class="form-row">
+          <label>Username</label>
+          <input id="modalUsername" />
+        </div>
+        <div class="form-row">
+          <label>Password</label>
+          <input id="modalPassword" type="password" />
+        </div>
+        <div class="form-row">
+          <label>Role</label>
+          <select id="modalRole">
+            <option value="employee">Employee</option>
+            <option value="manager">Manager</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button class="action-btn" id="modalCancel">Cancel</button>
+          <button class="btn-primary" id="modalSubmit">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="/js/admin-users.js"></script>
+  </body>
+</html>

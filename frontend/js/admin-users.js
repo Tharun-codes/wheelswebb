@@ -1,3 +1,4 @@
+console.log('admin-users.js v2 loaded');
 const user = JSON.parse(localStorage.getItem("user"));
 
 if (!user || user.role !== "admin") {
@@ -18,19 +19,20 @@ function showToast(msg, timeout = 3000) {
 
 /* ---------------- RENDER USERS ---------------- */
 function renderUsers(filter = "") {
-  console.log("=== RENDER USERS START ===");
-  console.log("Current user from localStorage:", user);
-  console.log("User role:", user.role);
-  
-  const tbody = document.getElementById("usersTableBody");
-  tbody.innerHTML = "";
+  const tbodyAdmins = document.getElementById("adminsTableBody");
+  const tbodyManagers = document.getElementById("managersTableBody");
+  const tbodyEmployees = document.getElementById("employeesTableBody");
+
+  tbodyAdmins.innerHTML = "";
+  tbodyManagers.innerHTML = "";
+  tbodyEmployees.innerHTML = "";
 
   const term = filter.trim().toLowerCase();
 
   const filtered = allUsers.filter(u => {
     if (!term) return true;
     return (
-      u.username.toLowerCase().includes(term) ||
+      (u.username || "").toLowerCase().includes(term) ||
       (u.role || "").toLowerCase().includes(term)
     );
   });
@@ -39,12 +41,13 @@ function renderUsers(filter = "") {
     const tr = document.createElement("tr");
 
     const status = u.status || "active";
-    const statusClass =
-      status === "active" ? "status-active" : "status-disabled";
+    const statusClass = status === "active" ? "status-active" : "status-disabled";
 
     tr.innerHTML = `
       <td>${u.username}</td>
-      <td>••••••••</td>
+      <td>
+        ${u.password ? `<span class="pw-text">••••••••</span><button type="button" class="pw-toggle" title="Show password" aria-label="Show password" style="margin-left:8px">👁️</button>` : '••••••••'}
+      </td>
       <td>${formatRole(u.role)}</td>
       <td>
         <span class="status-pill ${statusClass}">
@@ -54,99 +57,74 @@ function renderUsers(filter = "") {
       <td>${u.last_login ? new Date(u.last_login).toLocaleString() : "-"}</td>
     `;
 
-    /* ---------- ACTIONS ---------- */
+    // attach password toggle handler when a toggle button exists
+    const pwToggle = tr.querySelector('.pw-toggle');
+    if (pwToggle) {
+      const pwText = tr.querySelector('.pw-text');
+      let revealed = false;
+      pwToggle.addEventListener('click', () => {
+        revealed = !revealed;
+        pwText.textContent = revealed ? (u.password || '') : '••••••••';
+        pwToggle.innerHTML = revealed ? '🙈' : '👁️';
+        pwToggle.title = revealed ? 'Hide password' : 'Show password';
+        pwToggle.setAttribute('aria-label', revealed ? 'Hide password' : 'Show password');
+      });
+    }
+
     const actionsTd = document.createElement("td");
 
-    // Enable / Disable
     const statusBtn = document.createElement("button");
     statusBtn.className = "action-btn";
     statusBtn.textContent = status === "active" ? "Disable" : "Enable";
-
-    statusBtn.addEventListener("click", () =>
-      toggleStatus(u.id, status === "active" ? "inactive" : "active")
-    );
-
+    statusBtn.addEventListener("click", () => toggleStatus(u.id, status === "active" ? "inactive" : "active"));
     if (u.role === "admin" || u.id === user.id) {
       statusBtn.disabled = true;
       statusBtn.title = "This user cannot be disabled";
     }
 
-    // Edit
     const editBtn = document.createElement("button");
     editBtn.className = "action-btn";
     editBtn.textContent = "Edit";
     editBtn.style.marginLeft = "6px";
     editBtn.addEventListener("click", () => openEdit(u.id));
 
-    // View (Admin for employees, Manager for themselves)
     const viewBtn = document.createElement("button");
     viewBtn.className = "action-btn";
     viewBtn.textContent = "View";
     viewBtn.style.marginLeft = "6px";
-    
-    console.log(`Current user role: ${user.role}, Target user role: ${u.role}`);
-    
-    if (user.role === "admin" && u.role === "employee") {
-      // Admin viewing employee leads
-      viewBtn.addEventListener("click", () =>
-        viewEmployeeLeads(u.id, u.username, "employee")
-      );
-      console.log("View button enabled for employee:", u.username);
-    } else if (user.role === "admin" && u.role === "manager") {
-      // Admin viewing manager leads
-      viewBtn.addEventListener("click", () =>
-        viewEmployeeLeads(u.id, u.username, "manager")
-      );
-      console.log("View button enabled for manager:", u.username);
+
+    if (user.role === "admin" && (u.role === "employee" || u.role === "manager")) {
+      viewBtn.addEventListener("click", () => viewEmployeeLeads(u.id, u.username, u.role || "employee"));
     } else if (user.role === "manager" && u.id === user.id) {
-      // Manager viewing their own leads
-      viewBtn.addEventListener("click", () =>
-        viewEmployeeLeads(u.id, u.username, "manager")
-      );
-      console.log("View button enabled for manager viewing own leads:", u.username);
+      viewBtn.addEventListener("click", () => viewEmployeeLeads(u.id, u.username, "manager"));
     } else {
       viewBtn.disabled = true;
-      if (u.role === "admin") {
-        viewBtn.title = "Cannot view admin leads";
-      } else if (user.role === "manager" && u.id !== user.id) {
-        viewBtn.title = "Manager can only view their own leads";
-      } else {
-        viewBtn.title = "Only admin can view other users' leads";
-      }
-      console.log("View button disabled for:", u.role, "Reason:", viewBtn.title);
+      if (u.role === "admin") viewBtn.title = "Cannot view admin leads";
+      else if (user.role === "manager" && u.id !== user.id) viewBtn.title = "Manager can only view their own leads";
+      else viewBtn.title = "Only admin can view other users' leads";
     }
 
-    // Delete
     const delBtn = document.createElement("button");
     delBtn.className = "action-btn danger";
     delBtn.textContent = "Delete";
     delBtn.style.marginLeft = "6px";
-
     if (u.role === "admin") {
       delBtn.disabled = true;
       delBtn.title = "Admin users cannot be deleted";
     } else {
-      delBtn.addEventListener("click", () =>
-        deleteUser(u.id, u.username, u.role)
-      );
+      delBtn.addEventListener("click", () => deleteUser(u.id, u.username, u.role));
     }
 
     actionsTd.appendChild(statusBtn);
     actionsTd.appendChild(editBtn);
-    
-    // Add View button for appropriate users
-    if ((user.role === "admin" && (u.role === "employee" || u.role === "manager")) || 
-        (user.role === "manager" && u.id === user.id)) {
-      actionsTd.appendChild(viewBtn);
-      console.log("View button added for:", u.username, "Role:", u.role);
-    } else {
-      console.log("View button NOT added. User role:", user.role, "Target role:", u.role, "Target ID:", u.id, "User ID:", user.id);
-    }
-    
+    if (!viewBtn.disabled) actionsTd.appendChild(viewBtn);
     actionsTd.appendChild(delBtn);
     tr.appendChild(actionsTd);
 
-    tbody.appendChild(tr);
+    const role = (u.role || "employee").toLowerCase();
+    if (role === "admin") tbodyAdmins.appendChild(tr);
+    else if (role === "manager") tbodyManagers.appendChild(tr);
+    else tbodyEmployees.appendChild(tr);
   });
 }
 
@@ -159,7 +137,10 @@ function viewEmployeeLeads(userId, username, role) {
 /* ---------------- LOAD USERS ---------------- */
 async function loadUsers() {
   try {
-    const res = await fetch("/api/admin/users");
+    const admin = JSON.parse(localStorage.getItem("user")) || {};
+    const res = await fetch("/api/admin/users", {
+      headers: { "x-admin-id": admin.id }
+    });
     if (!res.ok) throw new Error("Failed to fetch users");
 
     const users = await res.json();

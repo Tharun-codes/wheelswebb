@@ -310,7 +310,17 @@ app.post("/api/validate-pincode", async (req, res) => {
 // ----------------- Admin users -----------------
 app.get("/api/admin/users", async (req, res) => {
   try {
-    const { rows } = await pool.query("SELECT id, username, role, status, last_login FROM users WHERE deleted_at IS NULL ORDER BY id");
+    // require an admin header to protect this sensitive endpoint
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    if (!adminId) return res.status(403).json({ error: "Unauthorized" });
+
+    const adminCheck = await pool.query("SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL", [adminId]);
+    if (!adminCheck.rows.length || adminCheck.rows[0].role !== 'admin') {
+      return res.status(403).json({ error: "Only admins may access this resource" });
+    }
+
+    // Return password field as requested (WARNING: plaintext passwords are insecure)
+    const { rows } = await pool.query("SELECT id, username, password, role, status, last_login FROM users WHERE deleted_at IS NULL ORDER BY id");
     res.json(rows);
   } catch (err) {
     console.error(err);

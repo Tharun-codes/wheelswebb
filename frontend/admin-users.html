@@ -20,19 +20,56 @@
         </div>
       </div>
 
-      <table class="users-table" aria-describedby="users-list">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Password</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Last Login</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="usersTableBody"></tbody>
-      </table>
+      <section class="users-section">
+        <h2>Admins</h2>
+        <table class="users-table" aria-describedby="admins-list">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Password</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminsTableBody"></tbody>
+        </table>
+      </section>
+
+      <section class="users-section">
+        <h2>Managers</h2>
+        <table class="users-table" aria-describedby="managers-list">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Password</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="managersTableBody"></tbody>
+        </table>
+      </section>
+
+      <section class="users-section">
+        <h2>Employees</h2>
+        <table class="users-table" aria-describedby="employees-list">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Password</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="employeesTableBody"></tbody>
+        </table>
+      </section>
     </div>
 
     <!-- Create / Edit Modal -->
@@ -63,6 +100,6 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <script src="/js/admin-users.js"></script>
+    <script src="/js/admin-users.js?v=2"></script>
   </body>
 </html>

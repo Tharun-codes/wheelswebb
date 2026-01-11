@@ -64,7 +64,7 @@ app.get("/api/manager/stats", async (req, res) => {
     const { managerId } = req.query;
 
     const { rows } = await pool.query(`
-      SELECT u.username, COUNT(l.id) AS lead_count
+      SELECT u.username, COUNT(l.loan_id) AS lead_count
       FROM users u
       LEFT JOIN leads l ON l.created_by = u.id
       WHERE u.id IN (

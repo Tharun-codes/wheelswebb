@@ -152,8 +152,8 @@ function renderUsers(filter = "") {
 
 /* ---------------- VIEW EMPLOYEE/MANAGER LEADS ---------------- */
 function viewEmployeeLeads(userId, username, role) {
-  // Redirect to view-lead.html with query parameters
-  window.location.href = `/view-lead.html?userId=${userId}&username=${encodeURIComponent(username)}&role=${role}`;
+  // Redirect to view-cases.html with query parameters to filter by user
+  window.location.href = `/view-cases.html?userId=${userId}&username=${encodeURIComponent(username)}&role=${role}`;
 }
 
 /* ---------------- LOAD USERS ---------------- */

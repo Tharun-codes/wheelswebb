@@ -1259,16 +1259,50 @@ function disableFormForView() {
   });
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =========================
+// VIEW / EDIT MODE DETECTION
+// =========================
+const params = new URLSearchParams(window.location.search);
+const loanId = params.get("loanId"); // ✅ STRING or null
+
+
+
 if (loanId) {
   fetch(`/api/leads/${loanId}`)
     .then(res => res.json())
     .then(lead => {
-      const data = lead.data;
+  if (!lead || !lead.data) {
+    console.error("Invalid lead response", lead);
+    return;
+  }
+  const data = lead.data;
+
       // ####
       // =========================
       // ✅ Restore UTR Payments (EDIT)
       // =========================
-      if (Array.isArray(data.payments)) {
+      if (data && Array.isArray(data.payments)) {
         data.payments.forEach((payment, index) => {
           const block = createPaymentBlock(index + 1);
           paymentContainer.appendChild(block);
@@ -1296,6 +1330,27 @@ if (loanId) {
         const el = document.getElementById(key);
         if (el) el.value = data[key];
       });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       // =========================
       // 2️⃣ Restore CIBIL UI

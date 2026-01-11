@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test User Management View</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+    .success { color: green; }
+    .error { color: red; }
+    button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    a { display: block; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Test User Management View Functionality</h1>
+  
+  <div class="test-section">
+    <h2>Test 1: Admin Users Page</h2>
+    <a href="/admin-users.html" target="_blank">Open Admin Users Page</a>
+    <p>Click "View" button on any employee/manager to test the fix.</p>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 2: Direct URL Test</h2>
+    <p>Test the corrected URL parameters:</p>
+    <a href="/view-cases.html?userId=1&username=testuser&role=employee" target="_blank">View Employee Leads</a>
+    <a href="/view-cases.html?userId=2&username=testmanager&role=manager" target="_blank">View Manager Leads</a>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 3: Compare UI/UX</h2>
+    <p>Compare the UI/UX consistency:</p>
+    <a href="/view-cases.html" target="_blank">View All Cases (Normal)</a>
+    <a href="/view-cases.html?userId=1&username=testuser&role=employee" target="_blank">View Employee Cases (Filtered)</a>
+    <p>Both should have the same UI/UX layout and styling.</p>
+  </div>
+
+  <script>
+    console.log('User Management Test Page Loaded');
+    console.log('Expected behavior: View buttons should redirect to view-cases.html with user filtering');
+    console.log('UI/UX should be identical between normal view and filtered view');
+  </script>
+</body>
+</html>

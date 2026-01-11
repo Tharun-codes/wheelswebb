@@ -161,7 +161,7 @@ function renderTable() {
       <td>${loanStage}</td>
       <td>${formatDate(lead.updatedAt || lead.createdAt)}</td>
       <td class="actions">
-        <a href="/used-car-loan.html?loanId=${lead.loan_id}&mode=view" class="viewBtn">View</a>
+        <a href="/view-lead.html?loanId=${lead.loan_id}" class="viewBtn">View</a>
         <a href="/used-car-loan.html?loanId=${lead.loan_id}">Edit</a>
         <button data-id="${lead.loan_id}" class="deleteBtn">Delete</button>
       </td>

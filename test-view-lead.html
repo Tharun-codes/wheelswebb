@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test View Lead</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+    .success { color: green; }
+    .error { color: red; }
+    button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Test View Lead Functionality</h1>
+  
+  <div class="test-section">
+    <h2>Test 1: API Endpoint Test</h2>
+    <button onclick="testAPI()">Test API /api/leads/1767893637563</button>
+    <div id="apiResult"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 2: Frontend URL Test</h2>
+    <p>Click below to test the actual view-lead.html page:</p>
+    <a href="/view-lead.html?loanId=1767893637563" target="_blank">Open View Lead Page</a>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 3: View Cases Integration</h2>
+    <a href="/view-cases.html" target="_blank">Open View Cases Page</a>
+    <p>Then click "View" button on any lead to test the complete flow.</p>
+  </div>
+
+  <script>
+    async function testAPI() {
+      const resultDiv = document.getElementById('apiResult');
+      resultDiv.innerHTML = 'Testing...';
+      
+      try {
+        const response = await fetch('/api/leads/1767893637563');
+        const data = await response.json();
+        
+        if (response.ok && data.loan_id) {
+          resultDiv.innerHTML = `<div class="success">✅ API Test Passed!</div>
+            <pre>${JSON.stringify(data, null, 2)}</pre>`;
+        } else {
+          resultDiv.innerHTML = `<div class="error">❌ API Test Failed: ${JSON.stringify(data)}</div>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<div class="error">❌ API Test Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Auto-run API test on page load
+    window.onload = function() {
+      testAPI();
+    };
+  </script>
+</body>
+</html>

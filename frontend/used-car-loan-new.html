@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>View Lead | WheelsWeb</title>
+  <title>Used Car Loan | WheelsWeb</title>
   <link rel="stylesheet" href="/css/dashboard.css" />
   <style>
     .section { margin: 30px 0; }
@@ -64,30 +64,6 @@
       font-weight: 600;
       margin-bottom: 6px;
     }
-    /* View mode specific styles */
-    .view-mode input,
-    .view-mode select,
-    .view-mode textarea {
-      background-color: #f8fafc;
-      border-color: #e2e8f0;
-      cursor: not-allowed;
-      color: #374151;
-    }
-    .view-mode input:focus,
-    .view-mode select:focus,
-    .view-mode textarea:focus {
-      outline: none;
-      box-shadow: none;
-    }
-    .view-mode button,
-    .view-mode .icon-btn {
-      pointer-events: none;
-      opacity: 0.6;
-    }
-    .view-mode .icon-btn.plus-state,
-    .view-mode .icon-btn.minus-state {
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -95,19 +71,25 @@
     <div class="logo">WheelsWeb</div>
     <nav class="sidebar-nav">
       <a href="/dashboard.html" class="nav-item">Overview</a>
-      <a href="/new-lead.html" class="nav-item">Start New Application</a>
+      <a href="/new-lead.html" class="nav-item active">Start New Application</a>
       <a href="/view-cases.html" class="nav-item">View All Cases</a>
-      <a href="/view-lead.html" class="nav-item active">View Lead</a>
     </nav>
   </aside>
 
   <main class="main">
-    <h2 id="pageHeading">View Lead Details</h2>
+    <h2>Used Car Loan Application</h2>
     
-    <!-- Load shared form structure -->
-    <div id="leadFormContainer"></div>
+    <form id="leadForm">
+      <!-- Load shared form structure -->
+      <div id="leadFormContainer"></div>
+      
+      <!-- Submit Button -->
+      <div class="section">
+        <button type="submit" style="background: #3b82f6; color: white; padding: 12px 30px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Submit Application</button>
+      </div>
+    </form>
   </main>
 
-  <script src="/js/view-lead.js"></script>
+  <script src="/js/submit-lead-new.js"></script>
 </body>
 </html>

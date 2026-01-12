@@ -7,6 +7,7 @@ if (!user || user.role !== "admin") {
 }
 
 let allUsers = [];
+let editingUserId = null; // Track if we're editing a user
 
 /* ---------------- TOAST ---------------- */
 function showToast(msg, timeout = 3000) {
@@ -168,6 +169,7 @@ function closeModal() {
   document.getElementById("modalUsername").value = "";
   document.getElementById("modalPassword").value = "";
   document.getElementById("modalRole").value = "employee";
+  editingUserId = null; // Reset editing state
 }
 
 function openCreate() {
@@ -178,13 +180,14 @@ function openEdit(id) {
   const u = allUsers.find(x => x.id === id);
   if (!u) return showToast("User not found");
 
+  editingUserId = id; // Set editing state
   document.getElementById("modalUsername").value = u.username;
-  document.getElementById("modalPassword").value = "";
+  document.getElementById("modalPassword").value = ""; // Clear password for security
   document.getElementById("modalRole").value = u.role || "employee";
   openModal("Edit User");
 }
 
-/* ---------------- CREATE USER ---------------- */
+/* ---------------- CREATE / EDIT USER ---------------- */
 async function submitModal() {
   const username = document.getElementById("modalUsername").value.trim();
   const password = document.getElementById("modalPassword").value;
@@ -194,20 +197,52 @@ async function submitModal() {
   if (role === "admin") return showToast("Cannot create admin users");
 
   try {
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password, role })
-    });
+    let res, data;
+    
+    if (editingUserId) {
+      // EDIT existing user
+      console.log("EDITING USER:", { id: editingUserId, username, password, role });
+      
+      res = await fetch(`/api/admin/users/${editingUserId}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-id": user.id 
+        },
+        body: JSON.stringify({ username, password })
+      });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
+      data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      showToast("User updated successfully");
+    } else {
+      // CREATE new user
+      if (!password) return showToast("Password required for new users");
+      
+      console.log("CREATING USER:", { username, password, role });
+      
+      res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-id": user.id 
+        },
+        body: JSON.stringify({ username, password, role })
+      });
+
+      data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      showToast("User created successfully");
+    }
 
     closeModal();
-    loadUsers();
-    showToast("User created");
+    loadUsers(); // Refresh the user list
+
   } catch (err) {
-    showToast(err.message || "Error creating user");
+    console.error(err);
+    showToast(err.message || "Failed to save user");
   }
 }
 

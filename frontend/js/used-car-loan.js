@@ -1,3 +1,8 @@
+
+const urlParams = new URLSearchParams(window.location.search);
+const loanId = urlParams.get("loanId");
+const isEditMode = !!loanId;
+
 // let user = null;
 
 // try {
@@ -100,9 +105,10 @@ function incrementLoanCounter(storageKey, currentCounter) {
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize loan ID
   const loanIdField = document.getElementById('loanId');
-  if (loanIdField) {
-    const { loanId } = generateLoanId();
-    loanIdField.value = loanId;
+    if (loanIdField && !loanId) {   // 👈 do NOT generate when editing
+      const { loanId } = generateLoanId();
+      loanIdField.value = loanId;
+
     loanIdField.readOnly = true;
     
     // Add visual indicator that it's auto-generated
@@ -1109,7 +1115,6 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
     toggleDisbursedFields();
   }
 
-  // ✅ Get logged-in user
   const user = JSON.parse(localStorage.getItem("user"));
   if (!user) {
     alert("Session expired");
@@ -1118,34 +1123,44 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
   }
 
   const leadData = {};
-  
-  // ✅ Attach creator info
   leadData.userId = user.id;
   leadData.role = user.role;
 
-  // ✅ Collect form inputs
+  // Collect all fields
   document.querySelectorAll("input, select, textarea").forEach(el => {
-    if (el.id) {
-      leadData[el.id] = el.value;
-    }
+    if (el.id) leadData[el.id] = el.value;
   });
 
-  console.log("Submitting used car loan with user:", { userId: user.id, role: user.role });
+  // 🚨 decide create or update
+  const url = loanId
+    ? `/api/leads/${loanId}`    // EDIT
+    : `/api/leads`;            // CREATE
 
-  // ✅ Submit
-  const res = await fetch("/api/leads", {
-    method: "POST",
+  const method = loanId ? "PUT" : "POST";
+
+  console.log("Saving lead", { mode: method, loanId });
+
+  const res = await fetch(url, {
+    method,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(leadData)
   });
 
-  if (res.ok) {
-    window.location.href = "/view-cases.html";
+  const result = await res.json();
+
+  if (!res.ok) {
+    alert(`Failed to save: ${result.error || "Unknown error"}`);
+    return;
+  }
+
+  // if new lead, redirect into edit mode
+  if (!loanId) {
+    window.location.href = `/used-car-loan.html?loanId=${result.loan_id}`;
   } else {
-    const errorData = await res.json();
-    alert(`Failed to save lead: ${errorData.error || 'Unknown error'}`);
+  window.location.href = "/view-cases.html";
   }
 });
+
 
 // --- RTO Documents Multi-Select Logic ---
 const rtoOptions = [
@@ -1283,11 +1298,6 @@ if (rtoDisplay && rtoDropdown) {
 // =========================
 // VIEW / EDIT MODE DETECTION
 // =========================
-const params = new URLSearchParams(window.location.search);
-const loanId = params.get("loanId"); // ✅ STRING or null
-const isView = params.get("view") === "1";
-
-
 
 if (loanId) {
   fetch(`/api/leads/${loanId}`)

@@ -103,6 +103,9 @@ function incrementLoanCounter(storageKey, currentCounter) {
 
 // Set loan ID and initialize form when page loads
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize progress tracking
+  updateProgress();
+  
   // Initialize loan ID
   const loanIdField = document.getElementById('loanId');
     if (loanIdField && !loanId) {   // 👈 do NOT generate when editing
@@ -121,6 +124,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const dateTimeField = document.getElementById("dateTime");
   if (dateTimeField) {
     dateTimeField.value = new Date().toLocaleString();
+  }
+
+  // Add input event listeners for progress tracking
+  const allInputs = document.querySelectorAll('input, select, textarea');
+  allInputs.forEach(input => {
+    input.addEventListener('input', updateProgress);
+    input.addEventListener('change', updateProgress);
+  });
+
+  // Add form validation
+  const form = document.getElementById('leadForm');
+  if (form) {
+    form.addEventListener('submit', handleFormSubmit);
   }
 
   // Initialize MFG dropdowns
@@ -184,6 +200,203 @@ document.addEventListener('DOMContentLoaded', function() {
   enforceAlphabetsOnly();
   enforceNumbersOnly();
 });
+
+// Progress tracking function
+function updateProgress() {
+  const requiredFields = document.querySelectorAll('[required]');
+  const filledRequiredFields = Array.from(requiredFields).filter(field => {
+    if (field.type === 'checkbox') return field.checked;
+    return field.value.trim() !== '';
+  });
+  
+  const progress = Math.round((filledRequiredFields.length / requiredFields.length) * 100);
+  const progressBar = document.getElementById('progressBar');
+  if (progressBar) {
+    progressBar.style.width = progress + '%';
+  }
+  
+  return progress;
+}
+
+// Form validation and submission
+function handleFormSubmit(e) {
+  e.preventDefault();
+  
+  const form = e.target;
+  const requiredFields = form.querySelectorAll('[required]');
+  let isValid = true;
+  let firstInvalidField = null;
+  
+  // Clear previous validation states
+  requiredFields.forEach(field => {
+    field.style.borderColor = '';
+  });
+  
+  // Validate required fields
+  requiredFields.forEach(field => {
+    if (!field.value.trim()) {
+      isValid = false;
+      field.style.borderColor = 'var(--error-color)';
+      if (!firstInvalidField) firstInvalidField = field;
+    }
+  });
+  
+  if (!isValid) {
+    // Show error message
+    showError('Please fill in all required fields');
+    // Scroll to first invalid field
+    if (firstInvalidField) {
+      firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstInvalidField.focus();
+    }
+    return;
+  }
+  
+  // Show loading state
+  showLoading();
+  
+  // Simulate form submission (replace with actual submission logic)
+  setTimeout(() => {
+    hideLoading();
+    showSuccess('Application submitted successfully!');
+    // Reset form or redirect as needed
+    setTimeout(() => {
+      if (confirm('Would you like to submit another application?')) {
+        form.reset();
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 2000);
+  }, 2000);
+}
+
+// UI Helper functions
+function showError(message) {
+  showNotification(message, 'error');
+}
+
+function showSuccess(message) {
+  showNotification(message, 'success');
+}
+
+function showNotification(message, type = 'info') {
+  // Remove existing notifications
+  const existing = document.querySelector('.notification');
+  if (existing) existing.remove();
+  
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  
+  // Style the notification
+  Object.assign(notification.style, {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    padding: '1rem 1.5rem',
+    borderRadius: 'var(--border-radius)',
+    color: 'white',
+    fontWeight: '600',
+    zIndex: '1000',
+    animation: 'slideIn 0.3s ease-out',
+    maxWidth: '400px'
+  });
+  
+  if (type === 'error') {
+    notification.style.background = 'var(--error-color)';
+  } else if (type === 'success') {
+    notification.style.background = 'var(--success-color)';
+  } else {
+    notification.style.background = 'var(--primary-color)';
+  }
+  
+  document.body.appendChild(notification);
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 5000);
+}
+
+function showLoading() {
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Submitting...';
+    submitBtn.classList.add('loading');
+  }
+  
+  // Add loading overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+  `;
+  overlay.innerHTML = '🚗 Processing your application...';
+  document.body.appendChild(overlay);
+}
+
+function hideLoading() {
+  const submitBtn = document.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = '🚀 Submit Application';
+    submitBtn.classList.remove('loading');
+  }
+  
+  // Remove loading overlay
+  const overlay = document.querySelector('.loading-overlay');
+  if (overlay) overlay.remove();
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+  
+  .notification {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+document.head.appendChild(style);
 
 // Loan tenure dropdown (01 to 96 months)
 const loanTenure = document.getElementById("loanTenure");

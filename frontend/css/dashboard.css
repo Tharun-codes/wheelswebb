@@ -49,6 +49,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 32px;
+  max-width: none;
+  width: 100%;
 }
 
 /* Header */
@@ -249,7 +251,8 @@ form {
   background: white;
   padding: 20px;
   border-radius: 10px;
-  max-width: 700px;
+  max-width: none;
+  width: 100%;
 }
 
 h3 {

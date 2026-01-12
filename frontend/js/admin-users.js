@@ -223,24 +223,35 @@ async function submitModal() {
 
   if (role === "manager") {
     profile = {
-      firstName: document.getElementById("mgrFirstName").value.trim(),
-      dob: document.getElementById("mgrDob").value,
-      pan: document.getElementById("mgrPan").value.trim(),
-      aadhar: document.getElementById("mgrAadhar").value.trim(),
-      mobile: document.getElementById("mgrMobile").value.trim(),
-      email: document.getElementById("mgrEmail").value.trim(),
-      location: document.getElementById("mgrLocation").value.trim(),
-      bank: {
-        accountNo: document.getElementById("mgrAccountNo").value.trim(),
-        ifsc: document.getElementById("mgrIfsc").value.trim(),
-        bankName: document.getElementById("mgrBank").value.trim()
-      }
-    };
+  firstName: document.getElementById("mgrFirstName").value.trim(),
+  dob: document.getElementById("mgrDob").value,
+  joiningDate: document.getElementById("mgrJoiningDate").value,  // 👈 THIS LINE
+  pan: document.getElementById("mgrPan").value.trim(),
+  aadhar: document.getElementById("mgrAadhar").value.trim(),
+  mobile: document.getElementById("mgrMobile").value.trim(),
+  email: document.getElementById("mgrEmail").value.trim(),
+  location: document.getElementById("mgrLocation").value.trim(),
+  bank: {
+    accountNo: document.getElementById("mgrAccountNo").value.trim(),
+    ifsc: document.getElementById("mgrIfsc").value.trim(),
+    bankName: document.getElementById("mgrBank").value.trim()
+  }
+};
+
+
 
     // basic validation
-    if (!profile.firstName || !profile.mobile || !profile.email) {
-      return showToast("Manager personal details are required");
+    if (
+      !profile.firstName ||
+      !profile.mobile ||
+      !profile.email ||
+      !profile.bank.accountNo ||
+      !profile.bank.ifsc ||
+      !profile.bank.bankName
+    ) {
+      return showToast("All manager & bank details are required");
     }
+
   }
 
   try {
@@ -267,16 +278,22 @@ async function submitModal() {
       // CREATE new user
       if (!password) return showToast("Password required for new users");
       
-      console.log("CREATING USER:", { username, password, role });
-      
-      res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-admin-id": user.id 
-        },
-        body: JSON.stringify({ username, password, role })
-      });
+      console.log("CREATING USER:", { username, password, role, profile });
+
+        const res = await fetch("/api/admin/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-id": user.id
+          },
+          body: JSON.stringify({
+            username,
+            password,
+            role,
+            profile   // 👈 THIS was missing
+          })
+        });
+
 
       data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -383,40 +400,53 @@ function openManagerInfo(userId) {
   if (!u) return;
 
   document.getElementById("managerInfoBody").innerHTML = `
-    <div class="mgr-info">
-      <strong>${u.first_name || "-"}</strong><br>
-      📞 ${u.mobile || "-"}<br>
-      ✉️ ${u.email || "-"}<br>
-      📍 ${u.location || "-"}<br>
-      🏦 ${u.bank_name || "-"}
+    <div style="line-height:1.8">
+      <b>${u.first_name || "-"}</b><br>
+
+      📅 <b>DOB:</b> ${u.dob ? new Date(u.dob).toLocaleDateString() : "-"}<br>
+      🗓 <b>Joining:</b> ${u.joining_date ? new Date(u.joining_date).toLocaleDateString() : "-"}<br>
+
+      🪪 <b>PAN:</b> ${u.pan || "-"}<br>
+      🧾 <b>Aadhar:</b> ${u.aadhar || "-"}<br>
+
+      📞 <b>Mobile:</b> ${u.mobile || "-"}<br>
+      ✉️ <b>Email:</b> ${u.email || "-"}<br>
+      📍 <b>Location:</b> ${u.location || "-"}<br>
+
+      <hr>
+
+      🏦 <b>Bank:</b> ${u.bank_name || "-"}<br>
+      💳 <b>Account:</b> ${u.account_no || "-"}<br>
+      🏷 <b>IFSC:</b> ${u.ifsc || "-"}
     </div>
   `;
 
   document.getElementById("infoBackdrop").classList.add("show");
 }
 
+
 function closeManagerInfo() {
   document.getElementById("infoBackdrop").classList.remove("show");
 }
 
-window.openManagerInfo = function (userId) {
-  const u = allUsers.find(x => x.id === userId);
-  if (!u) {
-    console.error("Manager not found", userId);
-    return;
-  }
+// window.openManagerInfo = function (userId) {
+//   const u = allUsers.find(x => x.id === userId);
+//   if (!u) {
+//     console.error("Manager not found", userId);
+//     return;
+//   }
 
-  document.getElementById("managerInfoBody").innerHTML = `
-    <strong>${u.first_name || "-"}</strong><br>
-    📞 ${u.mobile || "-"}<br>
-    ✉️ ${u.email || "-"}<br>
-    📍 ${u.location || "-"}<br>
-    🏦 ${u.bank_name || "-"}
-  `;
+//   document.getElementById("managerInfoBody").innerHTML = `
+//     <strong>${u.first_name || "-"}</strong><br>
+//     📞 ${u.mobile || "-"}<br>
+//     ✉️ ${u.email || "-"}<br>
+//     📍 ${u.location || "-"}<br>
+//     🏦 ${u.bank_name || "-"}
+//   `;
 
-  document.getElementById("infoBackdrop").classList.add("show");
-};
+//   document.getElementById("infoBackdrop").classList.add("show");
+// };
 
-window.closeManagerInfo = function () {
-  document.getElementById("infoBackdrop").classList.remove("show");
-};
+// window.closeManagerInfo = function () {
+//   document.getElementById("infoBackdrop").classList.remove("show");
+// };

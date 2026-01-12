@@ -380,31 +380,44 @@ app.get("/api/admin/users", async (req, res) => {
     }
 
     const { rows } = await pool.query(`
-      SELECT 
-        u.id,
-        u.username,
-        u.password,
-        u.role,
-        u.status,
-        u.last_login,
+            SELECT
+              u.id,
+              u.username,
+              u.password,
+              u.role,
+              u.status,
+              u.last_login,
 
-        mp.first_name,
-        mp.mobile,
-        mp.email,
-        mp.bank_name
+              mp.first_name,
+              mp.dob,
+              mp.joining_date,
+              mp.pan,
+              mp.aadhar,
+              mp.mobile,
+              mp.email,
+              mp.location,
+              mp.account_no,
+              mp.ifsc,
+              mp.bank_name
 
-      FROM users u
-      LEFT JOIN manager_profiles mp ON mp.user_id = u.id
-      WHERE u.deleted_at IS NULL
-      ORDER BY u.id
+            FROM users u
+            LEFT JOIN manager_profiles mp ON mp.user_id = u.id
+
+
     `);
 
     res.json(rows);
 
-  } catch (err) {
-    console.error("FETCH USERS ERROR:", err);
-    res.status(500).json({ error: "Failed to fetch users" });
+} catch (err) {
+  console.error("CREATE USER ERROR:", err);
+
+  if (err.code === "23505") {
+    return res.status(400).json({ error: "Username already exists" });
   }
+
+  res.status(500).json({ error: "Failed to create user" });
+}
+
 });
 
 
@@ -435,6 +448,20 @@ app.post("/api/admin/users", async (req, res) => {
         return res.status(400).json({ error: "Incomplete manager profile" });
       }
     }
+if (roleNormalized === "manager") {
+  if (
+    !profile ||
+    !profile.firstName ||
+    !profile.mobile ||
+    !profile.email ||
+    !profile.bank ||
+    !profile.bank.accountNo ||
+    !profile.bank.ifsc ||
+    !profile.bank.bankName
+  ) {
+    return res.status(400).json({ error: "Incomplete manager profile" });
+  }
+}
 
     // Insert user
     const userRes = await pool.query(
@@ -450,12 +477,13 @@ app.post("/api/admin/users", async (req, res) => {
     if (roleNormalized === "manager") {
       await pool.query(
         `INSERT INTO manager_profiles
-        (user_id, first_name, dob, pan, aadhar, mobile, email, location, account_no, ifsc, bank_name)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        (user_id, first_name, dob, joining_date, pan, aadhar, mobile, email, location, account_no, ifsc, bank_name)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
         [
           userId,
           profile.firstName,
           profile.dob,
+          profile.joiningDate,
           profile.pan,
           profile.aadhar,
           profile.mobile,
@@ -466,14 +494,21 @@ app.post("/api/admin/users", async (req, res) => {
           profile.bank.bankName
         ]
       );
+
     }
 
     res.json({ success: true });
+    
+} catch (err) {
+  console.error("CREATE USER ERROR:", err);
 
-  } catch (err) {
-    console.error("CREATE USER ERROR:", err);
-    res.status(500).json({ error: "Failed to create user" });
+  if (err.code === "23505") {
+    return res.status(400).json({ error: "Username already exists" });
   }
+
+  res.status(500).json({ error: "Failed to create user" });
+}
+
 });
 
 app.patch("/api/admin/users/:id", async (req, res) => {

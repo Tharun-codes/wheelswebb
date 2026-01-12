@@ -476,9 +476,71 @@ app.post("/api/admin/users", async (req, res) => {
   }
 });
 
+app.patch("/api/admin/users/:id", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    const { username, password } = req.body;
 
+    if (!adminId) return res.status(403).json({ error: 'Unauthorized' });
+    if (!username) return res.status(400).json({ error: 'Username required' });
 
+    const adminRes = await pool.query("SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL", [adminId]);
+    if (!adminRes.rows.length || adminRes.rows[0].role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins may edit users' });
+    }
 
+    const userRes = await pool.query("SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL", [userId]);
+    if (!userRes.rows.length) return res.status(404).json({ error: 'User not found' });
+    
+    // Prevent editing admin users
+    if (userRes.rows[0].role === 'admin') {
+      return res.status(403).json({ error: 'Admin users cannot be edited' });
+    }
+
+    // Check if username already exists for another user
+    if (username) {
+      const existingUser = await pool.query(
+        "SELECT id FROM users WHERE username = $1 AND id != $2 AND deleted_at IS NULL",
+        [username, userId]
+      );
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+    }
+
+    // Build update query dynamically
+    let updateFields = [];
+    let updateValues = [];
+    let paramIndex = 1;
+
+    if (username) {
+      updateFields.push(`username = $${paramIndex++}`);
+      updateValues.push(username);
+    }
+
+    if (password) {
+      updateFields.push(`password = $${paramIndex++}`);
+      updateValues.push(password);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    updateValues.push(userId); // Add userId for WHERE clause
+
+    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`;
+    
+    await pool.query(updateQuery, updateValues);
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error('Edit user error:', err);
+    res.status(500).json({ error: 'Failed to edit user' });
+  }
+});
 
 
 

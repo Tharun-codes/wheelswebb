@@ -1274,6 +1274,44 @@ if (loanStage) {
   toggleDisbursedFields(); // Run on load
 }
 
+// Motor Insurance Validity Calculation
+function calculateInsuranceValidity() {
+  const expiryDateInput = document.getElementById("motorInsuranceExpiry");
+  const validityDaysInput = document.getElementById("motorInsuranceValidity");
+  
+  if (!expiryDateInput || !validityDaysInput) return;
+  
+  const expiryDate = new Date(expiryDateInput.value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of day for accurate calculation
+  expiryDate.setHours(0, 0, 0, 0); // Set to start of day for accurate calculation
+  
+  if (expiryDate && !isNaN(expiryDate.getTime())) {
+    const timeDiff = expiryDate.getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff >= 0) {
+      validityDaysInput.value = `${daysDiff} days remaining`;
+      validityDaysInput.style.color = '#10b981'; // Green
+    } else {
+      validityDaysInput.value = `${Math.abs(daysDiff)} days expired`;
+      validityDaysInput.style.color = '#ef4444'; // Red
+    }
+  } else {
+    validityDaysInput.value = '';
+    validityDaysInput.style.color = '#6b7280'; // Gray
+  }
+}
+
+// Add event listener for insurance expiry date
+document.addEventListener('DOMContentLoaded', function() {
+  const motorInsuranceExpiryInput = document.getElementById("motorInsuranceExpiry");
+  if (motorInsuranceExpiryInput) {
+    motorInsuranceExpiryInput.addEventListener('change', calculateInsuranceValidity);
+    motorInsuranceExpiryInput.addEventListener('input', calculateInsuranceValidity);
+  }
+});
+
 // Auto Calculations
 const calcFields = {
   sanction: document.getElementById("disbursedSanctionLoanAmount"),

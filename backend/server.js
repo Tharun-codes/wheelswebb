@@ -643,8 +643,11 @@ app.post("/api/admin/assign-employee", async (req, res) => {
 
     await pool.query(
       `INSERT INTO manager_employees (manager_id, employee_id)
-       VALUES ($1, $2)
-       ON CONFLICT DO NOTHING`,
+        VALUES ($1, $2)
+        ON CONFLICT (employee_id) DO UPDATE
+        SET manager_id = EXCLUDED.manager_id;
+
+`,
       [finalManagerId, finalEmployeeId]
     );
 
@@ -658,18 +661,64 @@ app.post("/api/admin/assign-employee", async (req, res) => {
 app.get("/api/admin/manager-employees/:managerId", async (req, res) => {
   try {
     const { managerId } = req.params;
-    const { rows } = await pool.query(`
-      SELECT me.employee_id 
-      FROM manager_employees me
-      JOIN users u ON u.id = me.employee_id
-      WHERE me.manager_id = $1 AND u.deleted_at IS NULL AND u.status = 'active'
-    `, [managerId]);
+
+    const { rows } = await pool.query(
+      "SELECT employee_id FROM manager_employees WHERE manager_id = $1",
+      [managerId]
+    );
+
     res.json(rows.map(r => r.employee_id));
   } catch (err) {
     console.error(err);
     res.status(500).json([]);
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.get("/api/admin/employee-dealers/:employeeId", async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    const { rows } = await pool.query(`
+      SELECT dealer_id
+      FROM employee_dealers
+      WHERE employee_id = $1
+    `, [employeeId]);
+
+    res.json(rows.map(r => r.dealer_id));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json([]);
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

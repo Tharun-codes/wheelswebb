@@ -27,6 +27,7 @@ async function loadUsers() {
     if (!res.ok) throw new Error("Failed to fetch users");
 
     const users = await res.json();
+    allUsers = users.map(u => ({ ...u, id: Number(u.id) }));
     console.log('All users:', users);
     
     managers = users
@@ -385,9 +386,8 @@ async function loadAllAssignments() {
             console.log(`Manager ${manager.username} - Normalized employee IDs:`, normalizedEmployeeIds);
             
             // Find matching employees and dealers
-            const assignedEmployees = [...employees, ...dealers].filter(u => {
-              const userId = Number(u.id);
-              const isMatch = normalizedEmployeeIds.includes(userId);
+              const assignedEmployees = allUsers.filter(u => {
+                return u.role === "employee" && normalizedEmployeeIds.includes(Number(u.id));
               if (isMatch) {
                 console.log(`  ✓ Matched employee/dealer: ${u.username} (ID: ${userId})`);
               }
@@ -399,9 +399,10 @@ async function loadAllAssignments() {
             // Always add manager if they have any assignments (even if some IDs don't match)
             if (assignedEmployees.length > 0) {
               assignments.push({
-                manager: manager,
+                manager,
                 employees: assignedEmployees
               });
+
               console.log(`✓ Added manager ${manager.username} to assignments`);
             } else {
               console.warn(`⚠ Manager ${manager.username} has ${normalizedIds.length} assignments but none match current employees/dealers`);
@@ -561,7 +562,7 @@ async function loadEmployeeAssignments() {
     
     for (const employee of employees) {
       try {
-        const res = await fetch(`/api/admin/manager-employees/${employee.id}`);
+        const res = await fetch(`/api/admin/employee-dealers/${employee.id}`);
         console.log(`API response for employee ${employee.username}:`, res.status, res.ok);
         
         if (res.ok) {

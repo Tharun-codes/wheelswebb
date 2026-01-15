@@ -140,7 +140,7 @@ if (selectedBoss.role === "employee") {
     renderEmployees();
   } catch (err) {
     console.error(err);
-    showToast("fuck tarun");
+    showToast("Failed to load current assignments");
   }
 }
 

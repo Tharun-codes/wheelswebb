@@ -931,53 +931,7 @@
 </div>
 
 
-    <!-- CIBIL SNAPSHOT -->
-    <div class="section cibil-section">
-      <div class="section-header">
-        <h3>CIBIL DETAILS</h3>
-        <button
-          type="button"
-          id="cibilToggleBtn"
-          class="icon-btn plus-state compact"
-          aria-expanded="false"
-          aria-controls="cibilDetails"
-        >
-          +
-        </button>
-      </div>
 
-      <div id="cibilDetails" class="grid hidden">
-
-        <div class="form-field">
-          <label>CIBIL SCORE</label>
-          <div id="cibilDisplay" class="cibil-display">Not Entered</div>
-          <input type="hidden" id="cibilScore" />
-        </div>
-
-        <div class="form-field">
-          <label>UPDATE SCORE</label>
-          <button
-            type="button"
-            id="cibilPromptBtn"
-            class="ghost-btn"
-            style="width: 100%;"
-          >
-            Click Here
-          </button>
-        </div>
-
-        <div class="form-field">
-          <label>INDICATOR</label>
-          <div class="cibil-color-options">
-            <button type="button" class="cibil-color-btn" data-color="red" aria-label="Mark CIBIL Red"></button>
-            <button type="button" class="cibil-color-btn" data-color="yellow" aria-label="Mark CIBIL Yellow"></button>
-            <button type="button" class="cibil-color-btn" data-color="green" aria-label="Mark CIBIL Green"></button>
-          </div>
-          <input type="hidden" id="cibilIndicator" />
-        </div>
-
-      </div>
-    </div>
 
 
 <!-- CURRENT ADDRESS -->
@@ -1189,30 +1143,8 @@
 
   </div>
 </div>
-<!-- ADDITIONAL APPLICANTS -->
-<div class="section" id="additionalApplicantsSection">
-  <div class="section-header">
-    <h3>Additional Applicants</h3>
-    <button
-      type="button"
-      id="addAdditionalApplicantBtn"
-      class="icon-btn plus-state compact"
-    >
-      + Add Applicant
-    </button>
-  </div>
 
-  <p class="helper-text">
-    Use this to capture Co-Applicant / Guarantor information.
-    Each additional applicant includes profile, address,
-    employment, and reference details.
-  </p>
 
-  <div
-    id="additionalApplicantsContainer"
-    class="additional-applicants"
-  ></div>
-</div>
 
 <!-- NOMINEE -->
 <div class="section">
@@ -1260,6 +1192,84 @@
 
   </div>
 </div>
+
+
+
+    <!-- CIBIL SNAPSHOT -->
+    <div class="section cibil-section">
+      <div class="section-header">
+        <h3>CIBIL DETAILS</h3>
+        <button
+          type="button"
+          id="cibilToggleBtn"
+          class="icon-btn plus-state compact"
+          aria-expanded="false"
+          aria-controls="cibilDetails"
+        >
+          +
+        </button>
+      </div>
+
+      <div id="cibilDetails" class="grid hidden">
+
+        <div class="form-field">
+          <label>CIBIL SCORE</label>
+          <div id="cibilDisplay" class="cibil-display">Not Entered</div>
+          <input type="hidden" id="cibilScore" />
+        </div>
+
+        <div class="form-field">
+          <label>UPDATE SCORE</label>
+          <button
+            type="button"
+            id="cibilPromptBtn"
+            class="ghost-btn"
+            style="width: 100%;"
+          >
+            Click Here
+          </button>
+        </div>
+
+        <div class="form-field">
+          <label>INDICATOR</label>
+          <div class="cibil-color-options">
+            <button type="button" class="cibil-color-btn" data-color="red" aria-label="Mark CIBIL Red"></button>
+            <button type="button" class="cibil-color-btn" data-color="yellow" aria-label="Mark CIBIL Yellow"></button>
+            <button type="button" class="cibil-color-btn" data-color="green" aria-label="Mark CIBIL Green"></button>
+          </div>
+          <input type="hidden" id="cibilIndicator" />
+        </div>
+
+      </div>
+    </div>
+
+
+
+<!-- ADDITIONAL APPLICANTS -->
+<div class="section" id="additionalApplicantsSection">
+  <div class="section-header">
+    <h3>Additional Applicants</h3>
+    <button
+      type="button"
+      id="addAdditionalApplicantBtn"
+      class="icon-btn plus-state compact"
+    >
+      + Add Applicant
+    </button>
+  </div>
+
+  <p class="helper-text">
+    Use this to capture Co-Applicant / Guarantor information.
+    Each additional applicant includes profile, address,
+    employment, and reference details.
+  </p>
+
+  <div
+    id="additionalApplicantsContainer"
+    class="additional-applicants"
+  ></div>
+</div>
+
 
 
     <!-- BANK / FINANCE -->

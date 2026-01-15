@@ -8,20 +8,33 @@ if (!user) {
 // Hide admin navigation options for non-admin users
 const adminMenu = document.getElementById("adminUsersMenu");
 const assignMenu = document.getElementById("assignEmployeesMenu");
+const dealerKhataMenu = document.getElementById("dealerKhataMenu");
+const myKhataMenu = document.getElementById("myKhataMenu");
 
 if (user.role === "admin") {
   if (adminMenu) adminMenu.style.display = "block";
   if (assignMenu) assignMenu.style.display = "block";
+  if (dealerKhataMenu) dealerKhataMenu.style.display = "block";
   
   // Show notification bell for admins
   const notificationBell = document.getElementById("notificationBell");
   if (notificationBell) {
     notificationBell.style.display = "block";
   }
-} else {
-  // Hide for employee and manager roles
+} else if (user.role === "dealer") {
+  // Show dealer menu for dealers
+  if (myKhataMenu) myKhataMenu.style.display = "block";
+  
+  // Hide admin menus
   if (adminMenu) adminMenu.style.display = "none";
   if (assignMenu) assignMenu.style.display = "none";
+  if (dealerKhataMenu) dealerKhataMenu.style.display = "none";
+} else {
+  // Hide for manager and employee roles
+  if (adminMenu) adminMenu.style.display = "none";
+  if (assignMenu) assignMenu.style.display = "none";
+  if (dealerKhataMenu) dealerKhataMenu.style.display = "none";
+  if (myKhataMenu) myKhataMenu.style.display = "none";
 }
 
 function logout() {

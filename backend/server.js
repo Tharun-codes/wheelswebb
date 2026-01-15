@@ -1002,6 +1002,268 @@ app.post("/api/admin/notifications/read", async (req, res) => {
     res.status(500).json({ error: "Failed to mark notifications as read" });
   }
 });
+
+// ----------------- KHATA SYSTEM -----------------
+
+// Helper function to validate user role from database
+async function validateUserRole(userId, requiredRole) {
+  const result = await pool.query(
+    "SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL",
+    [userId]
+  );
+  
+  if (!result.rows.length) return false;
+  
+  if (requiredRole === 'admin') return result.rows[0].role === 'admin';
+  if (requiredRole === 'dealer') return result.rows[0].role === 'dealer';
+  if (requiredRole === 'manager') return result.rows[0].role === 'manager';
+  
+  return false;
+}
+
+// POST /api/khata/credit - Admin gives points to dealer
+app.post("/api/khata/credit", async (req, res) => {
+  try {
+    const { dealerId, points, reason } = req.body;
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    
+    // Strict validation
+    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
+    if (!dealerId || !points || !reason) {
+      return res.status(400).json({ error: "dealerId, points, and reason required" });
+    }
+    if (points <= 0) return res.status(400).json({ error: "Points must be greater than 0" });
+    
+    // Verify admin role from database (never trust frontend)
+    const isAdmin = await validateUserRole(adminId, 'admin');
+    if (!isAdmin) return res.status(403).json({ error: "Only admins can credit points" });
+    
+    // Verify dealer exists and is dealer role
+    const dealerResult = await pool.query(
+      "SELECT id, username FROM users WHERE id = $1 AND role = 'dealer' AND deleted_at IS NULL",
+      [dealerId]
+    );
+    if (!dealerResult.rows.length) return res.status(404).json({ error: "Dealer not found" });
+    
+    // Insert credit transaction
+    const insertResult = await pool.query(
+      `INSERT INTO dealer_khata (dealer_id, points, type, reason, created_by)
+       VALUES ($1, $2, 'credit', $3, $4)
+       RETURNING id, created_at`,
+      [dealerId, points, reason, adminId]
+    );
+    
+    console.log(`✅ Admin ${adminId} credited ${points} points to dealer ${dealerId} (${dealerResult.rows[0].username})`);
+    
+    res.json({ 
+      success: true, 
+      transactionId: insertResult.rows[0].id,
+      message: `Credited ${points} points to ${dealerResult.rows[0].username}`
+    });
+    
+  } catch (err) {
+    console.error("KHATA CREDIT ERROR:", err);
+    res.status(500).json({ error: "Failed to credit points" });
+  }
+});
+
+// POST /api/khata/redeem - Dealer redeems their points
+app.post("/api/khata/redeem", async (req, res) => {
+  try {
+    const { points, reason } = req.body;
+    const dealerId = parseInt(req.headers["x-dealer-id"]);
+    
+    // Strict validation
+    if (!dealerId) return res.status(403).json({ error: "Dealer authentication required" });
+    if (!points || !reason) {
+      return res.status(400).json({ error: "points and reason required" });
+    }
+    if (points <= 0) return res.status(400).json({ error: "Points must be greater than 0" });
+    
+    // Verify dealer role from database (never trust frontend)
+    const isDealer = await validateUserRole(dealerId, 'dealer');
+    if (!isDealer) return res.status(403).json({ error: "Only dealers can redeem points" });
+    
+    // Check sufficient balance
+    const balanceResult = await pool.query(
+      `SELECT 
+        COALESCE(SUM(CASE WHEN type = 'credit' THEN points ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN type = 'debit' THEN points ELSE 0 END), 0) AS balance
+       FROM dealer_khata 
+       WHERE dealer_id = $1`,
+      [dealerId]
+    );
+    
+    const currentBalance = parseInt(balanceResult.rows[0].balance) || 0;
+    if (currentBalance < points) {
+      return res.status(400).json({ 
+        error: "Insufficient balance", 
+        currentBalance,
+        requestedPoints: points 
+      });
+    }
+    
+    // Insert debit transaction
+    const insertResult = await pool.query(
+      `INSERT INTO dealer_khata (dealer_id, points, type, reason, created_by)
+       VALUES ($1, $2, 'debit', $3, $4)
+       RETURNING id, created_at`,
+      [dealerId, points, reason, dealerId]
+    );
+    
+    console.log(`✅ Dealer ${dealerId} redeemed ${points} points`);
+    
+    res.json({ 
+      success: true, 
+      transactionId: insertResult.rows[0].id,
+      pointsRedeemed: points,
+      remainingBalance: currentBalance - points
+    });
+    
+  } catch (err) {
+    console.error("KHATA REDEEM ERROR:", err);
+    res.status(500).json({ error: "Failed to redeem points" });
+  }
+});
+
+// GET /api/khata - View khata records
+app.get("/api/khata", async (req, res) => {
+  try {
+    const userId = parseInt(req.headers["x-user-id"]);
+    const userRole = req.headers["x-user-role"];
+    
+    if (!userId || !userRole) {
+      return res.status(400).json({ error: "User authentication required" });
+    }
+    
+    // Verify role from database (never trust frontend)
+    const actualRoleResult = await pool.query(
+      "SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL",
+      [userId]
+    );
+    
+    if (!actualRoleResult.rows.length) return res.status(404).json({ error: "User not found" });
+    const actualRole = actualRoleResult.rows[0].role;
+    
+    // Managers and employees are forbidden from khata routes
+    if (actualRole === 'manager' || actualRole === 'employee') {
+      return res.status(403).json({ error: "Managers and employees cannot access khata system" });
+    }
+    
+    let query = "";
+    let params = [];
+    
+    if (actualRole === 'admin') {
+      // Admin sees all dealer khata records with dealer names
+      query = `
+        SELECT 
+          dk.id,
+          dk.dealer_id,
+          u.username as dealer_username,
+          dk.points,
+          dk.type,
+          dk.reason,
+          dk.created_by,
+          creator.username as created_by_name,
+          dk.created_at
+        FROM dealer_khata dk
+        JOIN users u ON u.id = dk.dealer_id
+        JOIN users creator ON creator.id = dk.created_by
+        ORDER BY dk.created_at DESC
+      `;
+    } else if (actualRole === 'dealer') {
+      // Dealer sees only their own records
+      query = `
+        SELECT 
+          dk.id,
+          dk.dealer_id,
+          dk.points,
+          dk.type,
+          dk.reason,
+          dk.created_by,
+          creator.username as created_by_name,
+          dk.created_at
+        FROM dealer_khata dk
+        JOIN users creator ON creator.id = dk.created_by
+        WHERE dk.dealer_id = $1
+        ORDER BY dk.created_at DESC
+      `;
+      params = [userId];
+    } else {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    
+    const { rows } = await pool.query(query, params);
+    res.json(rows);
+    
+  } catch (err) {
+    console.error("KHATA VIEW ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch khata records" });
+  }
+});
+
+// GET /api/khata/balance - Get dealer balance
+app.get("/api/khata/balance", async (req, res) => {
+  try {
+    const dealerId = parseInt(req.headers["x-dealer-id"]);
+    
+    if (!dealerId) return res.status(403).json({ error: "Dealer authentication required" });
+    
+    // Verify dealer role from database (never trust frontend)
+    const isDealer = await validateUserRole(dealerId, 'dealer');
+    if (!isDealer) return res.status(403).json({ error: "Only dealers can check balance" });
+    
+    // Calculate balance
+    const balanceResult = await pool.query(
+      `SELECT 
+        COALESCE(SUM(CASE WHEN type = 'credit' THEN points ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN type = 'debit' THEN points ELSE 0 END), 0) AS balance
+       FROM dealer_khata 
+       WHERE dealer_id = $1`,
+      [dealerId]
+    );
+    
+    const balance = parseInt(balanceResult.rows[0].balance) || 0;
+    
+    res.json({ balance });
+    
+  } catch (err) {
+    console.error("KHATA BALANCE ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch balance" });
+  }
+});
+
+// GET /api/khata/dealers - Get list of all dealers (for admin dropdown)
+app.get("/api/khata/dealers", async (req, res) => {
+  try {
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    
+    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
+    
+    // Verify admin role
+    const isAdmin = await validateUserRole(adminId, 'admin');
+    if (!isAdmin) return res.status(403).json({ error: "Admin access required" });
+    
+    // Get all active dealers with their proper names
+    const { rows } = await pool.query(
+      `SELECT 
+         u.id, 
+         u.username,
+         COALESCE(ep.first_name || ' ' || ep.last_name, u.username) as display_name
+       FROM users u
+       LEFT JOIN employee_profiles ep ON ep.user_id = u.id
+       WHERE u.role = 'dealer' AND u.deleted_at IS NULL 
+       ORDER BY COALESCE(ep.first_name || ' ' || ep.last_name, u.username)`
+    );
+    
+    res.json(rows);
+    
+  } catch (err) {
+    console.error("KHATA DEALERS ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch dealers" });
+  }
+});
+
 // Start server in non-production; also export app for tests
 const PORT = process.env.PORT || 3001;
 if (process.env.NODE_ENV !== "production") {

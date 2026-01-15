@@ -232,16 +232,20 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    const today = new Date();
-    const mfgDate = new Date(yearVal, monthVal - 1);
-    let age = today.getFullYear() - mfgDate.getFullYear();
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    let years = currentYear - yearVal;
+    let months = currentMonth - monthVal;
     
-    if (today.getMonth() < mfgDate.getMonth() || 
-        (today.getMonth() === mfgDate.getMonth() && today.getDate() < mfgDate.getDate())) {
-      age--;
+    if (months < 0) {
+      years--;
+      months += 12;
     }
     
-    vehicleAgeInput.value = age + " years";
+    const totalMonths = (years * 12) + months;
+    vehicleAgeInput.value = totalMonths + " months";
   }
 
   // Add event listeners for vehicle age calculation
@@ -710,7 +714,7 @@ if (dsaSelect) {
 }
 
 function toggleSpouseField() {
-  const needsSpouse = maritalStatus && maritalStatus.value === "Married";
+  const needsSpouse = maritalStatus && (maritalStatus.value === "Married" || maritalStatus.value === "Divorced");
   if (spouseNameField) {
     spouseNameField.classList.toggle("hidden", !needsSpouse);
   }
@@ -821,6 +825,11 @@ function createAdditionalApplicantBlock(index) {
           </select>
         </div>
 
+        <div class="form-field additional-applicant-spouse-field" id="additionalApplicant${index}SpouseField" style="display: none;">
+          <label for="additionalApplicant${index}SpouseName">SPOUSE NAME *</label>
+          <input id="additionalApplicant${index}SpouseName" data-uppercase data-alphabets />
+        </div>
+
         <div class="form-field">
           <label for="additionalApplicant${index}FatherName">FATHER NAME</label>
           <input id="additionalApplicant${index}FatherName" data-uppercase data-alphabets />
@@ -901,6 +910,13 @@ function createAdditionalApplicantBlock(index) {
 
 <div class="sub-section">
   <h5>Permanent Address</h5>
+
+  <div style="margin-bottom: 15px;">
+    <label style="display:flex;align-items:center;gap:8px;font-weight:500;">
+      <input type="checkbox" id="additionalApplicant${index}CopyPermanentFromCurrent" />
+      Same as Current Address
+    </label>
+  </div>
 
   <div class="grid">
 
@@ -1091,6 +1107,8 @@ function initializeAdditionalApplicants() {
     const block = createAdditionalApplicantBlock(visibleIndex);
     additionalApplicantsContainer.appendChild(block);
     initAdditionalApplicantPin(visibleIndex);
+    initAdditionalApplicantSpouseField(visibleIndex);
+    initAdditionalApplicantAddressCopy(visibleIndex);
 
     // Re-apply validation to dynamically created fields
     enforceUppercase();
@@ -1863,6 +1881,8 @@ if (loanId) {
           const block = createAdditionalApplicantBlock(visibleIndex);
           additionalApplicantsContainer.appendChild(block);
           initAdditionalApplicantPin(visibleIndex);
+          initAdditionalApplicantSpouseField(visibleIndex);
+          initAdditionalApplicantAddressCopy(visibleIndex);
 
 
 
@@ -2058,5 +2078,62 @@ function initAdditionalApplicantPin(index) {
     dropdownId: `additionalApplicant${index}PermanentPinDropdown`
   });
 }
-// initAdditionalApplicantPin(visibleIndex);
 
+function initAdditionalApplicantSpouseField(index) {
+  const maritalStatusSelect = document.getElementById(`additionalApplicant${index}MaritalStatus`);
+  const spouseField = document.getElementById(`additionalApplicant${index}SpouseField`);
+  const spouseInput = document.getElementById(`additionalApplicant${index}SpouseName`);
+  
+  if (!maritalStatusSelect || !spouseField || !spouseInput) return;
+  
+  function toggleSpouseField() {
+    const needsSpouse = maritalStatusSelect.value === "Married" || maritalStatusSelect.value === "Divorced";
+    spouseField.style.display = needsSpouse ? "block" : "none";
+    spouseInput.required = needsSpouse;
+    if (!needsSpouse) {
+      spouseInput.value = "";
+    }
+  }
+  
+  maritalStatusSelect.addEventListener("change", toggleSpouseField);
+  toggleSpouseField(); // Initialize on load
+}
+
+function initAdditionalApplicantAddressCopy(index) {
+  const copyCheckbox = document.getElementById(`additionalApplicant${index}CopyPermanentFromCurrent`);
+  if (!copyCheckbox) return;
+  
+  // Field mappings for copying
+  const fieldMappings = [
+    ['CurrentProof', 'PermanentProof'],
+    ['CurrentLandmark', 'PermanentLandmark'],
+    ['CurrentPincode', 'PermanentPincode'],
+    ['CurrentDistrict', 'PermanentDistrict'],
+    ['CurrentRelation', 'PermanentRelation']
+  ];
+  
+  function copyPermanentFromCurrent() {
+    const isChecked = copyCheckbox.checked;
+    
+    fieldMappings.forEach(([source, target]) => {
+      const sourceField = document.getElementById(`additionalApplicant${index}${source}`);
+      const targetField = document.getElementById(`additionalApplicant${index}${target}`);
+      
+      if (sourceField && targetField) {
+        if (isChecked) {
+          targetField.value = sourceField.value;
+          targetField.readOnly = true;
+          targetField.style.backgroundColor = '#f8fafc';
+          targetField.style.color = '#6b7280';
+        } else {
+          targetField.readOnly = false;
+          targetField.style.backgroundColor = '';
+          targetField.style.color = '';
+        }
+      }
+    });
+  }
+  
+  copyCheckbox.addEventListener('change', copyPermanentFromCurrent);
+  copyPermanentFromCurrent(); // Initialize on load
+}

@@ -380,28 +380,34 @@ app.get("/api/admin/users", async (req, res) => {
     }
 
     const { rows } = await pool.query(`
-      SELECT
-        u.id,
-        u.username,
-        u.password,
-        u.role,
-        u.status,
-        u.last_login,
-        mp.first_name,
-        mp.dob,
-        mp.joining_date,
-        mp.pan,
-        mp.aadhar,
-        mp.mobile,
-        mp.email,
-        mp.location,
-        mp.account_no,
-        mp.ifsc,
-        mp.bank_name
-      FROM users u
-      LEFT JOIN manager_profiles mp ON mp.user_id = u.id
-      WHERE u.deleted_at IS NULL
-      ORDER BY u.id
+SELECT
+  u.id,
+  u.username,
+  u.password,
+  u.role,
+  u.status,
+  u.last_login,
+
+  mp.first_name,
+  mp.last_name,
+  mp.mobile,
+  mp.father_mobile_no,
+  mp.mother_mobile_no,
+  mp.personal_email,
+  mp.office_email,
+  mp.location,
+
+  mp.bank_name,
+  mp.account_no,
+  mp.ifsc,
+  mp.bank_branch
+
+FROM users u
+LEFT JOIN manager_profiles mp ON mp.user_id = u.id
+LEFT JOIN employee_profiles ep ON ep.user_id = u.id
+WHERE u.deleted_at IS NULL
+ORDER BY u.id DESC;
+
     `);
 
     res.json(rows);
@@ -432,20 +438,20 @@ app.post("/api/admin/users", async (req, res) => {
       return res.status(400).json({ error: "Invalid role" });
     }
 
-    if (roleNormalized === "manager") {
-      if (!profile) {
-        return res.status(400).json({ error: "Manager profile required" });
-      }
-      if (!profile.firstName || !profile.mobile || !profile.email) {
-        return res.status(400).json({ error: "Incomplete manager profile" });
-      }
-    }
+    // if (roleNormalized === "manager") {
+    //   if (!profile) {
+    //     return res.status(400).json({ error: "Manager profile required" });
+    //   }
+    //   if (!profile.firstName || !profile.mobile || !profile.email) {
+    //     return res.status(400).json({ error: "Incomplete manager profile" });
+    //   }
+    // }
 if (roleNormalized === "manager") {
   if (
     !profile ||
     !profile.firstName ||
     !profile.mobile ||
-    !profile.email ||
+    (!profile.personalEmail && !profile.officeEmail) ||
     !profile.bank ||
     !profile.bank.accountNo ||
     !profile.bank.ifsc ||
@@ -454,6 +460,7 @@ if (roleNormalized === "manager") {
     return res.status(400).json({ error: "Incomplete manager profile" });
   }
 }
+
 
 if (roleNormalized === "employee") {
   if (
@@ -483,24 +490,47 @@ if (roleNormalized === "employee") {
     // Insert manager KYC if manager
     if (roleNormalized === "manager") {
       await pool.query(
-        `INSERT INTO manager_profiles
-        (user_id, first_name, dob, joining_date, pan, aadhar, mobile, email, location, account_no, ifsc, bank_name)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-        [
-          userId,
-          profile.firstName,
-          profile.dob,
-          profile.joiningDate,
-          profile.pan,
-          profile.aadhar,
-          profile.mobile,
-          profile.email,
-          profile.location,
-          profile.bank.accountNo,
-          profile.bank.ifsc,
-          profile.bank.bankName
-        ]
-      );
+  `INSERT INTO manager_profiles
+  (
+    user_id,
+    first_name,
+    last_name,
+    dob,
+    joining_date,
+    pan,
+    aadhar,
+    mobile,
+    father_mobile_no,
+    mother_mobile_no,
+    personal_email,
+    office_email,
+    location,
+    account_no,
+    ifsc,
+    bank_name,
+    bank_branch
+  )
+  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+  [
+    userId,
+    profile.firstName,
+    profile.lastName,
+    profile.dob || null,
+    profile.joiningDate || null,
+    profile.pan,
+    profile.aadhar,
+    profile.mobile,
+    profile.fatherMobile,
+    profile.motherMobile,
+    profile.personalEmail,
+    profile.officeEmail,
+    profile.location,
+    profile.bank.accountNo,
+    profile.bank.ifsc,
+    profile.bank.bankName,
+    profile.bank.bankBranch
+  ]
+);
 
     }
 console.log("EMPLOYEE PROFILE INSERT:", employeeProfile);

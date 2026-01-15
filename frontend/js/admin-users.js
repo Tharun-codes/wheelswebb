@@ -204,6 +204,7 @@ function closeModal() {
   document.getElementById("modalRole").value = "employee";
   editingUserId = null; // Reset editing state
 }
+
 function openCreate() {
   openModal("Create User");
 
@@ -237,33 +238,46 @@ async function submitModal() {
   if (role === "manager") {
     profile = {
   firstName: document.getElementById("mgrFirstName").value.trim(),
-  dob: document.getElementById("mgrDob").value,
-  joiningDate: document.getElementById("mgrJoiningDate").value,  // 👈 THIS LINE
+  lastName: document.getElementById("mgrLastName").value.trim(),
+
+  dob: document.getElementById("mgrDob").value || null,
+  joiningDate: document.getElementById("mgrJoiningDate").value || null,
+
   pan: document.getElementById("mgrPan").value.trim(),
   aadhar: document.getElementById("mgrAadhar").value.trim(),
+
   mobile: document.getElementById("mgrMobile").value.trim(),
-  email: document.getElementById("mgrEmail").value.trim(),
+  fatherMobile: document.getElementById("mgrFatherMobile").value.trim(),
+  motherMobile: document.getElementById("mgrMotherMobile").value.trim(),
+
+  personalEmail: document.getElementById("mgrPersonalEmail").value.trim(),
+  officeEmail: document.getElementById("mgrOfficeEmail").value.trim(),
+
   location: document.getElementById("mgrLocation").value.trim(),
+
   bank: {
     accountNo: document.getElementById("mgrAccountNo").value.trim(),
     ifsc: document.getElementById("mgrIfsc").value.trim(),
-    bankName: document.getElementById("mgrBank").value.trim()
+    bankName: document.getElementById("mgrBank").value.trim(),
+    bankBranch: document.getElementById("mgrBankBranch").value.trim()
   }
 };
 
 
 
+
     // basic validation
-    if (
-      !profile.firstName ||
-      !profile.mobile ||
-      !profile.email ||
-      !profile.bank.accountNo ||
-      !profile.bank.ifsc ||
-      !profile.bank.bankName
-    ) {
-      return showToast("All manager & bank details are required");
-    }
+if (
+  !profile.firstName ||
+  !profile.mobile ||
+  (!profile.personalEmail && !profile.officeEmail) || // ✅ at least one email
+  !profile.bank.accountNo ||
+  !profile.bank.ifsc ||
+  !profile.bank.bankName
+) {
+  return showToast("All manager & bank details are required");
+}
+
 
   }
 
@@ -440,7 +454,23 @@ async function toggleStatus(id, status) {
     showToast(err.message);
   }
 }
+function toggleRoleSections(role) {
+  const managerFields = document.getElementById("managerFields");
+  const employeeSection = document.getElementById("employeeSection");
 
+  // hide all first
+  if (managerFields) managerFields.style.display = "none";
+  if (employeeSection) employeeSection.style.display = "none";
+
+  // show based on role
+  if (role === "manager") {
+    managerFields.style.display = "block";
+  }
+
+  if (role === "employee") {
+    employeeSection.style.display = "block";
+  }
+}
 /* ---------------- ROLE FORMAT ---------------- */
 function formatRole(role) {
   if (role === "admin") return "Admin";
@@ -465,23 +495,7 @@ const roleSelect = document.getElementById("modalRole");
 const managerFields = document.getElementById("managerFields");
 const employeeSection = document.getElementById("employeeSection");
 
-function toggleRoleSections(role) {
-  const managerFields = document.getElementById("managerFields");
-  const employeeSection = document.getElementById("employeeSection");
 
-  // hide all first
-  if (managerFields) managerFields.style.display = "none";
-  if (employeeSection) employeeSection.style.display = "none";
-
-  // show based on role
-  if (role === "manager") {
-    managerFields.style.display = "block";
-  }
-
-  if (role === "employee") {
-    employeeSection.style.display = "block";
-  }
-}
 
 // initial state (important when modal opens)
 toggleRoleSections(roleSelect.value);
@@ -501,29 +515,42 @@ function openManagerInfo(userId) {
   if (!u) return;
 
   document.getElementById("managerInfoBody").innerHTML = `
-    <div style="line-height:1.8">
-      <b>${u.first_name || "-"}</b><br>
+    <div style="line-height:1.9">
 
+      <h3 style="margin-bottom:8px">
+        ${u.first_name || ""} ${u.last_name || ""}
+      </h3>
+
+      <h4>Personal Details</h4>
       📅 <b>DOB:</b> ${u.dob ? new Date(u.dob).toLocaleDateString() : "-"}<br>
-      🗓 <b>Joining:</b> ${u.joining_date ? new Date(u.joining_date).toLocaleDateString() : "-"}<br>
+      🗓 <b>Joining Date:</b> ${u.joining_date ? new Date(u.joining_date).toLocaleDateString() : "-"}<br>
 
       🪪 <b>PAN:</b> ${u.pan || "-"}<br>
       🧾 <b>Aadhar:</b> ${u.aadhar || "-"}<br>
 
       📞 <b>Mobile:</b> ${u.mobile || "-"}<br>
-      ✉️ <b>Email:</b> ${u.email || "-"}<br>
+      👨‍👩‍👦 <b>Father Mobile:</b> ${u.father_mobile_no || "-"}<br>
+      👩 <b>Mother Mobile:</b> ${u.mother_mobile_no || "-"}<br>
+
+      ✉️ <b>Personal Email:</b> ${u.personal_email || "-"}<br>
+      🏢 <b>Office Email:</b> ${u.office_email || "-"}<br>
+
       📍 <b>Location:</b> ${u.location || "-"}<br>
 
       <hr>
 
+      <h4>Bank Details</h4>
       🏦 <b>Bank Name:</b> ${u.bank_name || "-"}<br>
       💳 <b>Account No:</b> ${u.account_no || "-"}<br>
-      🏷 <b>IFSC:</b> ${u.ifsc || "-"}
+      🏷 <b>IFSC:</b> ${u.ifsc || "-"}<br>
+      🌿 <b>Branch:</b> ${u.bank_branch || "-"}
     </div>
   `;
 
+  document.getElementById("modalTitle").textContent = "Manager Info";
   document.getElementById("infoBackdrop").classList.add("show");
 }
+
 
 
 function closeManagerInfo() {

@@ -225,9 +225,58 @@ function initNotificationSystem() {
   console.log("🎉 Notification system initialized successfully");
 }
 
+// async function loadDashboard() {
+//   try {
+//     const res = await fetch("/api/dashboard");
+//     if (!res.ok) throw new Error("Dashboard API failed");
+
+//     const data = await res.json();
+
+//     document.getElementById("totalAmount").innerText =
+//       Number(data.disbursed_amount || 0).toLocaleString("en-IN");
+
+//     document.getElementById("totalCases").innerText =
+//       data.disbursed_cases || 0;
+
+//   } catch (err) {
+//     console.error(err);
+//   }
+// }
+
+
+// async function loadBusinessType() {
+//   const res = await fetch("/api/dashboard/business-type");
+//   const data = await res.json();
+
+//   const bar = document.getElementById("businessTypeBar");
+//   bar.innerHTML = "";
+
+//   if (!data.length) {
+//     bar.innerHTML = "<p>No disbursed data</p>";
+//     return;
+//   }
+
+//   const max = Math.max(...data.map(d => d.count));
+
+//   data.forEach(row => {
+//     const div = document.createElement("div");
+//     div.className = "bar-fill";
+//     div.style.width = (row.count / max) * 100 + "%";
+//     div.textContent = `${row.loan_type} (${row.count})`;
+//     bar.appendChild(div);
+//   });
+// }
 async function loadDashboard() {
   try {
-    const res = await fetch("/api/dashboard");
+    let url = "";
+
+    if (user.role === "admin") {
+      url = `/api/dashboard/admin/${user.id}`;   // 👈 FIX
+    } else {
+      url = `/api/dashboard/${user.role}/${user.id}`;
+    }
+
+    const res = await fetch(url);
     if (!res.ok) throw new Error("Dashboard API failed");
 
     const data = await res.json();
@@ -245,26 +294,39 @@ async function loadDashboard() {
 
 
 async function loadBusinessType() {
-  const res = await fetch("/api/dashboard/business-type");
-  const data = await res.json();
+  try {
+    let url = "";
 
-  const bar = document.getElementById("businessTypeBar");
-  bar.innerHTML = "";
+    if (user.role === "admin") {
+      url = `/api/dashboard/admin/${user.id}/business-type`;  // 👈 FIX
+    } else {
+      url = `/api/dashboard/${user.role}/${user.id}/business-type`;
+    }
 
-  if (!data.length) {
-    bar.innerHTML = "<p>No disbursed data</p>";
-    return;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const bar = document.getElementById("businessTypeBar");
+    bar.innerHTML = "";
+
+    if (!data.length) {
+      bar.innerHTML = "<p>No disbursed data</p>";
+      return;
+    }
+
+    const max = Math.max(...data.map(d => d.count));
+
+    data.forEach(row => {
+      const div = document.createElement("div");
+      div.className = "bar-fill";
+      div.style.width = (row.count / max) * 100 + "%";
+      div.textContent = `${row.loan_type} (${row.count})`;
+      bar.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error(err);
   }
-
-  const max = Math.max(...data.map(d => d.count));
-
-  data.forEach(row => {
-    const div = document.createElement("div");
-    div.className = "bar-fill";
-    div.style.width = (row.count / max) * 100 + "%";
-    div.textContent = `${row.loan_type} (${row.count})`;
-    bar.appendChild(div);
-  });
 }
 
 

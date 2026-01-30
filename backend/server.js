@@ -18,39 +18,216 @@ function generateLoanId() {
   return Date.now().toString(); // simple unique id
 }
 
-// ----------------- Dashboard -----------------
-app.get("/api/dashboard", async (req, res) => {
-  try {
-    const { rows } = await pool.query(`
-      SELECT
-        COUNT(*) FILTER (WHERE stage = 'Disbursed') AS disbursed_cases,
-        COALESCE(
-          SUM(NULLIF(data->>'disbursedSanctionLoanAmount', '')::numeric),
-          0
-        ) AS disbursed_amount
-      FROM leads
-      WHERE stage = 'Disbursed'
-    `);
+//viji 29/26
 
+// ----------------- Dashboard -----------------
+// app.get("/api/dashboard", async (req, res) => {
+//   try {
+//     const { rows } = await pool.query(`
+//       SELECT
+//         COUNT(*) FILTER (WHERE stage = 'Disbursed') AS disbursed_cases,
+//         COALESCE(
+//           SUM(NULLIF(data->>'disbursedSanctionLoanAmount', '')::numeric),
+//           0
+//         ) AS disbursed_amount
+//       FROM leads
+//       WHERE stage = 'Disbursed'
+//     `);
+
+//     res.json(rows[0] || { disbursed_cases: 0, disbursed_amount: 0 });
+//   } catch (err) {
+//     console.error("Dashboard error:", err);
+//     res.status(500).json({ error: "Dashboard failed" });
+//   }
+// });
+// ----------------- ROLE BASED DASHBOARD -----------------
+app.get("/api/dashboard/:role/:userId", async (req, res) => {
+  try {
+    const { role, userId } = req.params;
+    const uid = Number(userId);
+
+    let query = "";
+    let params = [];
+
+    /* ================= ADMIN ================= */
+    if (role === "admin") {
+      query = `
+        SELECT
+          COUNT(*) FILTER (WHERE stage = 'Disbursed') AS disbursed_cases,
+          COALESCE(
+            SUM(NULLIF(data->>'disbursedSanctionLoanAmount', '')::numeric),
+            0
+          ) AS disbursed_amount
+        FROM leads
+        WHERE stage = 'Disbursed'
+      `;
+    }
+
+    /* ================= MANAGER ================= */
+    else if (role === "manager") {
+      query = `
+        SELECT
+          COUNT(*) FILTER (WHERE stage = 'Disbursed') AS disbursed_cases,
+          COALESCE(
+            SUM(NULLIF(data->>'disbursedSanctionLoanAmount', '')::numeric),
+            0
+          ) AS disbursed_amount
+        FROM leads
+        WHERE stage = 'Disbursed'
+        AND (
+          created_by = $1
+          OR created_by IN (
+            SELECT employee_id FROM manager_employees WHERE manager_id = $1
+          )
+          OR created_by IN (
+            SELECT dealer_id FROM employee_dealers 
+            WHERE employee_id IN (
+              SELECT employee_id FROM manager_employees WHERE manager_id = $1
+            )
+          )
+        )
+      `;
+      params = [uid];
+    }
+
+    /* ================= EMPLOYEE ================= */
+    else if (role === "employee") {
+      query = `
+        SELECT
+          COUNT(*) FILTER (WHERE stage = 'Disbursed') AS disbursed_cases,
+          COALESCE(
+            SUM(NULLIF(data->>'disbursedSanctionLoanAmount', '')::numeric),
+            0
+          ) AS disbursed_amount
+        FROM leads
+        WHERE stage = 'Disbursed'
+        AND (
+          created_by = $1
+          OR created_by IN (
+            SELECT dealer_id FROM employee_dealers WHERE employee_id = $1
+          )
+        )
+      `;
+      params = [uid];
+    }
+
+    /* ================= DEALER ================= */
+    else if (role === "dealer") {
+      query = `
+        SELECT
+          COUNT(*) FILTER (WHERE stage = 'Disbursed') AS disbursed_cases,
+          COALESCE(
+            SUM(NULLIF(data->>'disbursedSanctionLoanAmount', '')::numeric),
+            0
+          ) AS disbursed_amount
+        FROM leads
+        WHERE stage = 'Disbursed'
+        AND created_by = $1
+      `;
+      params = [uid];
+    }
+
+    const { rows } = await pool.query(query, params);
     res.json(rows[0] || { disbursed_cases: 0, disbursed_amount: 0 });
+
   } catch (err) {
-    console.error("Dashboard error:", err);
+    console.error("ROLE DASHBOARD ERROR:", err);
     res.status(500).json({ error: "Dashboard failed" });
   }
 });
+//viji 29/26
+// app.get("/api/dashboard/business-type", async (req, res) => {
+//   try {
+//     const { rows } = await pool.query(`
+//       SELECT loan_type, COUNT(*) AS count
+//       FROM leads
+//       WHERE stage = 'Disbursed'
+//       GROUP BY loan_type
+//       ORDER BY count DESC
+//     `);
+//     res.json(rows);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json([]);
+//   }
+// });
 
-app.get("/api/dashboard/business-type", async (req, res) => {
+
+app.get("/api/dashboard/:role/:userId/business-type", async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT loan_type, COUNT(*) AS count
-      FROM leads
-      WHERE stage = 'Disbursed'
-      GROUP BY loan_type
-      ORDER BY count DESC
-    `);
+    const { role, userId } = req.params;
+    const uid = Number(userId);
+
+    let query = "";
+    let params = [];
+
+    if (role === "admin") {
+      query = `
+        SELECT loan_type, COUNT(*) AS count
+        FROM leads
+        WHERE stage = 'Disbursed'
+        GROUP BY loan_type
+        ORDER BY count DESC
+      `;
+    }
+
+    else if (role === "manager") {
+      query = `
+        SELECT loan_type, COUNT(*) AS count
+        FROM leads
+        WHERE stage = 'Disbursed'
+        AND (
+          created_by = $1
+          OR created_by IN (
+            SELECT employee_id FROM manager_employees WHERE manager_id = $1
+          )
+          OR created_by IN (
+            SELECT dealer_id FROM employee_dealers 
+            WHERE employee_id IN (
+              SELECT employee_id FROM manager_employees WHERE manager_id = $1
+            )
+          )
+        )
+        GROUP BY loan_type
+        ORDER BY count DESC
+      `;
+      params = [uid];
+    }
+
+    else if (role === "employee") {
+      query = `
+        SELECT loan_type, COUNT(*) AS count
+        FROM leads
+        WHERE stage = 'Disbursed'
+        AND (
+          created_by = $1
+          OR created_by IN (
+            SELECT dealer_id FROM employee_dealers WHERE employee_id = $1
+          )
+        )
+        GROUP BY loan_type
+        ORDER BY count DESC
+      `;
+      params = [uid];
+    }
+
+    else if (role === "dealer") {
+      query = `
+        SELECT loan_type, COUNT(*) AS count
+        FROM leads
+        WHERE stage = 'Disbursed'
+        AND created_by = $1
+        GROUP BY loan_type
+        ORDER BY count DESC
+      `;
+      params = [uid];
+    }
+
+    const { rows } = await pool.query(query, params);
     res.json(rows);
+
   } catch (err) {
-    console.error(err);
+    console.error("ROLE BUSINESS TYPE ERROR:", err);
     res.status(500).json([]);
   }
 });

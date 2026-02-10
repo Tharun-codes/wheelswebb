@@ -1,654 +1,1200 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Assign Employees - Admin Panel</title>
+
     <link rel="stylesheet" href="/css/style.css" />
+
     <link rel="stylesheet" href="/css/admin.css" />
+
     <style>
+
         .assignment-container {
+
             display: grid;
+
             grid-template-columns: 1fr 1fr;
+
             gap: 24px;
+
             margin-top: 24px;
+
         }
+
+
 
         .assignment-section {
+
             background: white;
+
             border-radius: 12px;
+
             padding: 24px;
+
             box-shadow: 0 10px 30px rgba(2,6,23,0.06);
+
         }
+
+
 
         .section-header {
+
             display: flex;
+
             align-items: center;
+
             gap: 12px;
+
             margin-bottom: 20px;
+
             padding-bottom: 16px;
+
             border-bottom: 1px solid var(--border);
+
         }
+
+
 
         .section-icon {
+
             width: 40px;
+
             height: 40px;
+
             background: linear-gradient(135deg, #4f46e5, #6366f1);
+
             border-radius: 10px;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             color: white;
+
             font-weight: 600;
+
         }
+
+
 
         .section-title {
+
             flex: 1;
+
         }
+
+
 
         .section-title h3 {
+
             font-size: 18px;
+
             color: var(--text);
+
             margin-bottom: 4px;
+
         }
+
+
 
         .section-title p {
+
             font-size: 13px;
+
             color: var(--muted);
+
         }
+
+
 
         .manager-select {
+
             width: 100%;
+
             padding: 12px 16px;
+
             border: 2px solid var(--border);
+
             border-radius: 10px;
+
             font-size: 14px;
+
             background: white;
+
             color: var(--text);
+
             transition: border-color 0.2s;
+
         }
+
+
 
         .manager-select:focus {
+
             outline: none;
+
             border-color: var(--primary);
+
         }
+
+
 
         .employees-grid {
+
             display: grid;
+
             gap: 12px;
+
             max-height: 400px;
+
             overflow-y: auto;
+
             padding: 4px;
+
         }
+
+
 
         .employee-item {
+
             display: flex;
+
             align-items: center;
+
             padding: 12px 16px;
+
             background: #f8fafc;
+
             border: 1px solid var(--border);
+
             border-radius: 8px;
+
             transition: all 0.2s;
+
             cursor: pointer;
+
         }
+
+
 
         .employee-item:hover {
+
             background: #f1f5f9;
+
             border-color: var(--primary);
+
             transform: translateY(-1px);
+
         }
+
+
 
         .employee-item.selected {
+
             background: #eff6ff;
+
             border-color: var(--primary);
+
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+
         }
+
+
 
         .employee-checkbox {
+
             width: 18px;
+
             height: 18px;
+
             margin-right: 12px;
+
             accent-color: var(--primary);
+
         }
+
+
 
         .employee-info {
+
             flex: 1;
+
         }
+
+
 
         .employee-name {
+
             font-weight: 600;
+
             color: var(--text);
+
             font-size: 14px;
+
         }
+
+
 
         .employee-role {
+
             font-size: 12px;
+
             color: var(--muted);
+
             margin-top: 2px;
+
         }
+
+
 
         .employee-avatar {
+
             width: 32px;
+
             height: 32px;
+
             background: linear-gradient(135deg, #4f46e5, #6366f1);
+
             border-radius: 50%;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             color: white;
+
             font-weight: 600;
+
             font-size: 12px;
+
             margin-left: 12px;
+
         }
+
+
 
         .actions-section {
+
             grid-column: 1 / -1;
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-top: 24px;
+
             padding: 20px;
+
             background: white;
+
             border-radius: 12px;
+
             box-shadow: 0 10px 30px rgba(2,6,23,0.06);
+
         }
+
+
 
         .selection-info {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             gap: 20px;
+
         }
+
+
 
         .selected-count {
+
             font-size: 14px;
+
             color: var(--muted);
+
         }
+
+
 
         .selected-count strong {
+
             color: var(--primary);
+
             font-weight: 600;
+
         }
+
+
 
         .assignment-status {
+
             font-size: 13px;
+
             color: var(--muted);
+
             font-style: italic;
+
         }
+
+
 
         .assigned-section {
+
             margin-top: 24px;
+
             background: white;
+
             border-radius: 12px;
+
             padding: 24px;
+
             box-shadow: 0 10px 30px rgba(2,6,23,0.06);
+
         }
+
+
 
         .assigned-section .section-header {
+
             display: flex;
+
             align-items: center;
+
             gap: 12px;
+
             margin-bottom: 20px;
+
             padding-bottom: 16px;
+
             border-bottom: 1px solid var(--border);
+
             justify-content: space-between;
+
         }
+
+
 
         .assigned-section .section-title {
+
             flex: 1;
+
         }
+
+
 
         .btn-danger {
+
             padding: 8px 16px;
+
             border-radius: 8px;
+
             background: #ef4444;
+
             color: white;
+
             border: none;
+
             cursor: pointer;
+
             font-weight: 600;
+
             transition: all 0.2s;
+
         }
+
+
 
         .btn-danger:hover {
+
             background: #dc2626;
+
             transform: translateY(-1px);
+
         }
+
+
 
         .unassign-mode .employee-item {
+
             cursor: pointer;
+
             position: relative;
+
         }
+
+
 
         .unassign-mode .employee-item:hover {
+
             background: #fef2f2;
+
             border-color: #ef4444;
+
         }
+
+
 
         .unassign-checkbox {
+
             position: absolute;
+
             top: 12px;
+
             left: 12px;
+
             accent-color: #ef4444;
+
         }
+
+
 
         .unassign-mode .employee-info {
+
             margin-left: 30px;
+
         }
+
+
 
         .assignments-table-section {
+
             margin-top: 24px;
+
             background: white;
+
             border-radius: 12px;
+
             padding: 24px;
+
             box-shadow: 0 10px 30px rgba(2,6,23,0.06);
+
         }
+
+
 
         .table-container {
+
             overflow-x: auto;
+
         }
+
+
 
         .assignments-table {
+
             width: 100%;
+
             border-collapse: collapse;
+
             font-size: 14px;
+
         }
+
+
 
         .assignments-table th {
+
             background: #f8fafc;
+
             padding: 12px 16px;
+
             text-align: left;
+
             font-weight: 600;
+
             color: var(--text);
+
             border-bottom: 2px solid var(--border);
+
         }
+
+
 
         .assignments-table td {
+
             padding: 16px;
+
             border-bottom: 1px solid var(--border);
+
             vertical-align: top;
+
         }
+
+
 
         .assignments-table tr:hover {
+
             background: #f8fafc;
+
         }
+
+
 
         .employee-tags {
+
             display: flex;
+
             flex-wrap: wrap;
+
             gap: 6px;
+
         }
+
+
 
         .employee-tag {
+
             background: #eff6ff;
+
             color: var(--primary);
+
             padding: 4px 8px;
+
             border-radius: 12px;
+
             font-size: 12px;
+
             font-weight: 500;
+
         }
+
+
 
         .employee-count {
+
             background: linear-gradient(135deg, #4f46e5, #6366f1);
+
             color: white;
+
             padding: 4px 12px;
+
             border-radius: 16px;
+
             font-size: 12px;
+
             font-weight: 600;
+
             display: inline-block;
+
         }
+
+
 
         .action-btn {
+
             padding: 6px 12px;
+
             border-radius: 6px;
+
             border: 1px solid var(--border);
+
             background: white;
+
             color: var(--muted);
+
             cursor: pointer;
+
             font-size: 12px;
+
             font-weight: 500;
+
             transition: all 0.2s;
+
         }
+
+
 
         .action-btn:hover {
+
             background: #f8fafc;
+
             border-color: var(--primary);
+
             color: var(--primary);
+
         }
+
+
 
         .action-btn.unassign {
+
             border-color: #ef4444;
+
             color: #ef4444;
+
         }
+
+
 
         .action-btn.unassign:hover {
+
             background: #fef2f2;
+
             border-color: #dc2626;
+
             color: #dc2626;
+
         }
+
+
 
         .loading-row {
+
             text-align: center;
+
             padding: 40px;
+
         }
+
+
 
         .no-assignments {
+
             text-align: center;
+
             padding: 40px;
+
             color: var(--muted);
+
             font-style: italic;
+
         }
+
+
 
         .action-buttons {
+
             display: flex;
+
             gap: 12px;
+
         }
+
+
 
         .btn-secondary {
+
             padding: 10px 20px;
+
             border-radius: 10px;
+
             background: white;
+
             color: var(--muted);
+
             border: 1px solid var(--border);
+
             cursor: pointer;
+
             font-weight: 600;
+
             transition: all 0.2s;
+
         }
+
+
 
         .btn-secondary:hover {
+
             background: #f8fafc;
+
             border-color: var(--primary);
+
             color: var(--primary);
+
         }
+
+
 
         .btn-primary {
+
             padding: 10px 20px;
+
             border-radius: 10px;
+
             background: linear-gradient(120deg, #4f46e5, #6366f1);
+
             color: white;
+
             border: none;
+
             cursor: pointer;
+
             font-weight: 600;
+
             transition: all 0.2s;
+
         }
+
+
 
         .btn-primary:hover {
+
             transform: translateY(-1px);
+
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+
         }
+
+
 
         .btn-primary:disabled {
+
             opacity: 0.5;
+
             cursor: not-allowed;
+
             transform: none;
+
         }
+
+
 
         .empty-state {
+
             text-align: center;
+
             padding: 40px;
+
             color: var(--muted);
+
         }
+
+
 
         .empty-state-icon {
+
             font-size: 48px;
+
             margin-bottom: 16px;
+
             opacity: 0.3;
+
         }
+
+
 
         .loading {
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             padding: 40px;
+
             color: var(--muted);
+
         }
+
+
 
         .spinner {
+
             width: 20px;
+
             height: 20px;
+
             border: 2px solid var(--border);
+
             border-top-color: var(--primary);
+
             border-radius: 50%;
+
             animation: spin 1s linear infinite;
+
             margin-right: 12px;
+
         }
+
+
 
         @keyframes spin {
+
             to { transform: rotate(360deg); }
+
         }
 
+
+
         .toast {
+
             position: fixed;
+
             right: 20px;
+
             bottom: 20px;
+
             background: rgba(15,23,42,0.9);
+
             color: white;
+
             padding: 12px 16px;
+
             border-radius: 8px;
+
             display: none;
+
             z-index: 3000;
+
         }
+
+
 
         .toast.show { display: block; }
 
+
+
         @media (max-width: 768px) {
+
             .assignment-container {
+
                 grid-template-columns: 1fr;
+
             }
+
             
+
             .actions-section {
+
                 flex-direction: column;
+
                 gap: 16px;
+
                 align-items: stretch;
+
             }
+
             
+
             .action-buttons {
+
                 justify-content: stretch;
+
             }
+
             
+
             .btn-primary, .btn-secondary {
+
                 flex: 1;
+
             }
+
         }
 
-            .mini-unassign {
-                margin-left: 6px;
-                border: none;
-                background: none;
-                color: #ef4444;
-                font-weight: bold;
-                cursor: pointer;
-                font-size: 12px;
-                }
 
-                .mini-unassign:hover {
-                color: #dc2626;
-            }
 
-        .assignment-container.four-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            }
+                .mini-unassign {
 
-            .grid-box {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(2,6,23,0.06);
-            }
+        margin-left: 6px;
+
+        border: none;
+
+        background: none;
+
+        color: #ef4444;
+
+        font-weight: bold;
+
+        cursor: pointer;
+
+        font-size: 12px;
+
+        }
 
 
 
-        .actions-section {
-            display: none;
-            }
+        .mini-unassign:hover {
 
+        color: #dc2626;
+
+        }
 
 
 
     </style>
+
 </head>
+
 <body>
+
     <div class="admin-container">
+
         <div class="admin-header">
+
             <div class="admin-title">
+
                 <h1>Assign Employees</h1>
+
                 <div class="admin-subtitle">Manage manager-employee relationships</div>
+
             </div>
+
             <div class="admin-actions">
+
                 <input id="employeeSearch" class="search-input" placeholder="Search employees..." />
+
                 <a href="/dashboard.html" class="back-button">← Back </a>
+
             </div>
+
         </div>
 
-<div class="assignment-container four-grid">
-
-  <!-- Managers -->
-  <div class="grid-box">
-    <div class="section-header">
-      <div class="section-icon">👔</div>
-      <div class="section-title">
-        <h3>Managers</h3>
-        <p>Select manager</p>
-      </div>
-    </div>
 
 
+        <div class="assignment-container">
 
-    <div id="managerList" class="employees-grid"></div>
-  </div>
+            <!-- Manager Selection Section -->
 
-  <!-- Available Employees -->
-  <div class="grid-box">
-    <div class="section-header">
-      <div class="section-icon">👥</div>
-      <div class="section-title">
-        <h3>Available Employees</h3>
-        <p>Employees under manager</p>
-      </div>
-    </div>
+            <div class="assignment-section">
 
+                <div class="section-header">
 
+                    <div class="section-icon">👔</div>
 
-    <div id="availableEmployees" class="employees-grid"></div>
-  </div>
+                    <div class="section-title">
 
-  <!-- Employees -->
-  <div class="grid-box">
-    <div class="section-header">
-      <div class="section-icon">🧑‍💼</div>
-      <div class="section-title">
-        <h3>Employees</h3>
-        <p>Select employee</p>
-      </div>
-    </div>
+                        <h3>Managers + Employees</h3>
+
+                        <p>Choose a manager to assign employees to, or select employees to assign to managers</p>
+
+                    </div>
+
+                </div>
+
+                <select id="managerSelect" class="manager-select">
+
+                    <option value="">Loading managers...</option>
+
+                </select>
+
+            </div>
 
 
 
-    <div id="employeeListGrid" class="employees-grid"></div>
-  </div>
+            <!-- Employees Section -->
 
-  <!-- Available Dealers -->
-  <div class="grid-box">
-    <div class="section-header">
-      <div class="section-icon">🏪</div>
-      <div class="section-title">
-        <h3>Available Dealers</h3>
-        <p>Dealers under employee</p>
-      </div>
-    </div>
+            <div class="assignment-section">
 
+                <div class="section-header">
 
+                    <div class="section-icon">👥</div>
 
-    <div id="availableDealers" class="employees-grid"></div>
-  </div>
+                    <div class="section-title">
 
-</div>
+                        <h3>Available Employees + Dealers</h3>
+
+                        <p>These are the people who can be assigned to managers</p>
+
+                    </div>
+
+                </div>
+
+                <div id="employeeList" class="employees-grid">
+
+                    <div class="loading">
+
+                        <div class="spinner"></div>
+
+                        Loading employees...
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
 
 
         <!-- Actions Section -->
+
         <div class="actions-section">
+
             <div class="selected-count">
+
                 <strong id="selectedCount">0</strong> employees selected
+
             </div>
+
             <div class="action-buttons">
+
                 <button class="btn-secondary" onclick="clearSelection()">Clear</button>
+
                 <button class="btn-primary" id="saveBtn" onclick="saveAssignments()" disabled>
+
                     Save Assignments
+
                 </button>
+
             </div>
+
         </div>
+
+
 
         <!-- Current Assignments Table -->
+
         <div class="assignments-table-section">
+
             <div class="section-header">
+
                 <div class="section-icon">📊</div>
+
                 <div class="section-title">
+
                     <h3>Current Assignments</h3>
+
                     <p>View and manage manager-employee assignments</p>
+
                 </div>
+
             </div>
+
             <div class="table-container">
+
                 <table class="assignments-table">
+
                     <thead>
+
                         <tr>
+
                             <th>Manager Name</th>
+
                             <th>Assigned Employees</th>
+
                             <th>Employee Count</th>
+
                             <th>Actions</th>
+
                         </tr>
+
                     </thead>
+
                     <tbody id="assignmentsTableBody">
+
                         <tr>
+
                             <td colspan="4" class="loading-row">
+
                                 <div class="loading">
+
                                     <div class="spinner"></div>
+
                                     Loading assignments...
+
                                 </div>
+
                             </td>
+
                         </tr>
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </div>
 
+
+
         <!-- Employee Assignments Table -->
+
         <div class="assignments-table-section">
+
             <div class="section-header">
+
                 <div class="section-icon">👥</div>
+
                 <div class="section-title">
+
                     <h3>Employee Assignments</h3>
+
                     <p>View employees and their assigned dealers</p>
+
                 </div>
+
             </div>
+
             <div class="table-container">
+
                 <table class="assignments-table">
+
                     <thead>
+
                         <tr>
+
                             <th>Employee Name</th>
+
                             <th>Assigned Dealer</th>
+
                             <th>Dealer Count</th>
+
                             <th>Actions</th>
+
                         </tr>
+
                     </thead>
+
                     <tbody id="employeeAssignmentsTableBody">
+
                         <tr>
+
                             <td colspan="4" class="loading-row">
+
                                 <div class="loading">
+
                                 
+
                                     <div class="spinner"></div>
+
                                     Loading employee assignments...
+
                                 </div>
+
                             </td>
+
                         </tr>
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+
+
     <script src="/js/assign-employees.js"></script>
+
 </body>
+
 </html>
+

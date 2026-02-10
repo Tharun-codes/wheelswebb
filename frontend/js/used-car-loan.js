@@ -23,6 +23,53 @@ const isEditMode = !!loanId;
    INPUT VALIDATION & UPPERCASE
 ========================= */
 
+// Calculate age from DOB
+function calculateAge() {
+  const dobInput = document.getElementById('applicantDob');
+  const ageDisplay = document.getElementById('currentAge');
+  
+  if (!dobInput || !ageDisplay) return;
+  
+  const dob = new Date(dobInput.value);
+  const today = new Date();
+  
+  if (isNaN(dob.getTime())) {
+    ageDisplay.textContent = '';
+    return;
+  }
+  
+  let years = today.getFullYear() - dob.getFullYear();
+  let months = today.getMonth() - dob.getMonth();
+  let days = today.getDate() - dob.getDate();
+  
+  // Adjust for negative months or days
+  if (days < 0) {
+    months--;
+    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += lastMonth.getDate();
+  }
+  
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  // Format the age display
+  let ageText = 'Current Age: ';
+  if (years > 0) {
+    ageText += `${years} year${years !== 1 ? 's' : ''}`;
+  }
+  if (months > 0) {
+    if (years > 0) ageText += ' ';
+    ageText += `${months} month${months !== 1 ? 's' : ''}`;
+  }
+  if (years === 0 && months === 0) {
+    ageText += 'Less than 1 month';
+  }
+  
+  ageDisplay.textContent = ageText;
+}
+
 // Enforce uppercase for inputs with data-uppercase attribute
 function enforceUppercase() {
   const uppercaseInputs = document.querySelectorAll("[data-uppercase]");

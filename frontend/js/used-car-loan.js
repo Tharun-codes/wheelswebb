@@ -643,7 +643,7 @@ function formatCurrency(v) {
 
 function formatPercent(v) {
   if (v === null || v === undefined || isNaN(v)) return '-';
-  return Number(v).toFixed(2) + '% p.a.';
+  return Number(v).toFixed(2) + '%';
 }
 
 function computeAndShowEmi() {
@@ -651,31 +651,20 @@ function computeAndShowEmi() {
   const tenureEl = document.getElementById('loanTenure');
   const irrEl = document.getElementById('irr');
   const emiDisplay = document.getElementById('emiDisplay');
-  const irrDisplay = document.getElementById('irrDisplay');
 
-  if (!loanAmountEl || !tenureEl || !irrEl || !emiDisplay || !irrDisplay) return;
+  if (!loanAmountEl || !tenureEl || !irrEl || !emiDisplay) return;
 
-  const P = parseFloat(loanAmountEl.value) || 0;
-  const n = parseInt(tenureEl.value) || 0; // expecting months
-  const annualRate = parseFloat(irrEl.value) || 0;
+  const loanAmount = Number(loanAmountEl.value);
+  const tenure = Number(tenureEl.value);
+  const annualRate = Number(irrEl.value);
 
-  if (!P || !n) {
-    emiDisplay.textContent = '';
-    irrDisplay.textContent = annualRate ? formatPercent(annualRate) : '';
-    return;
-  }
-
-  const r = annualRate / 12 / 100; // monthly rate
-  let emi = 0;
-  if (r === 0) {
-    emi = P / n;
+  if (loanAmount && tenure && annualRate) {
+    const monthlyRate = annualRate / 100 / 12;
+    const emi = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenure) / (Math.pow(1 + monthlyRate, tenure) - 1);
+    emiDisplay.textContent = `EMI: ${formatCurrency(emi)}`;
   } else {
-    const x = Math.pow(1 + r, n);
-    emi = P * r * x / (x - 1);
+    emiDisplay.textContent = '';
   }
-
-  emiDisplay.textContent = 'Estimated EMI: ' + formatCurrency(emi) + ' / month';
-  irrDisplay.textContent = formatPercent(annualRate);
 }
 
 function initEmiCalculator() {

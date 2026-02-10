@@ -46,6 +46,10 @@ async function loadUsers() {
     console.log('Employees:', employees);
     console.log('Dealers:', dealers);
 
+    populateManagerSelect();
+
+    renderEmployees();
+
     loadAllAssignments();
     
     // Add search functionality

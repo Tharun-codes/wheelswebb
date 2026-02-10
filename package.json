@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "wheelsweb",
   "version": "1.0.0",
@@ -7,4 +8,25 @@
     "pg": "^8.16.3",
     "dotenv": "^17.2.3"
   }
+=======
+
+{
+  "name": "wheelsweb-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.16.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+>>>>>>> ec2d2730f5b3d85312fb24bfe49d7dab84d22abd
 }

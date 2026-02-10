@@ -23,6 +23,53 @@ const isEditMode = !!loanId;
    INPUT VALIDATION & UPPERCASE
 ========================= */
 
+// Calculate age from DOB
+function calculateAge() {
+  const dobInput = document.getElementById('applicantDob');
+  const ageDisplay = document.getElementById('currentAge');
+  
+  if (!dobInput || !ageDisplay) return;
+  
+  const dob = new Date(dobInput.value);
+  const today = new Date();
+  
+  if (isNaN(dob.getTime())) {
+    ageDisplay.textContent = '';
+    return;
+  }
+  
+  let years = today.getFullYear() - dob.getFullYear();
+  let months = today.getMonth() - dob.getMonth();
+  let days = today.getDate() - dob.getDate();
+  
+  // Adjust for negative months or days
+  if (days < 0) {
+    months--;
+    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += lastMonth.getDate();
+  }
+  
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  // Format the age display
+  let ageText = 'Current Age: ';
+  if (years > 0) {
+    ageText += `${years} year${years !== 1 ? 's' : ''}`;
+  }
+  if (months > 0) {
+    if (years > 0) ageText += ' ';
+    ageText += `${months} month${months !== 1 ? 's' : ''}`;
+  }
+  if (years === 0 && months === 0) {
+    ageText += 'Less than 1 month';
+  }
+  
+  ageDisplay.textContent = ageText;
+}
+
 // Enforce uppercase for inputs with data-uppercase attribute
 function enforceUppercase() {
   const uppercaseInputs = document.querySelectorAll("[data-uppercase]");
@@ -596,7 +643,7 @@ function formatCurrency(v) {
 
 function formatPercent(v) {
   if (v === null || v === undefined || isNaN(v)) return '-';
-  return Number(v).toFixed(2) + '% p.a.';
+  return Number(v).toFixed(2) + '%';
 }
 
 function computeAndShowEmi() {
@@ -604,31 +651,20 @@ function computeAndShowEmi() {
   const tenureEl = document.getElementById('loanTenure');
   const irrEl = document.getElementById('irr');
   const emiDisplay = document.getElementById('emiDisplay');
-  const irrDisplay = document.getElementById('irrDisplay');
 
-  if (!loanAmountEl || !tenureEl || !irrEl || !emiDisplay || !irrDisplay) return;
+  if (!loanAmountEl || !tenureEl || !irrEl || !emiDisplay) return;
 
-  const P = parseFloat(loanAmountEl.value) || 0;
-  const n = parseInt(tenureEl.value) || 0; // expecting months
-  const annualRate = parseFloat(irrEl.value) || 0;
+  const loanAmount = Number(loanAmountEl.value);
+  const tenure = Number(tenureEl.value);
+  const annualRate = Number(irrEl.value);
 
-  if (!P || !n) {
-    emiDisplay.textContent = '';
-    irrDisplay.textContent = annualRate ? formatPercent(annualRate) : '';
-    return;
-  }
-
-  const r = annualRate / 12 / 100; // monthly rate
-  let emi = 0;
-  if (r === 0) {
-    emi = P / n;
+  if (loanAmount && tenure && annualRate) {
+    const monthlyRate = annualRate / 100 / 12;
+    const emi = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenure) / (Math.pow(1 + monthlyRate, tenure) - 1);
+    emiDisplay.textContent = `EMI: ${formatCurrency(emi)}`;
   } else {
-    const x = Math.pow(1 + r, n);
-    emi = P * r * x / (x - 1);
+    emiDisplay.textContent = '';
   }
-
-  emiDisplay.textContent = 'Estimated EMI: ' + formatCurrency(emi) + ' / month';
-  irrDisplay.textContent = formatPercent(annualRate);
 }
 
 function initEmiCalculator() {
@@ -910,6 +946,9 @@ const dsaCodeInput = document.getElementById("loanDsaCode");
 const maritalStatus = document.getElementById("MaritalStatus");
 const spouseNameField = document.getElementById("spouseNameField");
 const spouseNameInput = document.getElementById("spouseName");
+const employmentCustomerProfile = document.getElementById("employmentCustomerProfile");
+const proprietorshipInfoField = document.getElementById("proprietorshipInfoField");
+const proprietorshipInfo = document.getElementById("proprietorshipInfo");
 const addAltNoBtn = document.getElementById("addAltNoBtn");
 const extraAltMobileContainer = document.getElementById("extraAltMobileContainer");
 const extraAltMobileInput = document.getElementById("extraAltMobile");
@@ -1025,19 +1064,39 @@ if (dsaSelect) {
 }
 
 function toggleSpouseField() {
-  const needsSpouse = maritalStatus && (maritalStatus.value === "Married" || maritalStatus.value === "Divorced");
+  const needsSpouse = maritalStatus && (maritalStatus.value === "Married" || maritalStatus.value === "Divorced" || maritalStatus.value === "Widow");
   if (spouseNameField) {
     spouseNameField.classList.toggle("hidden", !needsSpouse);
   }
   if (spouseNameInput) {
-    spouseNameInput.required = !!needsSpouse;
+    spouseNameInput.required = needsSpouse;
     if (!needsSpouse) spouseNameInput.value = "";
+  }
+}
+
+function toggleProprietorshipInfoField() {
+  const needsProprietorshipInfo = employmentCustomerProfile && (
+    employmentCustomerProfile.value === "Self-Employed" || 
+    employmentCustomerProfile.value === "ITR" || 
+    employmentCustomerProfile.value === "Agriculture"
+  );
+  if (proprietorshipInfoField) {
+    proprietorshipInfoField.classList.toggle("hidden", !needsProprietorshipInfo);
+  }
+  if (proprietorshipInfo) {
+    proprietorshipInfo.required = needsProprietorshipInfo;
+    if (!needsProprietorshipInfo) proprietorshipInfo.value = "";
   }
 }
 
 if (maritalStatus) {
   maritalStatus.addEventListener("change", toggleSpouseField);
   toggleSpouseField();
+}
+
+if (employmentCustomerProfile) {
+  employmentCustomerProfile.addEventListener("change", toggleProprietorshipInfoField);
+  toggleProprietorshipInfoField();
 }
 
 if (addAltNoBtn && extraAltMobileContainer && extraAltMobileInput) {

@@ -630,6 +630,22 @@
       animation: fadeIn 0.3s ease-out;
     }
 
+    /* Hide up/down arrows from number input fields */
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"]::-moz-number-spin-box {
+      display: none;
+    }
+
   </style>
 </head>
 <body>
@@ -869,7 +885,6 @@
         <option>Male</option>
         <option>Female</option>
         <option>Rather Not To Say</option>
-        <option>None</option>
       </select>
     </div>
 
@@ -914,10 +929,10 @@
       <label for="MaritalStatus">MARITAL STATUS *</label>
       <select id="MaritalStatus" required>
         <option value="">MARITAL STATUS *</option>
-        <option>None</option>
         <option>Single</option>
         <option>Married</option>
         <option>Divorced</option>
+        <option>Widow</option>
       </select>
     </div>
 
@@ -935,6 +950,12 @@
     <div class="form-field">
       <label for="motherName">MOTHER NAME *</label>
       <input id="motherName" required data-uppercase data-alphabets />
+    </div>
+
+    <div class="form-field">
+      <label for="applicantDob">APPLICANT DOB *</label>
+      <input type="date" id="applicantDob" required onchange="calculateAge()" />
+      <div id="currentAge" style="font-size:0.85rem;color:#374151;margin-top:6px;font-weight:600;"></div>
     </div>
 
   </div>
@@ -958,9 +979,10 @@
         <option>Aadhaar</option>
         <option>Voter ID</option>
         <option>Gas Bill</option>
-        <option>EB Bill</option>
-        <option>Tax Paid Receipt</option>
+        <option>Ration Card</option>
+        <option>Passport</option>
         <option>Rent Agreements</option>
+        <option>Purchase Deeds</option>
       </select>
     </div>
 
@@ -987,13 +1009,33 @@
     </div>
 
     <div class="form-field">
+      <label for="currentOhpRelation">OHP PROOF *</label>
+      <select id="currentOhpProof" required>
+        <option value="">OHP PROOF *</option>
+        <option>EB Bill</option>
+        <option>Property Tax Receipt</option>
+        <option>Water Bill</option>
+        <option>Hakku Patra</option>
+        <option>Purchase Deeds</option>
+        <option>Utility Bill</option>
+        <option>LandLord EB Bill</option>
+        <option>Others</option>
+      </select>
+    </div>
+
+    <div class="form-field">
       <label for="currentOhpRelation">OHP OWNER RELATION *</label>
       <select id="currentOhpRelation" required>
         <option value="">OHP OWNER RELATION *</option>
-        <option>SPOUSE</option>
-        <option>SELF-OWNED</option>
-        <option>PARANTEL</option>
-        <option>RENTED</option>
+        <option>Self Owned</option>
+        <option>Spouse</option>
+        <option>Parental</option>
+        <option>Mother In Law</option>
+        <option>Father In Law</option>
+        <option>Grand Parental</option>
+        <option>Rental</option>
+        <option>GOVT Quarters</option>
+        <option>Others</option>
       </select>
     </div>
 
@@ -1019,9 +1061,10 @@
         <option>Aadhaar</option>
         <option>Voter ID</option>
         <option>Gas Bill</option>
-        <option>EB Bill</option>
-        <option>Tax Paid Receipt</option>
+        <option>Ration Card</option>
+        <option>Passport</option>
         <option>Rent Agreements</option>
+        <option>Purchase Deeds</option>
       </select>
     </div>
 
@@ -1048,13 +1091,33 @@
     </div>
 
     <div class="form-field">
+      <label for="permanentOhpRelation">OHP PROOF *</label>
+      <select id="permanentOhpProof" required>
+        <option value="">OHP PROOF *</option>
+        <option>EB Bill</option>
+        <option>Property Tax Receipt</option>
+        <option>Water Bill</option>
+        <option>Hakku Patra</option>
+        <option>Purchase Deeds</option>
+        <option>Utility Bill</option>
+        <option>LandLord EB Bill</option>
+        <option>Others</option>
+      </select>
+    </div>
+
+    <div class="form-field">
       <label for="permanentOhpRelation">OHP OWNER RELATION *</label>
       <select id="permanentOhpRelation" required>
         <option value="">OHP OWNER RELATION *</option>
-        <option>SPOUSE</option>
-        <option>SELF-OWNED</option>
-        <option>PARANTEL</option>
-        <option>RENTED</option>
+        <option>Self Owned</option>
+        <option>Spouse</option>
+        <option>Parental</option>
+        <option>Mother In Law</option>
+        <option>Father In Law</option>
+        <option>Grand Parental</option>
+        <option>Rental</option>
+        <option>GOVT Quarters</option>
+        <option>Others</option>
       </select>
     </div>
 
@@ -1080,13 +1143,24 @@
     </div>
 
     <div class="form-field">
-      <label for="businessName">BUSINESS / OFFICE / DESIGNATION NAME *</label>
+      <label for="businessName">BUSINESS / OFFICE NAME *</label>
       <input
         id="businessName"
        
         required
         data-uppercase
       />
+    </div>
+
+    <div id="proprietorshipInfoField" class="form-field hidden">
+      <label for="proprietorshipInfo">PROPRIETORSHIP INFO *</label>
+      <select id="proprietorshipInfo">
+        <option value="">PROPRIETORSHIP INFO *</option>
+        <option>Proprietor</option>
+        <option>Proprietorship Firm</option>
+        <option>Partnership</option>
+        <option>Employee</option>
+      </select>
     </div>
 
     <div class="form-field">

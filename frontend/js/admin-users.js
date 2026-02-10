@@ -63,7 +63,7 @@ tr.innerHTML = `
 // Add Info button for managers
 const infoCell = tr.querySelector(".info-cell");
 
-if (u.role === "manager" || u.role === "employee") {
+if (u.role === "manager" || u.role === "employee" || u.role === "dealer") {
   const infoBtn = document.createElement("button");
   infoBtn.className = "info-btn";
   infoBtn.textContent = "ⓘ";
@@ -76,6 +76,11 @@ if (u.role === "manager" || u.role === "employee") {
   if (u.role === "employee") {
     infoBtn.addEventListener("click", () => openEmployeeInfo(u.id));
   }
+  if (u.role === "dealer") {
+    infoBtn.addEventListener("click", () => openDealerInfo(u.id));
+  }
+
+
 
   infoCell.appendChild(infoBtn);
 } else {
@@ -326,6 +331,25 @@ if (
       return showToast("Employee & bank details are required");
     }
   }
+if (role === "dealer") {
+  profile = {
+    dealerName: document.getElementById("dealer_name").value.trim(),
+    pan: document.getElementById("dealer_pan").value.trim(),
+    aadhar: document.getElementById("dealer_aadhar").value.trim(),
+    dob: document.getElementById("dealer_dob").value || null,
+    mobile: document.getElementById("dealer_mobile").value.trim(),
+    fatherMobile: document.getElementById("dealer_father_mobile").value.trim(),
+    motherMobile: document.getElementById("dealer_mother_mobile").value.trim(),
+    email: document.getElementById("dealer_email").value.trim(),
+    location: document.getElementById("dealer_location").value.trim(),
+    bank: {
+      accountNo: document.getElementById("dealer_account").value.trim(),
+      ifsc: document.getElementById("dealer_ifsc").value.trim(),
+      bankName: document.getElementById("dealer_bank").value.trim(),
+      bankBranch: document.getElementById("dealer_branch").value.trim()
+    }
+  };
+}
 
   try {
     let res, data;
@@ -457,10 +481,12 @@ async function toggleStatus(id, status) {
 function toggleRoleSections(role) {
   const managerFields = document.getElementById("managerFields");
   const employeeSection = document.getElementById("employeeSection");
+  const dealerFields = document.getElementById("dealerFields");
 
   // hide all first
   if (managerFields) managerFields.style.display = "none";
   if (employeeSection) employeeSection.style.display = "none";
+  if (dealerFields) dealerFields.style.display = "none";
 
   // show based on role
   if (role === "manager") {
@@ -470,7 +496,13 @@ function toggleRoleSections(role) {
   if (role === "employee") {
     employeeSection.style.display = "block";
   }
+
+  if (role === "dealer") {
+    dealerFields.style.display = "block";
+  }
 }
+
+
 /* ---------------- ROLE FORMAT ---------------- */
 function formatRole(role) {
   if (role === "admin") return "Admin";
@@ -626,3 +658,47 @@ async function openEmployeeInfo(userId) {
 // window.closeManagerInfo = function () {
 //   document.getElementById("infoBackdrop").classList.remove("show");
 // };
+
+async function openDealerInfo(userId) {
+  try {
+    const res = await fetch(`/api/admin/dealer-info/${userId}`);
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error);
+
+    document.getElementById("managerInfoBody").innerHTML = `
+      <div style="line-height:1.9">
+
+        <h3>${data.dealer_name || "-"}</h3>
+        🆔 <b>Dealer Code:</b> ${data.dealer_code || "-"}<br><br>
+
+        <h4>Personal Details</h4>
+        📅 <b>DOB:</b> ${data.dob ? new Date(data.dob).toLocaleDateString() : "-"}<br>
+        🪪 <b>PAN:</b> ${data.pan_no || "-"}<br>
+        🧾 <b>Aadhar:</b> ${data.aadhar_no || "-"}<br>
+
+        📞 <b>Mobile:</b> ${data.mobile_no || "-"}<br>
+        👨 <b>Father:</b> ${data.father_mobile_no || "-"}<br>
+        👩 <b>Mother:</b> ${data.mother_mobile_no || "-"}<br>
+
+        ✉️ <b>Email:</b> ${data.email || "-"}<br>
+        📍 <b>Location:</b> ${data.location || "-"}<br>
+
+        <hr>
+
+        <h4>Bank Details</h4>
+        🏦 <b>Bank:</b> ${data.bank_name || "-"}<br>
+        💳 <b>Account:</b> ${data.account_no || "-"}<br>
+        🏷 <b>IFSC:</b> ${data.ifsc || "-"}<br>
+        🌿 <b>Branch:</b> ${data.bank_branch || "-"}
+      </div>
+    `;
+
+    document.getElementById("modalTitle").textContent = "Dealer Info";
+    document.getElementById("infoBackdrop").classList.add("show");
+
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to load dealer info");
+  }
+}

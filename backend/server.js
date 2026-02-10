@@ -14,6 +14,12 @@ const FRONTEND_PATH = path.join(__dirname, "../frontend");
 app.use(express.static(FRONTEND_PATH));
 
 // ----------------- Utilities -----------------
+
+function generateDealerCode() {
+  const random = Math.floor(100000 + Math.random() * 900000);
+  return "DLR" + random;   // example: DLR483920
+}
+
 function generateLoanId() {
   return Date.now().toString(); // simple unique id
 }
@@ -750,6 +756,20 @@ if (roleNormalized === "employee") {
 }
 
 
+if (roleNormalized === "dealer") {
+  if (
+    !profile ||
+    !profile.dealerName ||
+    !profile.mobile ||
+    !profile.bank ||
+    !profile.bank.accountNo ||
+    !profile.bank.ifsc ||
+    !profile.bank.bankName
+  ) {
+    return res.status(400).json({ error: "Incomplete dealer profile" });
+  }
+}
+
     // Insert user
     const userRes = await pool.query(
       `INSERT INTO users (username, password, role, status)
@@ -851,6 +871,53 @@ console.log("EMPLOYEE PROFILE INSERT:", employeeProfile);
     ]
   );
 }
+// INSERT DEALER
+// Insert dealer profile
+if (roleNormalized === "dealer") {
+
+  const dealerCode = generateDealerCode();
+
+  const dealerRes = await pool.query(
+    `INSERT INTO dealer_profiles
+    (user_id, dealer_code, dealer_name, pan_no, aadhar_no, dob,
+     mobile_no, father_mobile_no, mother_mobile_no,
+     email, location)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+    RETURNING id`,
+    [
+      userId,
+      dealerCode,
+      profile.dealerName,
+      profile.pan,
+      profile.aadhar,
+      profile.dob || null,
+      profile.mobile,
+      profile.fatherMobile,
+      profile.motherMobile,
+      profile.email,
+      profile.location
+    ]
+  );
+
+  const dealerProfileId = dealerRes.rows[0].id;
+
+  // Insert bank details
+  await pool.query(
+    `INSERT INTO dealer_bank_details
+    (dealer_profile_id, account_no, ifsc, bank_name, bank_branch)
+    VALUES ($1,$2,$3,$4,$5)`,
+    [
+      dealerProfileId,
+      profile.bank.accountNo,
+      profile.bank.ifsc,
+      profile.bank.bankName,
+      profile.bank.bankBranch
+    ]
+  );
+
+  console.log("✅ Dealer created with code:", dealerCode);
+}
+
 
 
     res.json({ success: true });
@@ -866,6 +933,9 @@ console.log("EMPLOYEE PROFILE INSERT:", employeeProfile);
 }
 
 });
+
+
+
 
 app.patch("/api/admin/users/:id", async (req, res) => {
   try {
@@ -974,6 +1044,48 @@ app.get("/api/admin/employee-info/:userId", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch employee info" });
   }
 });
+app.get("/api/admin/dealer-info/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { rows } = await pool.query(`
+      SELECT 
+        u.username,
+        dp.dealer_code,
+        dp.dealer_name,
+        dp.pan_no,
+        dp.aadhar_no,
+        dp.dob,
+        dp.mobile_no,
+        dp.father_mobile_no,
+        dp.mother_mobile_no,
+        dp.email,
+        dp.location,
+
+        db.account_no,
+        db.ifsc,
+        db.bank_name,
+        db.bank_branch
+
+      FROM users u
+      JOIN dealer_profiles dp ON dp.user_id = u.id
+      LEFT JOIN dealer_bank_details db 
+        ON db.dealer_profile_id = dp.id
+      WHERE u.id = $1
+    `, [userId]);
+
+    if (!rows.length) {
+      return res.status(404).json({ error: "Dealer not found" });
+    }
+
+    res.json(rows[0]);
+
+  } catch (err) {
+    console.error("DEALER INFO ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch dealer info" });
+  }
+});
+
 
 
 app.delete("/api/admin/users/:id", async (req, res) => {

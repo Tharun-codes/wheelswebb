@@ -946,6 +946,9 @@ const dsaCodeInput = document.getElementById("loanDsaCode");
 const maritalStatus = document.getElementById("MaritalStatus");
 const spouseNameField = document.getElementById("spouseNameField");
 const spouseNameInput = document.getElementById("spouseName");
+const employmentCustomerProfile = document.getElementById("employmentCustomerProfile");
+const proprietorshipInfoField = document.getElementById("proprietorshipInfoField");
+const proprietorshipInfo = document.getElementById("proprietorshipInfo");
 const addAltNoBtn = document.getElementById("addAltNoBtn");
 const extraAltMobileContainer = document.getElementById("extraAltMobileContainer");
 const extraAltMobileInput = document.getElementById("extraAltMobile");
@@ -1061,19 +1064,39 @@ if (dsaSelect) {
 }
 
 function toggleSpouseField() {
-  const needsSpouse = maritalStatus && (maritalStatus.value === "Married" || maritalStatus.value === "Divorced");
+  const needsSpouse = maritalStatus && (maritalStatus.value === "Married" || maritalStatus.value === "Divorced" || maritalStatus.value === "Widow");
   if (spouseNameField) {
     spouseNameField.classList.toggle("hidden", !needsSpouse);
   }
   if (spouseNameInput) {
-    spouseNameInput.required = !!needsSpouse;
+    spouseNameInput.required = needsSpouse;
     if (!needsSpouse) spouseNameInput.value = "";
+  }
+}
+
+function toggleProprietorshipInfoField() {
+  const needsProprietorshipInfo = employmentCustomerProfile && (
+    employmentCustomerProfile.value === "Self-Employed" || 
+    employmentCustomerProfile.value === "ITR" || 
+    employmentCustomerProfile.value === "Agriculture"
+  );
+  if (proprietorshipInfoField) {
+    proprietorshipInfoField.classList.toggle("hidden", !needsProprietorshipInfo);
+  }
+  if (proprietorshipInfo) {
+    proprietorshipInfo.required = needsProprietorshipInfo;
+    if (!needsProprietorshipInfo) proprietorshipInfo.value = "";
   }
 }
 
 if (maritalStatus) {
   maritalStatus.addEventListener("change", toggleSpouseField);
   toggleSpouseField();
+}
+
+if (employmentCustomerProfile) {
+  employmentCustomerProfile.addEventListener("change", toggleProprietorshipInfoField);
+  toggleProprietorshipInfoField();
 }
 
 if (addAltNoBtn && extraAltMobileContainer && extraAltMobileInput) {

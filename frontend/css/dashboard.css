@@ -216,6 +216,19 @@ body {
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
+#dealerLeadBtnBox{
+  display: block;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+  color: #cbd5f5;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
 .sidebar-nav a:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;

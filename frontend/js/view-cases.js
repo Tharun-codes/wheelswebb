@@ -6,6 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const targetUserId = urlParams.get('userId');
 const targetUsername = urlParams.get('username');
 const targetRole = urlParams.get('role');
+const dealerView = urlParams.get("dealerView");
 
 let fetchUrl;
 
@@ -84,8 +85,22 @@ async function fetchLeads() {
 
     const leads = await res.json();
     allLeads = Array.isArray(leads) ? leads : [];
-    // default filtered set
-    filteredLeads = allLeads.slice();
+
+    // 🟣 If employee clicked "Dealer Leads"
+    if (user.role === "employee" && dealerView === "1") {
+      filteredLeads = allLeads.filter(l => l.created_by != user.id);
+    } else {
+      filteredLeads = allLeads.slice();
+    }
+
+        if(user.role==="employee" && dealerView==="1"){
+      const heading = document.getElementById("pageHeading");
+      if(heading){
+        heading.textContent = "Dealer Leads (Your Dealers)";
+      }
+    }
+
+
     populateStageFilter();
     renderTable();
     

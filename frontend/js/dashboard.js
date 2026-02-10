@@ -1,8 +1,17 @@
 const rawUser = localStorage.getItem("user");
-const user = rawUser ? JSON.parse(rawUser) : null;
+const user = JSON.parse(localStorage.getItem("user"));
+
+if (user.role !== "employee") {
+  const box = document.getElementById("dealerLeadBtnBox");
+  if (box) box.style.display = "none";
+}
 
 if (!user) {
   window.location.href = "/index.html";
+}
+function openDealerLeads(){
+  // open view cases page with dealer filter
+  window.location.href = "/view-cases.html?dealerView=1";
 }
 
 // Hide admin navigation options for non-admin users

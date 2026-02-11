@@ -2,8 +2,8 @@ const rawUser = localStorage.getItem("user");
 const user = JSON.parse(localStorage.getItem("user"));
 
 if (user.role !== "employee") {
-  const box = document.getElementById("dealerLeadBtnBox");
-  if (box) box.style.display = "none";
+  const dealerLeadBtn = document.getElementById("dealerLeadBtn");
+  if (dealerLeadBtn) dealerLeadBtn.style.display = "none";
 }
 
 if (!user) {

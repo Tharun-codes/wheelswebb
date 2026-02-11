@@ -669,13 +669,16 @@ SELECT
 
   mp.first_name,
   mp.last_name,
+  mp.dob,
+  mp.joining_date,
+  mp.pan,
+  mp.aadhar,
   mp.mobile,
   mp.father_mobile_no,
   mp.mother_mobile_no,
   mp.personal_email,
   mp.office_email,
   mp.location,
-
   mp.bank_name,
   mp.account_no,
   mp.ifsc,
@@ -683,9 +686,9 @@ SELECT
 
 FROM users u
 LEFT JOIN manager_profiles mp ON mp.user_id = u.id
-LEFT JOIN employee_profiles ep ON ep.user_id = u.id
 WHERE u.deleted_at IS NULL
 ORDER BY u.id DESC;
+
 
     `);
 

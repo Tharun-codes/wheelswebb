@@ -5,6 +5,8 @@
   <title>View All Cases | WheelsWeb</title>
   <link rel="stylesheet" href="/css/dashboard.css" />
   <style>
+    #adminFilters{ display:none; }
+
     /* Modern Professional Design */
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -399,6 +401,9 @@
     <select id="filterStage">
       <option value="">All Stages</option>
     </select>
+
+    <div id="adminFilters">
+
         <select id="filterRole">
   <option value="">All Roles</option>
   <option value="manager">Manager</option>
@@ -409,6 +414,7 @@
 <select id="filterUser">
   <option value="">Select User</option>
 </select>
+</div>
 
     <select id="rowsPerPage">
       <option value="10">10 / page</option>

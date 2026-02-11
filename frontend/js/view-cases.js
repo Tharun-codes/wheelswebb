@@ -7,6 +7,38 @@ let allUsers = [];
 
 const user = JSON.parse(localStorage.getItem("user"));
 
+/* 🟢 ADMIN ONLY: load users for filter dropdown */
+if (user.role === "admin") {
+  fetch("/api/all-users")
+    .then(res => res.json())
+    .then(users => {
+      const roleSelect = document.getElementById("filterRole");
+      const userSelect = document.getElementById("filterUser");
+
+      roleSelect.addEventListener("change", () => {
+        const role = roleSelect.value;
+        userSelect.innerHTML = '<option value="">Select User</option>';
+
+        users
+          .filter(u => !role || u.role === role)
+          .forEach(u => {
+            const opt = document.createElement("option");
+            opt.value = u.id;
+            opt.textContent = `${u.username} (${u.role})`;
+            userSelect.appendChild(opt);
+          });
+      });
+    });
+}
+
+const adminFilters = document.getElementById("adminFilters");
+
+if (user.role === "admin") {
+  if (adminFilters) adminFilters.style.display = "flex";
+} else {
+  if (adminFilters) adminFilters.style.display = "none";
+}
+
 // Check if admin is viewing another user's leads via query params
 const urlParams = new URLSearchParams(window.location.search);
 const targetUserId = urlParams.get('userId');

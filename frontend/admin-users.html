@@ -211,67 +211,177 @@
           </div>
 
         </div>      
-      </div>
 
-      <div id="employeeSection" style="display:none">
-<!-- employee info 15/26 viji -->
+<div id="employeeSection" style="display:none; margin-top:10px">
+
   <h3>Employee Details</h3>
 
-  <input placeholder="Employee ID" id="employee_id" />
-  <input placeholder="First Name" id="first_name" />
-  <input placeholder="Last Name" id="last_name" />
+  <div class="form-row">
+    <label>Employee ID</label>
+    <input id="employee_id" />
+  </div>
 
-  <input placeholder="PAN No" id="pan_no" />
-  <input placeholder="Aadhar No" id="aadhar_no" />
+  <div class="form-row">
+    <label>First Name</label>
+    <input id="first_name" />
+  </div>
 
-  <input type="date" id="dob" />
-  <input type="date" id="joining_date" />
+  <div class="form-row">
+    <label>Last Name</label>
+    <input id="last_name" />
+  </div>
 
-  <input placeholder="Mobile No" id="mobile_no" />
-  <input placeholder="Father Mobile No" id="father_mobile_no" />
-  <input placeholder="Mother Mobile No" id="mother_mobile_no" />
+  <div class="form-row">
+    <label>PAN No</label>
+    <input id="pan_no" />
+  </div>
 
-  <input placeholder="Personal Email" id="personal_email" />
-  <input placeholder="Office Email" id="office_email" />
+  <div class="form-row">
+    <label>Aadhar No</label>
+    <input id="aadhar_no" />
+  </div>
 
-  <input placeholder="Location" id="location" />
+  <div class="form-row">
+    <label>Date of Birth</label>
+    <input type="date" id="dob" />
+  </div>
+
+  <div class="form-row">
+    <label>Joining Date</label>
+    <input type="date" id="joining_date" />
+  </div>
+
+  <div class="form-row">
+    <label>Mobile No</label>
+    <input id="mobile_no" />
+  </div>
+
+  <div class="form-row">
+    <label>Father Mobile</label>
+    <input id="father_mobile_no" />
+  </div>
+
+  <div class="form-row">
+    <label>Mother Mobile</label>
+    <input id="mother_mobile_no" />
+  </div>
+
+  <div class="form-row">
+    <label>Personal Email</label>
+    <input id="personal_email" />
+  </div>
+
+  <div class="form-row">
+    <label>Office Email</label>
+    <input id="office_email" />
+  </div>
+
+  <div class="form-row">
+    <label>Location</label>
+    <input id="location" />
+  </div>
 
   <h4>Bank Details</h4>
 
-  <input placeholder="Account No" id="account_no" />
-  <input placeholder="IFSC" id="ifsc" />
-  <input placeholder="Bank Name" id="bank_name" />
-  <input placeholder="Bank Branch" id="bank_branch" />
+  <div class="form-row">
+    <label>Account No</label>
+    <input id="account_no" />
+  </div>
+
+  <div class="form-row">
+    <label>IFSC</label>
+    <input id="ifsc" />
+  </div>
+
+  <div class="form-row">
+    <label>Bank Name</label>
+    <input id="bank_name" />
+  </div>
+
+  <div class="form-row">
+    <label>Bank Branch</label>
+    <input id="bank_branch" />
+  </div>
 
 </div>
-
-<div id="dealerFields" style="display:none">
+<div id="dealerFields" style="display:none; margin-top:10px">
 
   <h3>Dealer Personal Details</h3>
-<label>Dealer Code (Auto Generated)</label>
-<input id="dealer_code" class="input" readonly placeholder="Auto generated" />
-  <input id="dealer_name" placeholder="Dealer Name" class="input" />
-  <input id="dealer_pan" placeholder="PAN No" class="input" />
-  <input id="dealer_aadhar" placeholder="Aadhar No" class="input" />
-  
-  <label>Date of Birth</label>
-  <input id="dealer_dob" type="date" class="input" />
 
-  <input id="dealer_mobile" placeholder="Mobile No" class="input" />
-  <input id="dealer_father_mobile" placeholder="Father Mobile No" class="input" />
-  <input id="dealer_mother_mobile" placeholder="Mother Mobile No" class="input" />
-  <input id="dealer_email" placeholder="Email" class="input" />
-  <input id="dealer_location" placeholder="Location" class="input" />
+  <div class="form-row">
+    <label>Dealer Code (Auto Generated)</label>
+    <input id="dealer_code" readonly placeholder="Auto generated" />
+  </div>
 
-  <h3>Bank Details</h3>
+  <div class="form-row">
+    <label>Dealer Name</label>
+    <input id="dealer_name" />
+  </div>
 
-  <input id="dealer_account" placeholder="Account Number" class="input" />
-  <input id="dealer_ifsc" placeholder="IFSC" class="input" />
-  <input id="dealer_bank" placeholder="Bank Name" class="input" />
-  <input id="dealer_branch" placeholder="Bank Branch" class="input" />
+  <div class="form-row">
+    <label>PAN No</label>
+    <input id="dealer_pan" />
+  </div>
+
+  <div class="form-row">
+    <label>Aadhar No</label>
+    <input id="dealer_aadhar" />
+  </div>
+
+  <div class="form-row">
+    <label>Date of Birth</label>
+    <input id="dealer_dob" type="date" />
+  </div>
+
+  <div class="form-row">
+    <label>Mobile No</label>
+    <input id="dealer_mobile" />
+  </div>
+
+  <div class="form-row">
+    <label>Father Mobile</label>
+    <input id="dealer_father_mobile" />
+  </div>
+
+  <div class="form-row">
+    <label>Mother Mobile</label>
+    <input id="dealer_mother_mobile" />
+  </div>
+
+  <div class="form-row">
+    <label>Email</label>
+    <input id="dealer_email" />
+  </div>
+
+  <div class="form-row">
+    <label>Location</label>
+    <input id="dealer_location" />
+  </div>
+
+  <h4>Bank Details</h4>
+
+  <div class="form-row">
+    <label>Account No</label>
+    <input id="dealer_account" />
+  </div>
+
+  <div class="form-row">
+    <label>IFSC</label>
+    <input id="dealer_ifsc" />
+  </div>
+
+  <div class="form-row">
+    <label>Bank Name</label>
+    <input id="dealer_bank" />
+  </div>
+
+  <div class="form-row">
+    <label>Bank Branch</label>
+    <input id="dealer_branch" />
+  </div>
 
 </div>
-    
+
 
 
     <div class="modal-footer">
@@ -280,6 +390,7 @@
     </div>
 
   </div>
+</div>
 </div>
 </div>
 

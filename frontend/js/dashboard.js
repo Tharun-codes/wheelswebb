@@ -390,6 +390,60 @@ window.addEventListener('load', () => {
 setInterval(() => {
   loadDashboard();
   loadBusinessType();
+  loadBestEmployee();
 }, 5000);
+
+// Load Best Employee Data
+async function loadBestEmployee() {
+  try {
+    // Mock data since backend API doesn't exist yet
+    // TODO: Replace with actual API call when backend is ready
+    const mockData = {
+      name: "Rajesh Kumar",
+      disbursed_amount: 2500000,
+      total_cases: 15
+    };
+
+    console.log("📋 Using mock best employee data:", mockData);
+    
+    if (mockData && mockData.name) {
+      document.getElementById("bestEmployeeName").textContent = mockData.name;
+      document.getElementById("bestEmployeeAmount").textContent = Number(mockData.disbursed_amount || 0).toLocaleString("en-IN");
+      document.getElementById("bestEmployeeCases").textContent = mockData.total_cases || 0;
+      console.log("✅ Best employee data updated successfully with mock data");
+    } else {
+      console.log("⚠️ No valid mock data available");
+      // Handle case where no data is available
+      const bestEmployeeCard = document.getElementById('bestEmployeeCard');
+      if (bestEmployeeCard) {
+        bestEmployeeCard.innerHTML = `
+          <div style="text-align: center; width: 100%;">
+            <div class="avatar-placeholder">🏆</div>
+            <h5>No Performance Data</h5>
+            <p class="employee-role">No disbursed cases found</p>
+          </div>
+        `;
+      }
+    }
+    
+  } catch (err) {
+    console.error("💥 Error loading best employee data:", err);
+    // Show error state
+    const bestEmployeeCard = document.getElementById('bestEmployeeCard');
+    if (bestEmployeeCard) {
+      bestEmployeeCard.innerHTML = `
+        <div style="text-align: center; width: 100%;">
+          <div class="avatar-placeholder">📊</div>
+          <h5>Data Loading Error</h5>
+          <p class="employee-role">Unable to load performance data</p>
+          <small style="color: rgba(255,255,255,0.6)">Error: ${err.message}</small>
+        </div>
+      `;
+    }
+  }
+}
+
+// Initial load of best employee data
+loadBestEmployee();
 
 

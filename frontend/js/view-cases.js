@@ -1,3 +1,9 @@
+const filterRole = document.getElementById("filterRole");
+if (filterRole) filterRole.addEventListener("change", applyFilters);
+const filterUser = document.getElementById("filterUser");
+if (filterUser) filterUser.addEventListener("change", applyFilters);
+
+let allUsers = [];
 
 const user = JSON.parse(localStorage.getItem("user"));
 
@@ -63,6 +69,35 @@ const filterStage = document.getElementById("filterStage");
 const rowsPerPageSelect = document.getElementById("rowsPerPage");
 const refreshBtn = document.getElementById("refreshBtn");
 const emptyState = document.getElementById("emptyState");
+
+async function loadUsers(){
+  const res = await fetch("/api/all-users");
+  allUsers = await res.json();
+}
+loadUsers();
+if(filterRole){
+filterRole.addEventListener("change", () => {
+
+  const role = filterRole.value;
+
+  filterUser.innerHTML = `<option value="">Select User</option>`;
+
+  if(!role) return;
+
+  const users = allUsers.filter(u => u.role === role);
+
+  users.forEach(u=>{
+    const opt = document.createElement("option");
+    opt.value = u.id;
+    opt.textContent = u.username;
+    filterUser.appendChild(opt);
+  });
+
+  applyFilters();
+});
+}
+
+
 
 async function fetchLeads() {
   try {
@@ -255,113 +290,85 @@ function renderPagination(rowsPerPage) {
 }
 
 function applyFilters() {
+
   const q = (searchInput.value || '').trim().toLowerCase();
   const stage = filterStage.value;
-  
+  const roleFilter = filterRole ? filterRole.value : "";
+  const userFilter = filterUser ? filterUser.value : "";
+
   filteredLeads = allLeads.filter(l => {
-    // Create searchable text from multiple fields
-    const searchableText = [
-      l.loan_id || '',
-      l.data?.name || '',
-      l.data?.mobile || '',
-      l.data?.email || '',
-      l.data?.pan || '',
-      l.data?.loanAmount || '',
-      l.data?.bankFinance || '',
-      l.data?.loanDsa || '',
-      l.data?.loanStage || '',
-      l.data?.caseDealer || '',
-      l.data?.basicCaseDealerSelect || '',
-      l.data?.basicRefNameMobile || '',
-      l.data?.vehicle || '',
-      l.data?.rcNo || '',
-      // Add UTR payment data to search
-      ...(l.data?.payments || []).map(p => [
-        p.date || '',
-        p.amount || '',
-        p.utrNo || '',
-        p.acHolderName || '',
-        p.bankName || '',
-        p.acNo || '',
-        p.ifsc || '',
-        p.remarks || ''
-      ]).flat()
-    ].join(' ').toLowerCase();
+    const selectedUserId = filterUser?.value;
+
+// If specific user selected
+if (selectedUserId) {
+
+  // show only that user's leads
+  if (String(l.created_by) !== String(selectedUserId)) {
     
-    // Stage filter
-    if (stage && l.data?.loanStage !== stage) return false;
-    
-    // Search filter - comprehensive partial matching
-    if (q) {
-      // Split search query into multiple terms for better matching
-      const searchTerms = q.split(' ').filter(term => term.length > 0);
-      
-      // Check if ALL search terms are found in any field
-      const allTermsMatch = searchTerms.every(term => {
-        return searchableText.includes(term);
-      });
-      
-      if (!allTermsMatch) return false;
+    // also include hierarchy
+    if (
+      String(l.manager_id) !== String(selectedUserId) &&
+      String(l.employee_id) !== String(selectedUserId)
+    ) {
+      return false;
     }
-    
+  }
+}
+
+
+    // 🔵 ROLE DROPDOWN FILTER
+    if (roleFilter && !userFilter) {
+      if (l.creator_role !== roleFilter) return false;
+    }
+
+    // 🔵 SPECIFIC USER FILTER
+    if (userFilter) {
+
+      // MANAGER selected
+      if (roleFilter === "manager") {
+        if (
+          l.created_by == userFilter ||   // manager own leads
+          l.manager_id == userFilter      // employees under manager
+        ) {
+          return true;
+        }
+        return false;
+      }
+
+      // EMPLOYEE selected
+      if (roleFilter === "employee") {
+        if (
+          l.created_by == userFilter || 
+          l.employee_id == userFilter
+        ) {
+          return true;
+        }
+        return false;
+      }
+
+      // DEALER selected
+      if (roleFilter === "dealer") {
+        if (l.created_by == userFilter) return true;
+        return false;
+      }
+    }
+
+    // 🔵 STAGE FILTER
+    if (stage && l.data?.loanStage !== stage) return false;
+
+    // 🔵 SEARCH FILTER
+    if (q) {
+      const searchableText = JSON.stringify(l).toLowerCase();
+      if (!searchableText.includes(q)) return false;
+    }
+
     return true;
   });
-  
-  // Sort results: exact matches first, then partial matches
-  if (q) {
-    filteredLeads.sort((a, b) => {
-      const aText = [
-        a.loan_id || '',
-        a.data?.name || '',
-        a.data?.mobile || '',
-        a.data?.basicCaseDealerSelect || '',
-        a.data?.basicRefNameMobile || ''
-      ].join(' ').toLowerCase();
-      
-      const bText = [
-        b.loan_id || '',
-        b.data?.name || '',
-        b.data?.mobile || '',
-        b.data?.basicCaseDealerSelect || '',
-        b.data?.basicRefNameMobile || ''
-      ].join(' ').toLowerCase();
-      
-      // Exact match priority
-      const aExact = aText.includes(q);
-      const bExact = bText.includes(q);
-      
-      if (aExact && !bExact) return -1;
-      if (!aExact && bExact) return 1;
-      
-      // Loan ID exact match gets highest priority
-      const aLoanExact = a.loan_id?.toLowerCase() === q;
-      const bLoanExact = b.loan_id?.toLowerCase() === q;
-      
-      if (aLoanExact && !bLoanExact) return -1;
-      if (!aLoanExact && bLoanExact) return 1;
-      
-      // Name exact match
-      const aNameExact = a.data?.name?.toLowerCase() === q;
-      const bNameExact = b.data?.name?.toLowerCase() === q;
-      
-      if (aNameExact && !bNameExact) return -1;
-      if (!aNameExact && bNameExact) return 1;
-      
-      // Mobile exact match
-      const aMobileExact = a.data?.mobile === q;
-      const bMobileExact = b.data?.mobile === q;
-      
-      if (aMobileExact && !bMobileExact) return -1;
-      if (!aMobileExact && bMobileExact) return 1;
-      
-      // Alphabetical sort as fallback
-      return aText.localeCompare(bText);
-    });
-  }
-  
+
   currentPage = 1;
   renderTable();
 }
+
 
 // const user = JSON.parse(localStorage.getItem("user"));
 
@@ -384,6 +391,8 @@ if (searchInput) searchInput.addEventListener('input', () => { applyFilters(); }
 if (filterStage) filterStage.addEventListener('change', () => { applyFilters(); });
 if (rowsPerPageSelect) rowsPerPageSelect.addEventListener('change', () => { currentPage = 1; renderTable(); });
 if (refreshBtn) refreshBtn.addEventListener('click', () => fetchLeads());
+
+if (filterRole) filterRole.addEventListener("change", applyFilters);
 
 // initial load
 fetchLeads();

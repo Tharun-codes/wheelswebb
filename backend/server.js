@@ -514,49 +514,54 @@ app.get("/api/leads", async (req, res) => {
     /* ================= ADMIN ================= */
     if (role === "admin") {
       query = `
-        SELECT *
-        FROM leads
-        ORDER BY created_at DESC
+SELECT 
+ l.*,
+ u.role as creator_role,
+
+ -- manager of employee
+ (SELECT manager_id FROM manager_employees WHERE employee_id = l.created_by LIMIT 1) as manager_id,
+
+ -- employee of dealer
+ (SELECT employee_id FROM employee_dealers WHERE dealer_id = l.created_by LIMIT 1) as employee_id
+
+FROM leads l
+LEFT JOIN users u ON u.id = l.created_by
+
       `;
     }
 
     /* ================= MANAGER ================= */
-    else if (role === "manager") {
-      query = `
-        SELECT *
-        FROM leads
-        WHERE
-          -- own leads
-          created_by = $1
+else if (role === "manager") {
+  query = `
+    SELECT 
+      l.*,
+      u.role as creator_role,
+      u.username as creator_name
+    FROM leads l
+    LEFT JOIN users u ON u.id = l.created_by
+    WHERE
+      l.created_by = $1
 
-          -- employee leads
-          OR created_by IN (
-            SELECT employee_id
-            FROM manager_employees
-            WHERE manager_id = $1
-          )
+      OR l.created_by IN (
+        SELECT employee_id
+        FROM manager_employees
+        WHERE manager_id = $1
+      )
 
-          -- dealer leads assigned to manager
-          OR created_by IN (
-            SELECT dealer_id
-            FROM employee_dealers
-            WHERE employee_id = $1
-          )
+      OR l.created_by IN (
+        SELECT dealer_id
+        FROM employee_dealers
+        WHERE employee_id IN (
+          SELECT employee_id
+          FROM manager_employees
+          WHERE manager_id = $1
+        )
+      )
+    ORDER BY l.created_at DESC
+  `;
+  params = [userId];
+}
 
-          -- dealer leads assigned to manager's employees
-          OR created_by IN (
-            SELECT dealer_id
-            FROM employee_dealers
-            WHERE employee_id IN (
-              SELECT employee_id
-              FROM manager_employees
-              WHERE manager_id = $1
-            )
-          )
-        ORDER BY created_at DESC
-      `;
-      params = [userId];
-    }
 
     /* ================= EMPLOYEE ================= */
     else if (role === "employee") {
@@ -579,15 +584,20 @@ app.get("/api/leads", async (req, res) => {
     }
 
     /* ================= DEALER ================= */
-    else if (role === "dealer") {
-      query = `
-        SELECT *
-        FROM leads
-        WHERE created_by = $1
-        ORDER BY created_at DESC
-      `;
-      params = [userId];
-    }
+else if (role === "dealer") {
+  query = `
+    SELECT 
+      l.*,
+      u.role as creator_role,
+      u.username as creator_name
+    FROM leads l
+    LEFT JOIN users u ON u.id = l.created_by
+    WHERE l.created_by = $1
+    ORDER BY l.created_at DESC
+  `;
+  params = [userId];
+}
+
 
     const { rows } = await pool.query(query, params);
     res.json(rows);
@@ -1730,6 +1740,20 @@ app.post("/api/dealer/notifications/read", async (req, res) => {
   } catch (err) {
     console.error("Mark dealer notifications read error:", err);
     res.status(500).json({ error: "Failed to mark notifications as read" });
+  }
+});
+app.get("/api/all-users", async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT id, username, role FROM users
+      WHERE deleted_at IS NULL AND status='active'
+      ORDER BY username
+    `);
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json([]);
   }
 });
 

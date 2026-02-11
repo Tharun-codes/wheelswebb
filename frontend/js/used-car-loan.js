@@ -1407,9 +1407,8 @@ function createAdditionalApplicantBlock(index) {
         <option value="">CUSTOMER PROFILE *</option>
         <option>Self-Employed</option>
         <option>Salaried</option>
-        <option>ITR</option>
-        <option>Agriculture</option>
-        <option>Pension</option>
+        <option>Cash Salaried</option>
+        <option>Pensioner</option>
       </select>
     </div>
 
@@ -1450,16 +1449,13 @@ function createAdditionalApplicantBlock(index) {
       <label for="additionalApplicant${index}BusinessProof">
         BUSINESS PROOF *
       </label>
-      <select id="additionalApplicant${index}BusinessProof" required>
-        <option value="">BUSINESS PROOF *</option>
-        <option>NIP</option>
-        <option>Pay slips</option>
-        <option>RTC</option>
-        <option>GST</option>
-        <option>ITR</option>
-        <option>License</option>
-        <option>Pension Statements</option>
-      </select>
+      <div class="multi-select-container">
+        <div class="multi-select-display" id="additionalApplicant${index}BusinessProofDisplay">
+          <span class="multi-select-placeholder">Select Business Proof...</span>
+        </div>
+        <div class="multi-select-dropdown" id="additionalApplicant${index}BusinessProofDropdown"></div>
+        <input type="hidden" id="additionalApplicant${index}BusinessProof" />
+      </div>
     </div>
 
     <div class="form-field" style="grid-column: span 3;">
@@ -1537,6 +1533,7 @@ function initializeAdditionalApplicants() {
     initAdditionalApplicantSpouseField(visibleIndex);
     initAdditionalApplicantTypeField(visibleIndex);
     initAdditionalApplicantProprietorshipField(visibleIndex);
+    initAdditionalApplicantBusinessProof(visibleIndex);
     initAdditionalApplicantAddressCopy(visibleIndex);
 
     // Re-apply validation to dynamically created fields
@@ -2354,6 +2351,7 @@ if (loanId) {
           initAdditionalApplicantSpouseField(visibleIndex);
           initAdditionalApplicantTypeField(visibleIndex);
           initAdditionalApplicantProprietorshipField(visibleIndex);
+          initAdditionalApplicantBusinessProof(visibleIndex);
           initAdditionalApplicantAddressCopy(visibleIndex);
 
 
@@ -2579,10 +2577,10 @@ function initAdditionalApplicantTypeField(index) {
   if (!applicantTypeSelect || !relationField || !relationSelect) return;
   
   function toggleRelationField() {
-    const isGuarantor = applicantTypeSelect.value === "Guarantor";
-    relationField.style.display = isGuarantor ? "none" : "block";
-    relationSelect.required = !isGuarantor;
-    if (isGuarantor) relationSelect.value = "";
+    const isCoApplicant = applicantTypeSelect.value === "Co-Applicant";
+    relationField.style.display = isCoApplicant ? "block" : "none";
+    relationSelect.required = isCoApplicant;
+    if (!isCoApplicant) relationSelect.value = "";
   }
   
   applicantTypeSelect.addEventListener("change", toggleRelationField);
@@ -2597,9 +2595,7 @@ function initAdditionalApplicantProprietorshipField(index) {
   if (!employmentProfileSelect || !proprietorshipInfoField || !proprietorshipInfoSelect) return;
   
   function toggleProprietorshipInfoField() {
-    const needsProprietorshipInfo = employmentProfileSelect.value === "Self-Employed" || 
-                                   employmentProfileSelect.value === "ITR" || 
-                                   employmentProfileSelect.value === "Agriculture";
+    const needsProprietorshipInfo = employmentProfileSelect.value === "Self-Employed";
     proprietorshipInfoField.classList.toggle("hidden", !needsProprietorshipInfo);
     proprietorshipInfoSelect.required = needsProprietorshipInfo;
     if (!needsProprietorshipInfo) proprietorshipInfoSelect.value = "";
@@ -2647,4 +2643,95 @@ function initAdditionalApplicantAddressCopy(index) {
   
   copyCheckbox.addEventListener('change', copyPermanentFromCurrent);
   copyPermanentFromCurrent(); // Initialize on load
+}
+
+function initAdditionalApplicantBusinessProof(index) {
+  const businessProofOptions = [
+    "NIP",
+    "Pay slips", 
+    "RTC",
+    "GST",
+    "ITR",
+    "License",
+    "Pension Statements"
+  ];
+
+  const display = document.getElementById(`additionalApplicant${index}BusinessProofDisplay`);
+  const dropdown = document.getElementById(`additionalApplicant${index}BusinessProofDropdown`);
+  const hiddenInput = document.getElementById(`additionalApplicant${index}BusinessProof`);
+  
+  if (!display || !dropdown || !hiddenInput) return;
+  
+  let selectedBusinessProof = [];
+
+  function renderBusinessProofDropdown() {
+    dropdown.innerHTML = "";
+    
+    businessProofOptions.forEach(option => {
+      const optionDiv = document.createElement("div");
+      optionDiv.className = "multi-select-option";
+      if (selectedBusinessProof.includes(option)) {
+        optionDiv.classList.add("selected");
+      }
+      optionDiv.textContent = option;
+      
+      optionDiv.addEventListener("click", () => toggleBusinessProofOption(option));
+      dropdown.appendChild(optionDiv);
+    });
+  }
+
+  function toggleBusinessProofOption(option) {
+    const index = selectedBusinessProof.indexOf(option);
+    if (index > -1) {
+      selectedBusinessProof.splice(index, 1);
+    } else {
+      selectedBusinessProof.push(option);
+    }
+    
+    updateBusinessProofDisplay();
+    renderBusinessProofDropdown();
+    
+    // Update hidden input value
+    hiddenInput.value = selectedBusinessProof.join(", ");
+  }
+
+  function updateBusinessProofDisplay() {
+    display.innerHTML = "";
+    
+    if (selectedBusinessProof.length === 0) {
+      display.innerHTML = '<span class="multi-select-placeholder">Select Business Proof...</span>';
+    } else {
+      selectedBusinessProof.forEach(opt => {
+        const tag = document.createElement("span");
+        tag.className = "multi-select-tag";
+        tag.textContent = opt;
+        const removeBtn = document.createElement("span");
+        removeBtn.textContent = "×";
+        removeBtn.style.cursor = "pointer";
+        removeBtn.style.marginLeft = "4px";
+        removeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleBusinessProofOption(opt);
+        });
+        tag.appendChild(removeBtn);
+        display.appendChild(tag);
+      });
+    }
+  }
+
+  // Toggle dropdown visibility
+  display.addEventListener("click", () => {
+    dropdown.classList.toggle("active");
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!display.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove("active");
+    }
+  });
+
+  // Initialize
+  renderBusinessProofDropdown();
+  updateBusinessProofDisplay();
 }

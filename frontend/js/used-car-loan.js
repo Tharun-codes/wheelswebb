@@ -1143,7 +1143,7 @@ function createAdditionalApplicantBlock(index) {
           </select>
         </div>
 
-        <div class="form-field">
+        <div class="form-field" id="additionalApplicant${index}RelationField">
           <label for="additionalApplicant${index}Relation">APPLICANT RELATION</label>
           <select id="additionalApplicant${index}Relation">
             <option value="">APPLICANT RELATION</option>
@@ -1192,6 +1192,7 @@ function createAdditionalApplicantBlock(index) {
             <option>Single</option>
             <option>Married</option>
             <option>Divorced</option>
+            <option>Widow</option>
           </select>
         </div>
 
@@ -1220,14 +1221,15 @@ function createAdditionalApplicantBlock(index) {
 
     <div class="form-field">
       <label for="additionalApplicant${index}CurrentProof">ADDRESS PROOF *</label>
-      <select id="additionalApplicant${index}CurrentProof">
+      <select id="additionalApplicant${index}CurrentProof" required>
         <option value="">ADDRESS PROOF *</option>
         <option>Aadhaar</option>
         <option>Voter ID</option>
         <option>Gas Bill</option>
-        <option>EB Bill</option>
-        <option>Tax Paid Receipt</option>
+        <option>Ration Card</option>
+        <option>Passport</option>
         <option>Rent Agreements</option>
+        <option>Purchase Deeds</option>
       </select>
     </div>
 
@@ -1265,13 +1267,33 @@ function createAdditionalApplicantBlock(index) {
     </div>
 
     <div class="form-field">
+      <label for="additionalApplicant${index}CurrentOhpProof">OHP PROOF *</label>
+      <select id="additionalApplicant${index}CurrentOhpProof" required>
+        <option value="">OHP PROOF *</option>
+        <option>EB Bill</option>
+        <option>Property Tax Receipt</option>
+        <option>Water Bill</option>
+        <option>Hakku Patra</option>
+        <option>Purchase Deeds</option>
+        <option>Utility Bill</option>
+        <option>LandLord EB Bill</option>
+        <option>Others</option>
+      </select>
+    </div>
+
+    <div class="form-field">
       <label for="additionalApplicant${index}CurrentRelation">OHP OWNER RELATION *</label>
-      <select id="additionalApplicant${index}CurrentRelation">
+      <select id="additionalApplicant${index}CurrentRelation" required>
         <option value="">OHP OWNER RELATION *</option>
-        <option>SPOUSE</option>
-        <option>SELF-OWNED</option>
-        <option>PARANTEL</option>
-        <option>RENTED</option>
+        <option>Self Owned</option>
+        <option>Spouse</option>
+        <option>Parental</option>
+        <option>Mother In Law</option>
+        <option>Father In Law</option>
+        <option>Grand Parental</option>
+        <option>Rental</option>
+        <option>GOVT Quarters</option>
+        <option>Others</option>
       </select>
     </div>
 
@@ -1292,14 +1314,15 @@ function createAdditionalApplicantBlock(index) {
 
     <div class="form-field">
       <label for="additionalApplicant${index}PermanentProof">ADDRESS PROOF *</label>
-      <select id="additionalApplicant${index}PermanentProof">
+      <select id="additionalApplicant${index}PermanentProof" required>
         <option value="">ADDRESS PROOF *</option>
         <option>Aadhaar</option>
         <option>Voter ID</option>
         <option>Gas Bill</option>
-        <option>EB Bill</option>
-        <option>Tax Paid Receipt</option>
+        <option>Ration Card</option>
+        <option>Passport</option>
         <option>Rent Agreements</option>
+        <option>Purchase Deeds</option>
       </select>
     </div>
 
@@ -1337,13 +1360,33 @@ function createAdditionalApplicantBlock(index) {
     </div>
 
     <div class="form-field">
+      <label for="additionalApplicant${index}PermanentOhpProof">OHP PROOF *</label>
+      <select id="additionalApplicant${index}PermanentOhpProof" required>
+        <option value="">OHP PROOF *</option>
+        <option>EB Bill</option>
+        <option>Property Tax Receipt</option>
+        <option>Water Bill</option>
+        <option>Hakku Patra</option>
+        <option>Purchase Deeds</option>
+        <option>Utility Bill</option>
+        <option>LandLord EB Bill</option>
+        <option>Others</option>
+      </select>
+    </div>
+
+    <div class="form-field">
       <label for="additionalApplicant${index}PermanentRelation">OHP OWNER RELATION *</label>
-      <select id="additionalApplicant${index}PermanentRelation">
+      <select id="additionalApplicant${index}PermanentRelation" required>
         <option value="">OHP OWNER RELATION *</option>
-        <option>SPOUSE</option>
-        <option>SELF-OWNED</option>
-        <option>PARANTEL</option>
-        <option>RENTED</option>
+        <option>Self Owned</option>
+        <option>Spouse</option>
+        <option>Parental</option>
+        <option>Mother In Law</option>
+        <option>Father In Law</option>
+        <option>Grand Parental</option>
+        <option>Rental</option>
+        <option>GOVT Quarters</option>
+        <option>Others</option>
       </select>
     </div>
 
@@ -1360,7 +1403,7 @@ function createAdditionalApplicantBlock(index) {
       <label for="additionalApplicant${index}EmploymentProfile">
         CUSTOMER PROFILE *
       </label>
-      <select id="additionalApplicant${index}EmploymentProfile">
+      <select id="additionalApplicant${index}EmploymentProfile" required>
         <option value="">CUSTOMER PROFILE *</option>
         <option>Self-Employed</option>
         <option>Salaried</option>
@@ -1371,30 +1414,43 @@ function createAdditionalApplicantBlock(index) {
     </div>
 
         <div class="form-field">
-          <label for="additionalApplicant${index}BusinessName">
-            BUSINESS / OFFICE / DESIGNATION NAME
-          </label>
-          <input
-            id="additionalApplicant${index}BusinessName"
-            data-uppercase
-          />
-        </div>
+      <label for="additionalApplicant${index}BusinessName">
+        BUSINESS / OFFICE NAME *
+      </label>
+      <input
+        id="additionalApplicant${index}BusinessName"
+        required
+        data-uppercase
+      />
+    </div>
 
-        <div class="form-field">
-          <label for="additionalApplicant${index}MonthlyIncome">
-            MONTHLY INCOME
-          </label>
-          <input
-            id="additionalApplicant${index}MonthlyIncome"
-            type="number"
-          />
-        </div>
+    <div id="additionalApplicant${index}ProprietorshipInfoField" class="form-field hidden">
+      <label for="additionalApplicant${index}ProprietorshipInfo">PROPRIETORSHIP INFO *</label>
+      <select id="additionalApplicant${index}ProprietorshipInfo">
+        <option value="">PROPRIETORSHIP INFO *</option>
+        <option>Proprietor</option>
+        <option>Proprietorship Firm</option>
+        <option>Partnership</option>
+        <option>Employee</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="additionalApplicant${index}MonthlyIncome">
+        MONTHLY INCOME *
+      </label>
+      <input
+        id="additionalApplicant${index}MonthlyIncome"
+        type="number"
+        required
+      />
+    </div>
 
     <div class="form-field">
       <label for="additionalApplicant${index}BusinessProof">
         BUSINESS PROOF *
       </label>
-      <select id="additionalApplicant${index}BusinessProof">
+      <select id="additionalApplicant${index}BusinessProof" required>
         <option value="">BUSINESS PROOF *</option>
         <option>NIP</option>
         <option>Pay slips</option>
@@ -1408,10 +1464,11 @@ function createAdditionalApplicantBlock(index) {
 
     <div class="form-field" style="grid-column: span 3;">
       <label for="additionalApplicant${index}OfficeAddress">
-        FULL ADDRESS
+        FULL ADDRESS *
       </label>
       <textarea
         id="additionalApplicant${index}OfficeAddress"
+        required
       ></textarea>
     </div>
 
@@ -1478,6 +1535,8 @@ function initializeAdditionalApplicants() {
     additionalApplicantsContainer.appendChild(block);
     initAdditionalApplicantPin(visibleIndex);
     initAdditionalApplicantSpouseField(visibleIndex);
+    initAdditionalApplicantTypeField(visibleIndex);
+    initAdditionalApplicantProprietorshipField(visibleIndex);
     initAdditionalApplicantAddressCopy(visibleIndex);
 
     // Re-apply validation to dynamically created fields
@@ -2293,6 +2352,8 @@ if (loanId) {
           additionalApplicantsContainer.appendChild(block);
           initAdditionalApplicantPin(visibleIndex);
           initAdditionalApplicantSpouseField(visibleIndex);
+          initAdditionalApplicantTypeField(visibleIndex);
+          initAdditionalApplicantProprietorshipField(visibleIndex);
           initAdditionalApplicantAddressCopy(visibleIndex);
 
 
@@ -2510,6 +2571,44 @@ function initAdditionalApplicantSpouseField(index) {
   toggleSpouseField(); // Initialize on load
 }
 
+function initAdditionalApplicantTypeField(index) {
+  const applicantTypeSelect = document.getElementById(`additionalApplicant${index}Type`);
+  const relationField = document.getElementById(`additionalApplicant${index}RelationField`);
+  const relationSelect = document.getElementById(`additionalApplicant${index}Relation`);
+  
+  if (!applicantTypeSelect || !relationField || !relationSelect) return;
+  
+  function toggleRelationField() {
+    const isGuarantor = applicantTypeSelect.value === "Guarantor";
+    relationField.style.display = isGuarantor ? "none" : "block";
+    relationSelect.required = !isGuarantor;
+    if (isGuarantor) relationSelect.value = "";
+  }
+  
+  applicantTypeSelect.addEventListener("change", toggleRelationField);
+  toggleRelationField();
+}
+
+function initAdditionalApplicantProprietorshipField(index) {
+  const employmentProfileSelect = document.getElementById(`additionalApplicant${index}EmploymentProfile`);
+  const proprietorshipInfoField = document.getElementById(`additionalApplicant${index}ProprietorshipInfoField`);
+  const proprietorshipInfoSelect = document.getElementById(`additionalApplicant${index}ProprietorshipInfo`);
+  
+  if (!employmentProfileSelect || !proprietorshipInfoField || !proprietorshipInfoSelect) return;
+  
+  function toggleProprietorshipInfoField() {
+    const needsProprietorshipInfo = employmentProfileSelect.value === "Self-Employed" || 
+                                   employmentProfileSelect.value === "ITR" || 
+                                   employmentProfileSelect.value === "Agriculture";
+    proprietorshipInfoField.classList.toggle("hidden", !needsProprietorshipInfo);
+    proprietorshipInfoSelect.required = needsProprietorshipInfo;
+    if (!needsProprietorshipInfo) proprietorshipInfoSelect.value = "";
+  }
+  
+  employmentProfileSelect.addEventListener("change", toggleProprietorshipInfoField);
+  toggleProprietorshipInfoField();
+}
+
 function initAdditionalApplicantAddressCopy(index) {
   const copyCheckbox = document.getElementById(`additionalApplicant${index}CopyPermanentFromCurrent`);
   if (!copyCheckbox) return;
@@ -2520,6 +2619,7 @@ function initAdditionalApplicantAddressCopy(index) {
     ['CurrentLandmark', 'PermanentLandmark'],
     ['CurrentPincode', 'PermanentPincode'],
     ['CurrentDistrict', 'PermanentDistrict'],
+    ['CurrentOhpProof', 'PermanentOhpProof'],
     ['CurrentRelation', 'PermanentRelation']
   ];
   

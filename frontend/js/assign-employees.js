@@ -127,7 +127,8 @@ function renderEmployees() {
   div.innerHTML = "";
 
   const assignableUsers = [...employees, ...dealers];
-  const searchTerm = document.getElementById("employeeSearch").value.toLowerCase().trim();
+  const searchInput = document.getElementById("employeeSearch");
+const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
   
   // Filter employees based on search with exact match priority
   const filteredUsers = assignableUsers.filter(user => {
@@ -377,12 +378,9 @@ async function loadAllAssignments() {
             console.log(`Manager ${manager.username} - Normalized employee IDs:`, normalizedEmployeeIds);
             
             // Find matching employees and dealers
-              const assignedEmployees = allUsers.filter(u => {
-                return u.role === "employee" && normalizedEmployeeIds.includes(Number(u.id));
-              if (isMatch) {
-                console.log(`  ✓ Matched employee/dealer: ${u.username} (ID: ${userId})`);
-              }
-              return isMatch;
+            const assignedEmployees = allUsers.filter(u => {
+              const isMatch = normalizedEmployeeIds.includes(Number(u.id));
+              return u.role === "employee" && isMatch;
             });
 
             console.log(`Manager ${manager.username} - Found ${assignedEmployees.length} matching employees/dealers out of ${normalizedIds.length} assigned IDs`);
@@ -998,3 +996,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadAllAssignments();
   await loadEmployeeAssignments();
 });
+
+
+function populateManagerSelect() {
+  const select = document.getElementById("managerSelect");
+  if (!select) return;
+
+  select.innerHTML = `
+    <option value="">Select manager or employee</option>
+  `;
+
+  // managers
+  managers.forEach(m => {
+    select.innerHTML += `
+      <option value="${m.id}">👔 ${m.username} (manager)</option>
+    `;
+  });
+
+  // employees (can also be boss of dealers)
+  employees.forEach(e => {
+    select.innerHTML += `
+      <option value="${e.id}">🧑‍💼 ${e.username} (employee)</option>
+    `;
+  });
+
+  select.addEventListener("change", onManagerChange);
+}

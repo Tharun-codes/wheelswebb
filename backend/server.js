@@ -242,6 +242,8 @@ app.get("/api/dashboard/:role/:userId/business-type", async (req, res) => {
 
 
 
+
+
 app.get("/api/manager/stats", async (req, res) => {
   try {
     const { managerId } = req.query;
@@ -709,8 +711,43 @@ ORDER BY u.id DESC;
   }
 });
 
+// ----------------- Dealers list (admin/manager/employee) -----------------
+app.get("/api/users/dealers", async (req, res) => {
+  try {
+    const userId = parseInt(req.headers["x-user-id"]);
+    if (!userId) return res.status(403).json({ error: "Unauthorized" });
 
+    const userCheck = await pool.query(
+      "SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL",
+      [userId]
+    );
+    if (!userCheck.rows.length) return res.status(403).json({ error: "Unauthorized" });
 
+    const role = (userCheck.rows[0].role || '').toLowerCase();
+    if (!['admin', 'manager', 'employee'].includes(role)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT
+         u.id,
+         u.username,
+         u.status,
+         COALESCE(dp.dealer_name, u.username) AS display_name
+       FROM users u
+       LEFT JOIN dealer_profiles dp ON dp.user_id = u.id
+       WHERE u.role = 'dealer'
+         AND u.deleted_at IS NULL
+         AND (u.status IS NULL OR u.status <> 'inactive')
+       ORDER BY COALESCE(dp.dealer_name, u.username)`
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("FETCH DEALERS ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch dealers" });
+  }
+});
 
 //tharun
 app.post("/api/admin/users", async (req, res) => {

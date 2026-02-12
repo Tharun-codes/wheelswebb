@@ -180,6 +180,9 @@ function toggleBasicFieldsBySource() {
         if (dealerSelect) dealerSelect.required = true;
         if (dealerNameInput) dealerNameInput.required = false;
         if (caseDealer) caseDealer.required = false;
+
+        // Ensure dealer list is loaded/refreshed when switching Source to Dealer
+        try { loadDealerOptions(); } catch (e) { /* ignore */ }
       }
       // Show Ref Name / Mob No for manual editing when dealer selected
       if (wrapperRef) wrapperRef.classList.remove('hidden');
@@ -683,57 +686,73 @@ async function loadDealerOptions() {
   const dealerSelect = document.getElementById('basicCaseDealerSelect');
   if (!dealerSelect) return;
 
-  // Try to use logged-in user id as admin header if available
-  let admin = null;
-  try { admin = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { admin = null; }
+  // Always clear hardcoded options immediately (DSA list in HTML)
+  dealerSelect.innerHTML = '';
+  const loadingOpt = document.createElement('option');
+  loadingOpt.value = '';
+  loadingOpt.textContent = 'Loading dealers...';
+  dealerSelect.appendChild(loadingOpt);
+
+  let currentUser = null;
+  try { currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { currentUser = null; }
 
   try {
     const headers = {};
-    if (admin && admin.id) headers['x-admin-id'] = admin.id;
+    if (currentUser && currentUser.id) headers['x-user-id'] = currentUser.id;
 
-    const res = await fetch('/api/admin/users', { headers });
+    const res = await fetch('/api/users/dealers', { headers });
     if (!res.ok) {
-      // cannot fetch (likely not admin) — leave default options
+      dealerSelect.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No dealers available';
+      dealerSelect.appendChild(opt);
       return;
     }
 
-    const users = await res.json();
-    const dealers = Array.isArray(users) ? users.filter(u => (u.role || '').toLowerCase() === 'dealer' && u.status !== 'inactive') : [];
+    const dealers = await res.json();
+    const list = Array.isArray(dealers) ? dealers : [];
 
-    // Clear existing (but keep first placeholder)
-    const placeholder = dealerSelect.querySelector('option[value=""]');
     dealerSelect.innerHTML = '';
-    if (placeholder) dealerSelect.appendChild(placeholder);
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select Dealer';
+    dealerSelect.appendChild(placeholder);
 
-    dealers.forEach(d => {
+    list.forEach(d => {
       const opt = document.createElement('option');
-      // Prefer a readable name if available, fall back to username
-      opt.textContent = d.username || (d.first_name || 'Dealer');
-      opt.value = d.username || d.id;
+      opt.textContent = d.display_name || d.username || 'Dealer';
+      opt.value = d.id;
       dealerSelect.appendChild(opt);
     });
 
-    // keep an 'Others' option
     const othersOpt = document.createElement('option');
     othersOpt.value = 'Others';
     othersOpt.textContent = 'Others';
     dealerSelect.appendChild(othersOpt);
 
     // If user selects 'Others' in dealer select, show manual Case Dealer input
-    dealerSelect.addEventListener('change', () => {
-      const wrapperCase = document.getElementById('basicCaseDealerWrapper');
-      if (!wrapperCase) return;
-      if ((dealerSelect.value || '').toLowerCase() === 'others') {
-        wrapperCase.classList.remove('hidden');
-        const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = true;
-      } else {
-        wrapperCase.classList.add('hidden');
-        const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = false;
-      }
-    });
-
+    if (!dealerSelect.dataset.othersListenerAttached) {
+      dealerSelect.dataset.othersListenerAttached = '1';
+      dealerSelect.addEventListener('change', () => {
+        const wrapperCase = document.getElementById('basicCaseDealerWrapper');
+        if (!wrapperCase) return;
+        if ((dealerSelect.value || '').toLowerCase() === 'others') {
+          wrapperCase.classList.remove('hidden');
+          const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = true;
+        } else {
+          wrapperCase.classList.add('hidden');
+          const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = false;
+        }
+      });
+    }
   } catch (err) {
     console.error('Failed to load dealers', err);
+    dealerSelect.innerHTML = '';
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No dealers available';
+    dealerSelect.appendChild(opt);
   }
 }
 

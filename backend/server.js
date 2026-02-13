@@ -151,6 +151,85 @@ app.get("/api/dashboard/:role/:userId", async (req, res) => {
     res.status(500).json({ error: "Dashboard failed" });
   }
 });
+
+app.get("/api/dashboard/:role/:userId/best-employee", async (req, res) => {
+  try {
+    const { role, userId } = req.params;
+    const uid = Number(userId);
+
+    if (!uid || Number.isNaN(uid)) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
+
+    let scopeFilterSql = "";
+    let params = [];
+
+    if (role === "admin") {
+      params = [];
+      scopeFilterSql = "";
+    } else if (role === "manager") {
+      params = [uid];
+      scopeFilterSql = "WHERE employee_id IN (SELECT employee_id FROM manager_employees WHERE manager_id = $1)";
+    } else if (role === "employee") {
+      params = [uid];
+      scopeFilterSql = "WHERE employee_id = $1";
+    } else {
+      return res.status(403).json({ error: "Role not allowed" });
+    }
+
+    const { rows } = await pool.query(
+      `WITH disbursed_leads AS (
+         SELECT
+           l.created_by,
+           COALESCE(NULLIF(l.data->>'disbursedSanctionLoanAmount', ''), '0')::numeric AS amount
+         FROM leads l
+         WHERE l.stage = 'Disbursed'
+       ), lead_owner AS (
+         SELECT
+           dl.amount,
+           CASE
+             WHEN u.role = 'employee' THEN u.id
+             WHEN u.role = 'dealer' THEN (
+               SELECT ed.employee_id FROM employee_dealers ed WHERE ed.dealer_id = u.id LIMIT 1
+             )
+             ELSE NULL
+           END AS employee_id
+         FROM disbursed_leads dl
+         JOIN users u ON u.id = dl.created_by
+         WHERE u.deleted_at IS NULL
+       ), employee_agg AS (
+         SELECT
+           employee_id,
+           SUM(amount) AS disbursed_amount,
+           COUNT(*) AS total_cases
+         FROM lead_owner
+         WHERE employee_id IS NOT NULL
+         GROUP BY employee_id
+       )
+       SELECT
+         ea.employee_id,
+         u.username AS name,
+         ea.disbursed_amount,
+         ea.total_cases
+       FROM employee_agg ea
+       JOIN users u ON u.id = ea.employee_id
+       ${scopeFilterSql}
+       ORDER BY ea.disbursed_amount DESC
+       LIMIT 1;`,
+      params
+    );
+
+    if (!rows.length) {
+      return res.json(null);
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("BEST EMPLOYEE ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch best employee" });
+  }
+});
+
 //viji 29/26
 // app.get("/api/dashboard/business-type", async (req, res) => {
 //   try {
@@ -247,6 +326,8 @@ app.get("/api/dashboard/:role/:userId/business-type", async (req, res) => {
     res.status(500).json([]);
   }
 });
+
+
 
 
 
@@ -719,8 +800,43 @@ ORDER BY u.id DESC;
   }
 });
 
+// ----------------- Dealers list (admin/manager/employee) -----------------
+app.get("/api/users/dealers", async (req, res) => {
+  try {
+    const userId = parseInt(req.headers["x-user-id"]);
+    if (!userId) return res.status(403).json({ error: "Unauthorized" });
 
+    const userCheck = await pool.query(
+      "SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL",
+      [userId]
+    );
+    if (!userCheck.rows.length) return res.status(403).json({ error: "Unauthorized" });
 
+    const role = (userCheck.rows[0].role || '').toLowerCase();
+    if (!['admin', 'manager', 'employee'].includes(role)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT
+         u.id,
+         u.username,
+         u.status,
+         COALESCE(dp.dealer_name, u.username) AS display_name
+       FROM users u
+       LEFT JOIN dealer_profiles dp ON dp.user_id = u.id
+       WHERE u.role = 'dealer'
+         AND u.deleted_at IS NULL
+         AND (u.status IS NULL OR u.status <> 'inactive')
+       ORDER BY COALESCE(dp.dealer_name, u.username)`
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("FETCH DEALERS ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch dealers" });
+  }
+});
 
 //tharun
 app.post("/api/admin/users", async (req, res) => {

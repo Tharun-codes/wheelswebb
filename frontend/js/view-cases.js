@@ -17,6 +17,15 @@ if (user.role === "admin") {
 
       roleSelect.addEventListener("change", () => {
         const role = roleSelect.value;
+        const userSelect = document.getElementById("filterUser");
+        
+        // Show/hide user dropdown based on role selection
+        if (role) {
+          userSelect.style.display = "block";
+        } else {
+          userSelect.style.display = "none";
+        }
+        
         userSelect.innerHTML = '<option value="">Select User</option>';
 
         users

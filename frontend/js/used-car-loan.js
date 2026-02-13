@@ -180,6 +180,9 @@ function toggleBasicFieldsBySource() {
         if (dealerSelect) dealerSelect.required = true;
         if (dealerNameInput) dealerNameInput.required = false;
         if (caseDealer) caseDealer.required = false;
+
+        // Ensure dealer list is loaded/refreshed when switching Source to Dealer
+        try { loadDealerOptions(); } catch (e) { /* ignore */ }
       }
       // Show Ref Name / Mob No for manual editing when dealer selected
       if (wrapperRef) wrapperRef.classList.remove('hidden');
@@ -523,6 +526,20 @@ document.addEventListener('DOMContentLoaded', function() {
     input.addEventListener('change', updateProgress);
   });
 
+  // Initialize BT toggle functionality
+  const btToggleBtn = document.getElementById('btToggleBtn');
+  const btFields = document.getElementById('btFields');
+  if (btToggleBtn && btFields) {
+    btToggleBtn.addEventListener('click', function() {
+      btFields.classList.toggle('hidden');
+      // Update button text based on visibility
+      this.textContent = btFields.classList.contains('hidden') ? 'Vehicle BT' : 'Hide BT Fields';
+    });
+  }
+
+  // Populate BT dropdowns
+  populateBtDropdowns();
+
   // Add form validation
   const form = document.getElementById('leadForm');
   if (form) {
@@ -618,6 +635,124 @@ document.addEventListener('DOMContentLoaded', function() {
   enforceNumbersOnly();
 });
 
+// Populate BT dropdowns
+function populateBtDropdowns() {
+  // Populate BT Bank/Finance dropdown (same as Bank/Finance Information)
+  const btBankFinanceSelect = document.getElementById('btBankFinance');
+  if (btBankFinanceSelect) {
+    // Copy options from the main bankFinance dropdown
+    const bankFinanceSelect = document.getElementById('bankFinance');
+    if (bankFinanceSelect) {
+      Array.from(bankFinanceSelect.options).forEach(option => {
+        const newOption = document.createElement('option');
+        newOption.value = option.value;
+        newOption.textContent = option.textContent;
+        btBankFinanceSelect.appendChild(newOption);
+      });
+    }
+  }
+
+  // Populate BT Tenure dropdown (01-96)
+  const btTenureSelect = document.getElementById('btTenure');
+  if (btTenureSelect) {
+    for (let i = 1; i <= 96; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = String(i).padStart(2, '0');
+      btTenureSelect.appendChild(option);
+    }
+  }
+
+  // Populate BT Paid Tenure dropdown (01-96)
+  const btPaidTenureSelect = document.getElementById('btPaidTenure');
+  if (btPaidTenureSelect) {
+    for (let i = 1; i <= 96; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = String(i).padStart(2, '0');
+      btPaidTenureSelect.appendChild(option);
+    }
+  }
+
+  // Initialize BT EMI calculator after populating dropdowns
+  initBtEmiCalculator();
+}
+
+// Function to make sections read-only for employees
+function makeSectionsReadOnlyForEmployees() {
+  const user = getUserFromStorage();
+  const isEmployee = user && user.role === 'employee';
+  const loanStage = document.getElementById('loanStage');
+  const isDisbursed = loanStage && loanStage.value === 'Disbursed';
+  
+  if (!isEmployee || !isDisbursed) return;
+  
+  // Make UTR Information section read-only
+  const utrFields = document.getElementById('utrFields');
+  if (utrFields) {
+    utrFields.style.opacity = '0.6';
+    utrFields.title = 'Employees cannot edit UTR Information';
+    
+    // Disable all inputs in UTR section
+    utrFields.querySelectorAll('input, select, textarea, button').forEach(el => {
+      if (el.type !== 'hidden') {
+        el.disabled = true;
+        el.style.cursor = 'not-allowed';
+      }
+    });
+  }
+  
+  // Make Motor Insurance section read-only
+  const motorInsuranceFields = document.getElementById('motorInsuranceFields');
+  if (motorInsuranceFields) {
+    motorInsuranceFields.style.opacity = '0.6';
+    motorInsuranceFields.title = 'Employees cannot edit Motor Insurance';
+    
+    // Disable all inputs in Motor Insurance section
+    motorInsuranceFields.querySelectorAll('input, select, textarea, button').forEach(el => {
+      if (el.type !== 'hidden') {
+        el.disabled = true;
+        el.style.cursor = 'not-allowed';
+      }
+    });
+  }
+  
+  // Also disable RTO CHARGES and CHALLAN/FINE CHARGES for employees
+  const rtoCharges = document.getElementById('disbursedRtoCharges');
+  const challanCharges = document.getElementById('disbursedChallanFineCharges');
+  
+  if (rtoCharges) {
+    rtoCharges.disabled = true;
+    rtoCharges.style.opacity = '0.6';
+    rtoCharges.style.cursor = 'not-allowed';
+    rtoCharges.title = 'Employees cannot edit RTO Charges';
+  }
+  
+  if (challanCharges) {
+    challanCharges.disabled = true;
+    challanCharges.style.opacity = '0.6';
+    challanCharges.style.cursor = 'not-allowed';
+    challanCharges.title = 'Employees cannot edit Challan/Fine Charges';
+  }
+  
+  // Also disable disbursed Motor Insurance input field EXCEPT for employees
+  const disbursedMotorInsurance = document.getElementById('disbursedMotorInsurance');
+  if (disbursedMotorInsurance) {
+    // Allow access for employees
+    if (isEmployee) {
+      disbursedMotorInsurance.disabled = false;
+      disbursedMotorInsurance.style.opacity = '1';
+      disbursedMotorInsurance.style.cursor = 'text';
+      disbursedMotorInsurance.title = '';
+    } else {
+      disbursedMotorInsurance.disabled = true;
+      disbursedMotorInsurance.style.opacity = '0.6';
+      disbursedMotorInsurance.style.cursor = 'not-allowed';
+      disbursedMotorInsurance.title = 'Employees cannot edit Motor Insurance';
+    }
+  }
+}
+
 // Progress tracking function
 function updateProgress() {
   const requiredFields = document.querySelectorAll('[required]');
@@ -667,6 +802,59 @@ function computeAndShowEmi() {
   }
 }
 
+function computeAndShowBtEmi() {
+  const loanAmountEl = document.getElementById('btLoanAmount');
+  const tenureEl = document.getElementById('btTenure');
+  const irrEl = document.getElementById('btIrr');
+  const emiDisplay = document.getElementById('btEmiDisplay');
+
+  if (!loanAmountEl || !tenureEl || !irrEl || !emiDisplay) return;
+
+  const loanAmount = Number(loanAmountEl.value);
+  const tenure = Number(tenureEl.value);
+  const annualRate = Number(irrEl.value);
+
+  if (loanAmount && tenure && annualRate) {
+    const monthlyRate = annualRate / 100 / 12;
+    const emi = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenure) / (Math.pow(1 + monthlyRate, tenure) - 1);
+    emiDisplay.textContent = `EMI: ${formatCurrency(emi)}`;
+  } else {
+    emiDisplay.textContent = '';
+  }
+}
+
+function computeAndShowBtPrincipal() {
+  const loanAmountEl = document.getElementById('btLoanAmount');
+  const tenureEl = document.getElementById('btTenure');
+  const irrEl = document.getElementById('btIrr');
+  const paidTenureEl = document.getElementById('btPaidTenure');
+  const principalDisplay = document.getElementById('btPrincipalDisplay');
+
+  if (!loanAmountEl || !tenureEl || !irrEl || !paidTenureEl || !principalDisplay) return;
+
+  const L = Number(loanAmountEl.value); // Loan Amount
+  const N = Number(tenureEl.value); // Total Tenure
+  const n = Number(paidTenureEl.value); // Paid Tenure
+  const annualRate = Number(irrEl.value);
+
+  if (!L || !N || !n || annualRate === null || isNaN(annualRate) || n > N) {
+    principalDisplay.textContent = '';
+    return;
+  }
+
+  // Calculate remaining principal using the formula
+  const r = annualRate / 100 / 12; // Monthly rate
+  const emi = L * r * Math.pow(1 + r, N) / (Math.pow(1 + r, N) - 1);
+  const remainingPrincipal = L * Math.pow(1 + r, n) - (emi * (Math.pow(1 + r, n) - 1) / r);
+
+  const paidPrincipal = L - remainingPrincipal;
+
+  principalDisplay.innerHTML = `
+    Principal Out Standing: ${formatCurrency(remainingPrincipal)}<br>
+    Paid Principal: ${formatCurrency(paidPrincipal)}
+  `;
+}
+
 function initEmiCalculator() {
   const loanAmountEl = document.getElementById('loanAmount');
   const tenureEl = document.getElementById('loanTenure');
@@ -678,62 +866,92 @@ function initEmiCalculator() {
   computeAndShowEmi();
 }
 
+function initBtEmiCalculator() {
+  const loanAmountEl = document.getElementById('btLoanAmount');
+  const tenureEl = document.getElementById('btTenure');
+  const irrEl = document.getElementById('btIrr');
+  const paidTenureEl = document.getElementById('btPaidTenure');
+  if (loanAmountEl) loanAmountEl.addEventListener('input', computeAndShowBtEmi);
+  if (tenureEl) tenureEl.addEventListener('change', computeAndShowBtEmi);
+  if (irrEl) irrEl.addEventListener('input', computeAndShowBtEmi);
+  if (paidTenureEl) paidTenureEl.addEventListener('change', computeAndShowBtPrincipal);
+  // initial compute
+  computeAndShowBtEmi();
+  computeAndShowBtPrincipal();
+}
+
 // Fetch dealers (users with role 'dealer') and populate the dealer select
 async function loadDealerOptions() {
   const dealerSelect = document.getElementById('basicCaseDealerSelect');
   if (!dealerSelect) return;
 
-  // Try to use logged-in user id as admin header if available
-  let admin = null;
-  try { admin = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { admin = null; }
+  // Always clear hardcoded options immediately (DSA list in HTML)
+  dealerSelect.innerHTML = '';
+  const loadingOpt = document.createElement('option');
+  loadingOpt.value = '';
+  loadingOpt.textContent = 'Loading dealers...';
+  dealerSelect.appendChild(loadingOpt);
+
+  let currentUser = null;
+  try { currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { currentUser = null; }
 
   try {
     const headers = {};
-    if (admin && admin.id) headers['x-admin-id'] = admin.id;
+    if (currentUser && currentUser.id) headers['x-user-id'] = currentUser.id;
 
-    const res = await fetch('/api/admin/users', { headers });
+    const res = await fetch('/api/users/dealers', { headers });
     if (!res.ok) {
-      // cannot fetch (likely not admin) — leave default options
+      dealerSelect.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No dealers available';
+      dealerSelect.appendChild(opt);
       return;
     }
 
-    const users = await res.json();
-    const dealers = Array.isArray(users) ? users.filter(u => (u.role || '').toLowerCase() === 'dealer' && u.status !== 'inactive') : [];
+    const dealers = await res.json();
+    const list = Array.isArray(dealers) ? dealers : [];
 
-    // Clear existing (but keep first placeholder)
-    const placeholder = dealerSelect.querySelector('option[value=""]');
     dealerSelect.innerHTML = '';
-    if (placeholder) dealerSelect.appendChild(placeholder);
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select Dealer';
+    dealerSelect.appendChild(placeholder);
 
-    dealers.forEach(d => {
+    list.forEach(d => {
       const opt = document.createElement('option');
-      // Prefer a readable name if available, fall back to username
-      opt.textContent = d.username || (d.first_name || 'Dealer');
-      opt.value = d.username || d.id;
+      opt.textContent = d.display_name || d.username || 'Dealer';
+      opt.value = d.id;
       dealerSelect.appendChild(opt);
     });
 
-    // keep an 'Others' option
     const othersOpt = document.createElement('option');
     othersOpt.value = 'Others';
     othersOpt.textContent = 'Others';
     dealerSelect.appendChild(othersOpt);
 
     // If user selects 'Others' in dealer select, show manual Case Dealer input
-    dealerSelect.addEventListener('change', () => {
-      const wrapperCase = document.getElementById('basicCaseDealerWrapper');
-      if (!wrapperCase) return;
-      if ((dealerSelect.value || '').toLowerCase() === 'others') {
-        wrapperCase.classList.remove('hidden');
-        const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = true;
-      } else {
-        wrapperCase.classList.add('hidden');
-        const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = false;
-      }
-    });
-
+    if (!dealerSelect.dataset.othersListenerAttached) {
+      dealerSelect.dataset.othersListenerAttached = '1';
+      dealerSelect.addEventListener('change', () => {
+        const wrapperCase = document.getElementById('basicCaseDealerWrapper');
+        if (!wrapperCase) return;
+        if ((dealerSelect.value || '').toLowerCase() === 'others') {
+          wrapperCase.classList.remove('hidden');
+          const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = true;
+        } else {
+          wrapperCase.classList.add('hidden');
+          const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = false;
+        }
+      });
+    }
   } catch (err) {
     console.error('Failed to load dealers', err);
+    dealerSelect.innerHTML = '';
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No dealers available';
+    dealerSelect.appendChild(opt);
   }
 }
 
@@ -1663,15 +1881,7 @@ if (disbursedTenure) {
   }
 }
 
-// Populate Disbursed EMI Date (1-31)
-if (disbursedEmiDate) {
-  for (let i = 1; i <= 31; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    disbursedEmiDate.appendChild(opt);
-  }
-}
+// EMI Date is now a date input, no need to populate options
 
 // Toggle Disbursed Fields
 const utrFields = document.getElementById("utrFields");
@@ -1685,6 +1895,11 @@ function toggleDisbursedFields() {
   if (loanStage && disbursedFields) {
     const isDisbursed = loanStage.value === "Disbursed";
     disbursedFields.classList.toggle("hidden", !isDisbursed);
+    
+    // Apply employee read-only restrictions when disbursed
+    if (isDisbursed) {
+      makeSectionsReadOnlyForEmployees();
+    }
     
     // Toggle UTR fields
     if (utrFields) {
@@ -1963,9 +2178,9 @@ function calculateDisbursedAmounts() {
   const rto = getVal(calcFields.rto);
   const challan = getVal(calcFields.challan);
 
-  // Net Loan Amount = Sanction - PF - Doc - Other - RTO - Challan
+  // Net Loan Amount = Sanction - PF - Doc - Other - RTO - Challan - Motor Ins
   if (calcFields.net) {
-    calcFields.net.value = sanction - pf - doc - other - rto - challan;
+    calcFields.net.value = sanction - pf - doc - other - rto - challan - motorIns;
   }
 }
 
@@ -2082,6 +2297,10 @@ let selectedRtoDocs = [];
 
 function renderRtoDropdown() {
   if (!rtoDropdown) return;
+  
+  const user = getUserFromStorage();
+  const isEmployee = user && user.role === 'employee';
+  
   rtoDropdown.innerHTML = "";
   rtoOptions.forEach(opt => {
     const div = document.createElement("div");
@@ -2089,10 +2308,21 @@ function renderRtoDropdown() {
     if (selectedRtoDocs.includes(opt)) {
       div.classList.add("selected");
     }
+    
+    // Make options non-clickable for employee role (read-only)
+    if (isEmployee) {
+      div.style.opacity = "0.6";
+      div.style.cursor = "not-allowed";
+      div.title = "Employees can view but not edit RTO Documents";
+    }
+    
     div.textContent = opt;
     div.addEventListener("click", (e) => {
       e.stopPropagation();
-      toggleRtoOption(opt);
+      // Only allow toggle if not employee
+      if (!isEmployee) {
+        toggleRtoOption(opt);
+      }
     });
     rtoDropdown.appendChild(div);
   });
@@ -2100,7 +2330,17 @@ function renderRtoDropdown() {
 
 function updateRtoDisplay() {
   if (!rtoDisplay) return;
+  
+  const user = getUserFromStorage();
+  const isEmployee = user && user.role === 'employee';
+  
   rtoDisplay.innerHTML = "";
+  
+  if (isEmployee) {
+    rtoDisplay.style.opacity = "0.6";
+    rtoDisplay.style.cursor = "not-allowed";
+    rtoDisplay.title = "Employees can view but not edit RTO Documents";
+  }
   
   if (selectedRtoDocs.length === 0) {
     rtoDisplay.innerHTML = '<span class="multi-select-placeholder">Select RTO Documents...</span>';
@@ -2109,15 +2349,12 @@ function updateRtoDisplay() {
       const tag = document.createElement("span");
       tag.className = "multi-select-tag";
       tag.textContent = opt;
-      const removeBtn = document.createElement("span");
-      removeBtn.textContent = "×";
-      removeBtn.style.cursor = "pointer";
-      removeBtn.style.marginLeft = "4px";
-      removeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleRtoOption(opt);
-      });
-      tag.appendChild(removeBtn);
+      
+      if (isEmployee) {
+        tag.style.opacity = "0.6";
+        tag.title = "Employees can view but not edit RTO Documents";
+      }
+      
       rtoDisplay.appendChild(tag);
     });
   }
@@ -2277,6 +2514,7 @@ if (loanId) {
       // =========================
       if (loanStage && loanStage.value === "Disbursed") {
         toggleDisbursedFields();
+        makeSectionsReadOnlyForEmployees();
       }
 
       // =========================

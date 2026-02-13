@@ -2,8 +2,8 @@ const rawUser = localStorage.getItem("user");
 const user = JSON.parse(localStorage.getItem("user"));
 
 if (user.role !== "employee") {
-  const box = document.getElementById("dealerLeadBtnBox");
-  if (box) box.style.display = "none";
+  const dealerLeadBtn = document.getElementById("dealerLeadBtn");
+  if (dealerLeadBtn) dealerLeadBtn.style.display = "none";
 }
 
 if (!user) {
@@ -396,47 +396,58 @@ setInterval(() => {
 // Load Best Employee Data
 async function loadBestEmployee() {
   try {
-    // Mock data since backend API doesn't exist yet
-    // TODO: Replace with actual API call when backend is ready
-    const mockData = {
-      name: "Rajesh Kumar",
-      disbursed_amount: 2500000,
-      total_cases: 15
-    };
+    const nameEl = document.getElementById("bestEmployeeName");
+    const amountEl = document.getElementById("bestEmployeeAmount");
+    const casesEl = document.getElementById("bestEmployeeCases");
+    const cardEl = document.getElementById('bestEmployeeCard');
 
-    console.log("📋 Using mock best employee data:", mockData);
-    
-    if (mockData && mockData.name) {
-      document.getElementById("bestEmployeeName").textContent = mockData.name;
-      document.getElementById("bestEmployeeAmount").textContent = Number(mockData.disbursed_amount || 0).toLocaleString("en-IN");
-      document.getElementById("bestEmployeeCases").textContent = mockData.total_cases || 0;
-      console.log("✅ Best employee data updated successfully with mock data");
-    } else {
-      console.log("⚠️ No valid mock data available");
-      // Handle case where no data is available
-      const bestEmployeeCard = document.getElementById('bestEmployeeCard');
-      if (bestEmployeeCard) {
-        bestEmployeeCard.innerHTML = `
-          <div style="text-align: center; width: 100%;">
-            <div class="avatar-placeholder">🏆</div>
-            <h5>No Performance Data</h5>
-            <p class="employee-role">No disbursed cases found</p>
-          </div>
-        `;
-      }
+    if (!nameEl || !amountEl || !casesEl || !cardEl) return;
+    if (!user || !user.role || !user.id) return;
+
+    // Dealer doesn't have "best employee" concept (they are not an employee)
+    if (user.role === 'dealer') {
+      cardEl.innerHTML = `
+        <div style="text-align: center; width: 100%;">
+          <div class="avatar-placeholder">🏆</div>
+          <h5>No Performance Data</h5>
+          <p class="employee-role">Not available for dealer role</p>
+        </div>
+      `;
+      return;
     }
-    
+
+    const url = `/api/dashboard/${encodeURIComponent(user.role)}/${encodeURIComponent(user.id)}/best-employee`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    console.log("🔍 Best employee API response:", data);
+    if (!data || !data.name) {
+      cardEl.innerHTML = `
+        <div style="text-align: center; width: 100%;">
+          <div class="avatar-placeholder">🏆</div>
+          <h5>No Performance Data</h5>
+          <p class="employee-role">No disbursed cases found</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Real employee data
+    nameEl.textContent = data.name;
+    amountEl.textContent = Number(data.disbursed_amount || 0).toLocaleString("en-IN");
+    casesEl.textContent = data.total_cases || 0;
   } catch (err) {
     console.error("💥 Error loading best employee data:", err);
-    // Show error state
     const bestEmployeeCard = document.getElementById('bestEmployeeCard');
     if (bestEmployeeCard) {
       bestEmployeeCard.innerHTML = `
         <div style="text-align: center; width: 100%;">
-          <div class="avatar-placeholder">📊</div>
-          <h5>Data Loading Error</h5>
+          <div class="avatar-placeholder">🏆</div>
+          <h5>No Performance Data</h5>
           <p class="employee-role">Unable to load performance data</p>
-          <small style="color: rgba(255,255,255,0.6)">Error: ${err.message}</small>
         </div>
       `;
     }

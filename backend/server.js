@@ -15,6 +15,16 @@ app.use(express.static(FRONTEND_PATH));
 
 // ----------------- Utilities -----------------
 
+async function generateRTOCode() {
+  const { rows } = await pool.query(`
+    SELECT COUNT(*) FROM rto_profiles
+  `);
+
+  const count = Number(rows[0].count) + 1;
+  return `RTO${String(count).padStart(4, "0")}`;
+}
+
+
 function generateDealerCode() {
   const random = Math.floor(100000 + Math.random() * 900000);
   return "DLR" + random;   // example: DLR483920
@@ -715,7 +725,7 @@ ORDER BY u.id DESC;
 //tharun
 app.post("/api/admin/users", async (req, res) => {
   try {
-    const { username, password, role, profile, employeeProfile } = req.body;
+const { username, password, role, profile, employeeProfile, rtoProfile } = req.body;
 
     console.log("ADMIN CREATE USER:", req.body);
 
@@ -724,7 +734,7 @@ app.post("/api/admin/users", async (req, res) => {
     }
 
     const roleNormalized = role.toLowerCase();
-    const allowed = ["manager", "employee", "dealer"];
+const allowed = ["manager","employee","dealer","rto_agent"];
 
     if (!allowed.includes(roleNormalized)) {
       return res.status(400).json({ error: "Invalid role" });
@@ -931,6 +941,48 @@ if (roleNormalized === "dealer") {
   console.log("✅ Dealer created with code:", dealerCode);
 }
 
+if (roleNormalized === "rto_agent") {
+
+  if (
+    !rtoProfile ||
+    !rtoProfile.firstName ||
+    !rtoProfile.mobile ||
+    !rtoProfile.bank ||
+    !rtoProfile.bank.accountNo
+  ) {
+    return res.status(400).json({ error: "Incomplete RTO profile" });
+  }
+
+  await pool.query(`
+    INSERT INTO rto_agent_profiles
+    (user_id, first_name, last_name,
+     pan_no, aadhar_no, dob, joining_date,
+     mobile_no, father_mobile_no, mother_mobile_no,
+     personal_email, office_email, location,
+     account_no, ifsc, bank_name, bank_branch)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+  `, [
+    userId,
+    rtoProfile.firstName,
+    rtoProfile.lastName,
+    rtoProfile.pan,
+    rtoProfile.aadhar,
+    rtoProfile.dob || null,
+    rtoProfile.joiningDate || null,
+    rtoProfile.mobile,
+    rtoProfile.fatherMobile,
+    rtoProfile.motherMobile,
+    rtoProfile.personalEmail,
+    rtoProfile.officeEmail,
+    rtoProfile.location,
+    rtoProfile.bank.accountNo,
+    rtoProfile.bank.ifsc,
+    rtoProfile.bank.bankName,
+    rtoProfile.bank.bankBranch
+  ]);
+
+  console.log("✅ RTO agent profile created");
+}
 
 
     res.json({ success: true });
@@ -1099,6 +1151,24 @@ app.get("/api/admin/dealer-info/:userId", async (req, res) => {
   }
 });
 
+app.get("/api/admin/rto-info/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pool.query(`
+      SELECT u.username, r.*
+      FROM users u
+      LEFT JOIN rto_agent_profiles r ON u.id = r.user_id
+      WHERE u.id=$1
+    `,[userId]);
+
+    res.json(result.rows[0]);
+
+  } catch(err){
+    console.error(err);
+    res.status(500).json({error:"Failed to fetch RTO info"});
+  }
+});
 
 
 app.delete("/api/admin/users/:id", async (req, res) => {

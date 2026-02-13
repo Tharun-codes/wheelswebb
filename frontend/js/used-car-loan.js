@@ -533,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btToggleBtn.addEventListener('click', function() {
       btFields.classList.toggle('hidden');
       // Update button text based on visibility
-      this.textContent = btFields.classList.contains('hidden') ? 'Do you Have BT' : 'Hide BT Fields';
+      this.textContent = btFields.classList.contains('hidden') ? 'Vehicle BT' : 'Hide BT Fields';
     });
   }
 
@@ -676,6 +676,81 @@ function populateBtDropdowns() {
 
   // Initialize BT EMI calculator after populating dropdowns
   initBtEmiCalculator();
+}
+
+// Function to make sections read-only for employees
+function makeSectionsReadOnlyForEmployees() {
+  const user = getUserFromStorage();
+  const isEmployee = user && user.role === 'employee';
+  const loanStage = document.getElementById('loanStage');
+  const isDisbursed = loanStage && loanStage.value === 'Disbursed';
+  
+  if (!isEmployee || !isDisbursed) return;
+  
+  // Make UTR Information section read-only
+  const utrFields = document.getElementById('utrFields');
+  if (utrFields) {
+    utrFields.style.opacity = '0.6';
+    utrFields.title = 'Employees cannot edit UTR Information';
+    
+    // Disable all inputs in UTR section
+    utrFields.querySelectorAll('input, select, textarea, button').forEach(el => {
+      if (el.type !== 'hidden') {
+        el.disabled = true;
+        el.style.cursor = 'not-allowed';
+      }
+    });
+  }
+  
+  // Make Motor Insurance section read-only
+  const motorInsuranceFields = document.getElementById('motorInsuranceFields');
+  if (motorInsuranceFields) {
+    motorInsuranceFields.style.opacity = '0.6';
+    motorInsuranceFields.title = 'Employees cannot edit Motor Insurance';
+    
+    // Disable all inputs in Motor Insurance section
+    motorInsuranceFields.querySelectorAll('input, select, textarea, button').forEach(el => {
+      if (el.type !== 'hidden') {
+        el.disabled = true;
+        el.style.cursor = 'not-allowed';
+      }
+    });
+  }
+  
+  // Also disable RTO CHARGES and CHALLAN/FINE CHARGES for employees
+  const rtoCharges = document.getElementById('disbursedRtoCharges');
+  const challanCharges = document.getElementById('disbursedChallanFineCharges');
+  
+  if (rtoCharges) {
+    rtoCharges.disabled = true;
+    rtoCharges.style.opacity = '0.6';
+    rtoCharges.style.cursor = 'not-allowed';
+    rtoCharges.title = 'Employees cannot edit RTO Charges';
+  }
+  
+  if (challanCharges) {
+    challanCharges.disabled = true;
+    challanCharges.style.opacity = '0.6';
+    challanCharges.style.cursor = 'not-allowed';
+    challanCharges.title = 'Employees cannot edit Challan/Fine Charges';
+  }
+  
+  // Also disable disbursed Motor Insurance input field EXCEPT for employees
+  const disbursedMotorInsurance = document.getElementById('disbursedMotorInsurance');
+  if (disbursedMotorInsurance) {
+    // Allow access for employees
+    if (isEmployee) {
+      disbursedMotorInsurance.disabled = false;
+      disbursedMotorInsurance.style.opacity = '1';
+      disbursedMotorInsurance.style.cursor = 'text';
+      disbursedMotorInsurance.title = '';
+    } else {
+      disbursedMotorInsurance.disabled = true;
+      disbursedMotorInsurance.style.opacity = '0.6';
+      disbursedMotorInsurance.style.cursor = 'not-allowed';
+      disbursedMotorInsurance.title = 'Employees cannot edit Motor Insurance';
+    }
+  }
 }
 
 // Progress tracking function
@@ -1806,15 +1881,7 @@ if (disbursedTenure) {
   }
 }
 
-// Populate Disbursed EMI Date (1-31)
-if (disbursedEmiDate) {
-  for (let i = 1; i <= 31; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    disbursedEmiDate.appendChild(opt);
-  }
-}
+// EMI Date is now a date input, no need to populate options
 
 // Toggle Disbursed Fields
 const utrFields = document.getElementById("utrFields");
@@ -1828,6 +1895,11 @@ function toggleDisbursedFields() {
   if (loanStage && disbursedFields) {
     const isDisbursed = loanStage.value === "Disbursed";
     disbursedFields.classList.toggle("hidden", !isDisbursed);
+    
+    // Apply employee read-only restrictions when disbursed
+    if (isDisbursed) {
+      makeSectionsReadOnlyForEmployees();
+    }
     
     // Toggle UTR fields
     if (utrFields) {
@@ -2106,9 +2178,9 @@ function calculateDisbursedAmounts() {
   const rto = getVal(calcFields.rto);
   const challan = getVal(calcFields.challan);
 
-  // Net Loan Amount = Sanction - PF - Doc - Other - RTO - Challan
+  // Net Loan Amount = Sanction - PF - Doc - Other - RTO - Challan - Motor Ins
   if (calcFields.net) {
-    calcFields.net.value = sanction - pf - doc - other - rto - challan;
+    calcFields.net.value = sanction - pf - doc - other - rto - challan - motorIns;
   }
 }
 
@@ -2225,6 +2297,10 @@ let selectedRtoDocs = [];
 
 function renderRtoDropdown() {
   if (!rtoDropdown) return;
+  
+  const user = getUserFromStorage();
+  const isEmployee = user && user.role === 'employee';
+  
   rtoDropdown.innerHTML = "";
   rtoOptions.forEach(opt => {
     const div = document.createElement("div");
@@ -2232,10 +2308,21 @@ function renderRtoDropdown() {
     if (selectedRtoDocs.includes(opt)) {
       div.classList.add("selected");
     }
+    
+    // Make options non-clickable for employee role (read-only)
+    if (isEmployee) {
+      div.style.opacity = "0.6";
+      div.style.cursor = "not-allowed";
+      div.title = "Employees can view but not edit RTO Documents";
+    }
+    
     div.textContent = opt;
     div.addEventListener("click", (e) => {
       e.stopPropagation();
-      toggleRtoOption(opt);
+      // Only allow toggle if not employee
+      if (!isEmployee) {
+        toggleRtoOption(opt);
+      }
     });
     rtoDropdown.appendChild(div);
   });
@@ -2243,7 +2330,17 @@ function renderRtoDropdown() {
 
 function updateRtoDisplay() {
   if (!rtoDisplay) return;
+  
+  const user = getUserFromStorage();
+  const isEmployee = user && user.role === 'employee';
+  
   rtoDisplay.innerHTML = "";
+  
+  if (isEmployee) {
+    rtoDisplay.style.opacity = "0.6";
+    rtoDisplay.style.cursor = "not-allowed";
+    rtoDisplay.title = "Employees can view but not edit RTO Documents";
+  }
   
   if (selectedRtoDocs.length === 0) {
     rtoDisplay.innerHTML = '<span class="multi-select-placeholder">Select RTO Documents...</span>';
@@ -2252,15 +2349,12 @@ function updateRtoDisplay() {
       const tag = document.createElement("span");
       tag.className = "multi-select-tag";
       tag.textContent = opt;
-      const removeBtn = document.createElement("span");
-      removeBtn.textContent = "×";
-      removeBtn.style.cursor = "pointer";
-      removeBtn.style.marginLeft = "4px";
-      removeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleRtoOption(opt);
-      });
-      tag.appendChild(removeBtn);
+      
+      if (isEmployee) {
+        tag.style.opacity = "0.6";
+        tag.title = "Employees can view but not edit RTO Documents";
+      }
+      
       rtoDisplay.appendChild(tag);
     });
   }
@@ -2420,6 +2514,7 @@ if (loanId) {
       // =========================
       if (loanStage && loanStage.value === "Disbursed") {
         toggleDisbursedFields();
+        makeSectionsReadOnlyForEmployees();
       }
 
       // =========================

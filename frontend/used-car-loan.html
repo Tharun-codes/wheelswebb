@@ -1636,93 +1636,50 @@
 
     </div>
 
-
-
-  </div>
-
-
-
-  <!-- BT Fields -->
-
-  <div id="btFields" class="grid-2 hidden">
-
-
-
+    <!-- BT Toggle Button -->
     <div class="form-field">
-
-      <label for="prevFinanceName">PREVIOUS FINANCE NAME *</label>
-
-      <input
-
-        id="prevFinanceName"
-
-       
-
-        data-bt-required="true"
-
-        data-uppercase
-
-      />
-
+      <button type="button" id="btToggleBtn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+        Do you Have BT
+      </button>
     </div>
 
-
-
-    <div class="form-field">
-
-      <label for="btTenure">BT TENURE (MONTHS) *</label>
-
-      <input
-
-        id="btTenure"
-
-        type="number"
-
-        min="1"
-
-       
-
-        data-bt-required="true"
-
-      />
-
-    </div>
-
-
+    <!-- BT Fields (hidden by default) -->
+    <div id="btFields" class="grid-2 hidden">
 
     <div class="form-field">
-
-      <label for="emiPaid">NO OF EMI PAID *</label>
-
-      <select id="emiPaid" data-bt-required="true">
-
-        <option value="">NO OF EMI PAID *</option>
-
+      <label for="btBankFinance">Bank/Finance *</label>
+      <select id="btBankFinance" data-bt-required="true">
+        <option value="">Select Bank/Finance</option>
       </select>
-
     </div>
-
-
 
     <div class="form-field">
-
-      <label for="btPrincipalOs">BT PRINCIPLE OS *</label>
-
-      <input
-
-        id="btPrincipalOs"
-
-        type="number"
-
-        min="0"
-
-       
-
-        data-bt-required="true"
-
-      />
-
+      <label for="btLoanAmount">Loan Amount *</label>
+      <input id="btLoanAmount" type="number" data-bt-required="true" />
+      <div id="btEmiDisplay" style="font-size:0.85rem;color:#374151;margin-top:6px;font-weight:600;"></div>
     </div>
+
+    <div class="form-field">
+      <label for="btTenure">Tenure *</label>
+      <select id="btTenure" data-bt-required="true">
+        <option value="">Select Tenure</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label for="btIrr">IRR *</label>
+      <input id="btIrr" type="number" step="0.01" data-bt-required="true" placeholder="e.g. 12.5" />
+    </div>
+
+    <div class="form-field">
+      <label for="btPaidTenure">Paid Tenure *</label>
+      <select id="btPaidTenure" data-bt-required="true">
+        <option value="">Select Paid Tenure</option>
+      </select>
+      <div id="btPrincipalDisplay" style="font-size:0.85rem;color:#374151;margin-top:6px;font-weight:600;"></div>
+    </div>
+
+    </div> <!-- End BT Fields -->
 
 
 

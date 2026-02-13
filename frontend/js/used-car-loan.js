@@ -526,6 +526,20 @@ document.addEventListener('DOMContentLoaded', function() {
     input.addEventListener('change', updateProgress);
   });
 
+  // Initialize BT toggle functionality
+  const btToggleBtn = document.getElementById('btToggleBtn');
+  const btFields = document.getElementById('btFields');
+  if (btToggleBtn && btFields) {
+    btToggleBtn.addEventListener('click', function() {
+      btFields.classList.toggle('hidden');
+      // Update button text based on visibility
+      this.textContent = btFields.classList.contains('hidden') ? 'Do you Have BT' : 'Hide BT Fields';
+    });
+  }
+
+  // Populate BT dropdowns
+  populateBtDropdowns();
+
   // Add form validation
   const form = document.getElementById('leadForm');
   if (form) {
@@ -621,6 +635,49 @@ document.addEventListener('DOMContentLoaded', function() {
   enforceNumbersOnly();
 });
 
+// Populate BT dropdowns
+function populateBtDropdowns() {
+  // Populate BT Bank/Finance dropdown (same as Bank/Finance Information)
+  const btBankFinanceSelect = document.getElementById('btBankFinance');
+  if (btBankFinanceSelect) {
+    // Copy options from the main bankFinance dropdown
+    const bankFinanceSelect = document.getElementById('bankFinance');
+    if (bankFinanceSelect) {
+      Array.from(bankFinanceSelect.options).forEach(option => {
+        const newOption = document.createElement('option');
+        newOption.value = option.value;
+        newOption.textContent = option.textContent;
+        btBankFinanceSelect.appendChild(newOption);
+      });
+    }
+  }
+
+  // Populate BT Tenure dropdown (01-96)
+  const btTenureSelect = document.getElementById('btTenure');
+  if (btTenureSelect) {
+    for (let i = 1; i <= 96; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = String(i).padStart(2, '0');
+      btTenureSelect.appendChild(option);
+    }
+  }
+
+  // Populate BT Paid Tenure dropdown (01-96)
+  const btPaidTenureSelect = document.getElementById('btPaidTenure');
+  if (btPaidTenureSelect) {
+    for (let i = 1; i <= 96; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = String(i).padStart(2, '0');
+      btPaidTenureSelect.appendChild(option);
+    }
+  }
+
+  // Initialize BT EMI calculator after populating dropdowns
+  initBtEmiCalculator();
+}
+
 // Progress tracking function
 function updateProgress() {
   const requiredFields = document.querySelectorAll('[required]');
@@ -670,6 +727,59 @@ function computeAndShowEmi() {
   }
 }
 
+function computeAndShowBtEmi() {
+  const loanAmountEl = document.getElementById('btLoanAmount');
+  const tenureEl = document.getElementById('btTenure');
+  const irrEl = document.getElementById('btIrr');
+  const emiDisplay = document.getElementById('btEmiDisplay');
+
+  if (!loanAmountEl || !tenureEl || !irrEl || !emiDisplay) return;
+
+  const loanAmount = Number(loanAmountEl.value);
+  const tenure = Number(tenureEl.value);
+  const annualRate = Number(irrEl.value);
+
+  if (loanAmount && tenure && annualRate) {
+    const monthlyRate = annualRate / 100 / 12;
+    const emi = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenure) / (Math.pow(1 + monthlyRate, tenure) - 1);
+    emiDisplay.textContent = `EMI: ${formatCurrency(emi)}`;
+  } else {
+    emiDisplay.textContent = '';
+  }
+}
+
+function computeAndShowBtPrincipal() {
+  const loanAmountEl = document.getElementById('btLoanAmount');
+  const tenureEl = document.getElementById('btTenure');
+  const irrEl = document.getElementById('btIrr');
+  const paidTenureEl = document.getElementById('btPaidTenure');
+  const principalDisplay = document.getElementById('btPrincipalDisplay');
+
+  if (!loanAmountEl || !tenureEl || !irrEl || !paidTenureEl || !principalDisplay) return;
+
+  const L = Number(loanAmountEl.value); // Loan Amount
+  const N = Number(tenureEl.value); // Total Tenure
+  const n = Number(paidTenureEl.value); // Paid Tenure
+  const annualRate = Number(irrEl.value);
+
+  if (!L || !N || !n || annualRate === null || isNaN(annualRate) || n > N) {
+    principalDisplay.textContent = '';
+    return;
+  }
+
+  // Calculate remaining principal using the formula
+  const r = annualRate / 100 / 12; // Monthly rate
+  const emi = L * r * Math.pow(1 + r, N) / (Math.pow(1 + r, N) - 1);
+  const remainingPrincipal = L * Math.pow(1 + r, n) - (emi * (Math.pow(1 + r, n) - 1) / r);
+
+  const paidPrincipal = L - remainingPrincipal;
+
+  principalDisplay.innerHTML = `
+    Principal Out Standing: ${formatCurrency(remainingPrincipal)}<br>
+    Paid Principal: ${formatCurrency(paidPrincipal)}
+  `;
+}
+
 function initEmiCalculator() {
   const loanAmountEl = document.getElementById('loanAmount');
   const tenureEl = document.getElementById('loanTenure');
@@ -679,6 +789,20 @@ function initEmiCalculator() {
   if (irrEl) irrEl.addEventListener('input', computeAndShowEmi);
   // initial compute
   computeAndShowEmi();
+}
+
+function initBtEmiCalculator() {
+  const loanAmountEl = document.getElementById('btLoanAmount');
+  const tenureEl = document.getElementById('btTenure');
+  const irrEl = document.getElementById('btIrr');
+  const paidTenureEl = document.getElementById('btPaidTenure');
+  if (loanAmountEl) loanAmountEl.addEventListener('input', computeAndShowBtEmi);
+  if (tenureEl) tenureEl.addEventListener('change', computeAndShowBtEmi);
+  if (irrEl) irrEl.addEventListener('input', computeAndShowBtEmi);
+  if (paidTenureEl) paidTenureEl.addEventListener('change', computeAndShowBtPrincipal);
+  // initial compute
+  computeAndShowBtEmi();
+  computeAndShowBtPrincipal();
 }
 
 // Fetch dealers (users with role 'dealer') and populate the dealer select

@@ -228,14 +228,104 @@ function openCreate() {
 }
 
 
-function openEdit(id) {
+async function openEdit(id) {
   const u = allUsers.find(x => x.id === id);
   if (!u) return showToast("User not found");
 
-  editingUserId = id; // Set editing state
+  editingUserId = id;
+
   document.getElementById("modalUsername").value = u.username;
-  document.getElementById("modalPassword").value = ""; // Clear password for security
+  document.getElementById("modalPassword").value = "";
   document.getElementById("modalRole").value = u.role || "employee";
+
+  toggleRoleSections(u.role);
+
+  try {
+
+    if (u.role === "manager") {
+      const res = await fetch(`/api/user/manager-info/${id}`)
+      const data = await res.json();
+
+      document.getElementById("mgrFirstName").value = data.first_name || "";
+      document.getElementById("mgrLastName").value = data.last_name || "";
+      document.getElementById("mgrPan").value = data.pan || "";
+      document.getElementById("mgrAadhar").value = data.aadhar || "";
+      document.getElementById("mgrMobile").value = data.mobile || "";
+      document.getElementById("mgrFatherMobile").value = data.father_mobile_no || "";
+      document.getElementById("mgrMotherMobile").value = data.mother_mobile_no || "";
+      document.getElementById("mgrPersonalEmail").value = data.personal_email || "";
+      document.getElementById("mgrOfficeEmail").value = data.office_email || "";
+      document.getElementById("mgrLocation").value = data.location || "";
+      document.getElementById("mgrAccountNo").value = data.account_no || "";
+      document.getElementById("mgrIfsc").value = data.ifsc || "";
+      document.getElementById("mgrBank").value = data.bank_name || "";
+      document.getElementById("mgrBankBranch").value = data.bank_branch || "";
+    }
+
+    if (u.role === "employee") {
+      const res = await fetch(`/api/user/employee-info/${id}`);
+      const data = await res.json();
+
+      document.getElementById("employee_id").value = data.employee_id || "";
+      document.getElementById("first_name").value = data.first_name || "";
+      document.getElementById("last_name").value = data.last_name || "";
+      document.getElementById("pan_no").value = data.pan_no || "";
+      document.getElementById("aadhar_no").value = data.aadhar_no || "";
+      document.getElementById("mobile_no").value = data.mobile_no || "";
+      document.getElementById("father_mobile_no").value = data.father_mobile_no || "";
+      document.getElementById("mother_mobile_no").value = data.mother_mobile_no || "";
+      document.getElementById("personal_email").value = data.personal_email || "";
+      document.getElementById("office_email").value = data.office_email || "";
+      document.getElementById("location").value = data.location || "";
+      document.getElementById("account_no").value = data.account_no || "";
+      document.getElementById("ifsc").value = data.ifsc || "";
+      document.getElementById("bank_name").value = data.bank_name || "";
+      document.getElementById("bank_branch").value = data.bank_branch || "";
+    }
+
+    if (u.role === "dealer") {
+      const res = await fetch(`/api/admin/dealer-info/${id}`);
+      const data = await res.json();
+
+      document.getElementById("dealer_name").value = data.dealer_name || "";
+      document.getElementById("dealer_pan").value = data.pan_no || "";
+      document.getElementById("dealer_aadhar").value = data.aadhar_no || "";
+      document.getElementById("dealer_mobile").value = data.mobile_no || "";
+      document.getElementById("dealer_father_mobile").value = data.father_mobile_no || "";
+      document.getElementById("dealer_mother_mobile").value = data.mother_mobile_no || "";
+      document.getElementById("dealer_email").value = data.email || "";
+      document.getElementById("dealer_location").value = data.location || "";
+      document.getElementById("dealer_account").value = data.account_no || "";
+      document.getElementById("dealer_ifsc").value = data.ifsc || "";
+      document.getElementById("dealer_bank").value = data.bank_name || "";
+      document.getElementById("dealer_branch").value = data.bank_branch || "";
+    }
+
+    if (u.role === "rto_agent") {
+      const res = await fetch(`/api/admin/rto-info/${id}`);
+      const data = await res.json();
+
+      document.getElementById("rto_first_name").value = data.first_name || "";
+      document.getElementById("rto_last_name").value = data.last_name || "";
+      document.getElementById("rto_pan").value = data.pan_no || "";
+      document.getElementById("rto_aadhar").value = data.aadhar_no || "";
+      document.getElementById("rto_mobile").value = data.mobile_no || "";
+      document.getElementById("rto_father_mobile").value = data.father_mobile_no || "";
+      document.getElementById("rto_mother_mobile").value = data.mother_mobile_no || "";
+      document.getElementById("rto_personal_email").value = data.personal_email || "";
+      document.getElementById("rto_office_email").value = data.office_email || "";
+      document.getElementById("rto_location").value = data.location || "";
+      document.getElementById("rto_account").value = data.account_no || "";
+      document.getElementById("rto_ifsc").value = data.ifsc || "";
+      document.getElementById("rto_bank").value = data.bank_name || "";
+      document.getElementById("rto_branch").value = data.bank_branch || "";
+    }
+
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to load profile data");
+  }
+
   openModal("Edit User");
 }
 

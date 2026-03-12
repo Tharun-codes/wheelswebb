@@ -58,3 +58,8 @@ seventh change at 168 (major)
 [5:00 pm, 11/02/2026] Vijay: Manager info
 [5:01 pm, 11/02/2026] Vijay: Css for deale and employe
 [5:02 pm, 11/02/2026] Vijay: Assign
+
+
+Start new appli
+dealer error
+

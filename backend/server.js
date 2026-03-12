@@ -30,17 +30,6 @@ app.use(express.static(FRONTEND_PATH));
 
 // ----------------- Utilities -----------------
 
-<<<<<<< HEAD
-=======
-async function generateRTOCode() {
-  const { rows } = await pool.query(`
-    SELECT COUNT(*) FROM rto_profiles
-  `);
-
-  const count = Number(rows[0].count) + 1;
-  return `RTO${String(count).padStart(4, "0")}`;
-}
->>>>>>> 4299f37062d62e8ea28995eb3e79ee116cc8a3a9
 
 
 function generateDealerCode() {
@@ -1718,13 +1707,6 @@ app.get("/api/users/dealers", async (req, res) => {
 app.post("/api/admin/users", async (req, res) => {
 
   try {
-<<<<<<< HEAD
-
-    const { username, password, role, profile, employeeProfile } = req.body;
-=======
-const { username, password, role, profile, employeeProfile, rtoProfile } = req.body;
->>>>>>> 4299f37062d62e8ea28995eb3e79ee116cc8a3a9
-
 
 
     console.log("ADMIN CREATE USER:", req.body);
@@ -1740,13 +1722,6 @@ const { username, password, role, profile, employeeProfile, rtoProfile } = req.b
 
 
     const roleNormalized = role.toLowerCase();
-<<<<<<< HEAD
-
-    const allowed = ["manager", "employee", "dealer"];
-=======
-const allowed = ["manager","employee","dealer","rto_agent"];
->>>>>>> 4299f37062d62e8ea28995eb3e79ee116cc8a3a9
-
 
 
     if (!allowed.includes(roleNormalized)) {

@@ -1161,28 +1161,17 @@ app.post("/api/leads", async (req, res) => {
 
 
 app.get("/api/leads/:loanId", async (req, res) => {
-
   try {
-
     const { loanId } = req.params;
-
     const result = await pool.query("SELECT * FROM leads WHERE loan_id = $1", [loanId]);
-
     if (!result.rows.length) return res.status(404).json({ success: false });
-
     res.json(result.rows[0]);
-
   } catch (err) {
-
     console.error("Get lead error:", err);
-
     res.status(500).json({ success: false });
-
   }
 
 });
-
-
 
 app.put("/api/leads/:loanId", async (req, res) => {
 
@@ -1399,11 +1388,7 @@ else if (role === "dealer") {
   `;
 
   params = [userId];
-
 }
-
-
-
 
 
     const { rows } = await pool.query(query, params);
@@ -1651,9 +1636,7 @@ app.get("/api/users/dealers", async (req, res) => {
 
 
     const role = (userCheck.rows[0].role || '').toLowerCase();
-
     if (!['admin', 'manager', 'employee'].includes(role)) {
-
       return res.status(403).json({ error: "Access denied" });
 
     }

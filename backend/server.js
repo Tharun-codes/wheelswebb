@@ -1691,10 +1691,12 @@ app.post("/api/admin/users", async (req, res) => {
 
   try {
 
-
     console.log("ADMIN CREATE USER:", req.body);
 
+    const { username, password, role, profile, employeeProfile, rtoProfile } = req.body;
 
+    // Define allowed roles
+    const allowed = ['admin', 'manager', 'employee', 'dealer'];
 
     if (!username || !password || !role) {
 

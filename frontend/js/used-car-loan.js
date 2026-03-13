@@ -880,49 +880,47 @@ function initBtEmiCalculator() {
   computeAndShowBtPrincipal();
 }
 
-// Fetch dealers (users with role 'dealer') and populate the dealer select
+// Fetch dealers (users with role 'dealer') and populate dealer select
 async function loadDealerOptions() {
   const dealerSelect = document.getElementById('basicCaseDealerSelect');
   if (!dealerSelect) {
     console.error('Dealer select element not found');
     return;
   }
-
+  
   // Always clear hardcoded options immediately (DSA list in HTML)
   dealerSelect.innerHTML = '';
   const loadingOpt = document.createElement('option');
   loadingOpt.value = '';
   loadingOpt.textContent = 'Loading dealers...';
   dealerSelect.appendChild(loadingOpt);
-
-  // Use the existing function to get user
-  const currentUser = getUserFromStorage();
   
-  console.log('Loading dealers for user:', currentUser);
-
+  console.log('Loading dealers using /api/all-users endpoint...');
+  
   try {
-    const headers = {};
-    if (currentUser && currentUser.id) {
-      headers['x-user-id'] = String(currentUser.id);
-      console.log('User ID for header:', currentUser.id);
-    } else {
-      console.error('No user ID available - user not logged in');
-      dealerSelect.innerHTML = '';
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = 'Please login to see dealers';
-      dealerSelect.appendChild(opt);
-      return;
-    }
-    
-    console.log('Fetching dealers with headers:', headers);
-
-    const res = await fetch('/api/users/dealers', { headers });
-    console.log('Dealer API response status:', res.status);
+    // Use the same API as view-cases to get all users
+    const res = await fetch('/api/all-users');
+    console.log('All users API response status:', res.status);
     
     if (!res.ok) {
-      const errorText = await res.text();
-      console.error('Dealer API error:', res.status, errorText);
+      console.error('All users API error:', res.status);
+      dealerSelect.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Error loading dealers';
+      dealerSelect.appendChild(opt);
+      return;
+    }
+    
+    const allUsers = await res.json();
+    console.log('All users received:', allUsers);
+    
+    // Filter only users with role 'dealer'
+    const dealers = allUsers.filter(user => user.role === 'dealer');
+    console.log('Filtered dealers:', dealers);
+    
+    if (dealers.length === 0) {
+      console.warn('No dealers found in user list');
       dealerSelect.innerHTML = '';
       const opt = document.createElement('option');
       opt.value = '';
@@ -930,63 +928,28 @@ async function loadDealerOptions() {
       dealerSelect.appendChild(opt);
       return;
     }
-
-    const dealers = await res.json();
-    console.log('Dealers received:', dealers);
     
-    const list = Array.isArray(dealers) ? dealers : [];
-    
-    if (list.length === 0) {
-      console.warn('No dealers in database');
-      dealerSelect.innerHTML = '';
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = 'No dealers available';
-      dealerSelect.appendChild(opt);
-      return;
-    }
-
     dealerSelect.innerHTML = '';
     const placeholder = document.createElement('option');
     placeholder.value = '';
     placeholder.textContent = 'Select Dealer';
     dealerSelect.appendChild(placeholder);
-
-    list.forEach(d => {
+    
+    // Add dealers to dropdown
+    dealers.forEach(d => {
       const opt = document.createElement('option');
-      opt.textContent = d.display_name || d.dealer_name || d.username || 'Dealer';
+      opt.textContent = d.username || 'Dealer';
       opt.value = d.id;
       dealerSelect.appendChild(opt);
     });
     
-    console.log('Dealer options populated:', list.length, 'dealers');
-
-    const othersOpt = document.createElement('option');
-    othersOpt.value = 'Others';
-    othersOpt.textContent = 'Others';
-    dealerSelect.appendChild(othersOpt);
-
-    // If user selects 'Others' in dealer select, show manual Case Dealer input
-    if (!dealerSelect.dataset.othersListenerAttached) {
-      dealerSelect.dataset.othersListenerAttached = '1';
-      dealerSelect.addEventListener('change', () => {
-        const wrapperCase = document.getElementById('basicCaseDealerWrapper');
-        if (!wrapperCase) return;
-        if ((dealerSelect.value || '').toLowerCase() === 'others') {
-          wrapperCase.classList.remove('hidden');
-          const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = true;
-        } else {
-          wrapperCase.classList.add('hidden');
-          const caseDealer = document.getElementById('basicCaseDealer'); if (caseDealer) caseDealer.required = false;
-        }
-      });
-    }
+    console.log('Dealer options populated:', dealers.length, 'dealers');
   } catch (err) {
-    console.error('Failed to load dealers', err);
+    console.error('Failed to load dealers:', err);
     dealerSelect.innerHTML = '';
     const opt = document.createElement('option');
     opt.value = '';
-    opt.textContent = 'No dealers available';
+    opt.textContent = 'Error loading dealers';
     dealerSelect.appendChild(opt);
   }
 }

@@ -279,15 +279,26 @@ function initNotificationSystem() {
 // }
 async function loadDashboard() {
   try {
+
+    const start = document.getElementById("startDate").value;
+const end = document.getElementById("endDate").value;
+const product = document.getElementById("productType").value;
+
+const params = new URLSearchParams();
+
+if (start) params.append("start", start);
+if (end) params.append("end", end);
+if (product) params.append("product", product);
     let url = "";
 
     if (user.role === "admin") {
-      url = `/api/dashboard/admin/${user.id}`;   // 👈 FIX
+      url = `/api/dashboard/admin/${user.id}`;
     } else {
       url = `/api/dashboard/${user.role}/${user.id}`;
     }
 
-    const res = await fetch(url);
+
+    const res = await fetch(`${url}?${params.toString()}`);
     if (!res.ok) throw new Error("Dashboard API failed");
 
     const data = await res.json();
@@ -305,41 +316,46 @@ async function loadDashboard() {
 
 
 async function loadBusinessType() {
-  try {
-    let url = "";
 
-    if (user.role === "admin") {
-      url = `/api/dashboard/admin/${user.id}/business-type`;  // 👈 FIX
-    } else {
-      url = `/api/dashboard/${user.role}/${user.id}/business-type`;
-    }
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
+  const product = document.getElementById("productType").value;
 
-    const res = await fetch(url);
-    const data = await res.json();
+  let url = "";
 
-    const bar = document.getElementById("businessTypeBar");
-    bar.innerHTML = "";
-
-    if (!data.length) {
-      bar.innerHTML = "<p>No disbursed data</p>";
-      return;
-    }
-
-    const max = Math.max(...data.map(d => d.count));
-
-    data.forEach(row => {
-      const div = document.createElement("div");
-      div.className = "bar-fill";
-      div.style.width = (row.count / max) * 100 + "%";
-      div.textContent = `${row.loan_type} (${row.count})`;
-      bar.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error(err);
+  if (user.role === "admin") {
+    url = `/api/dashboard/admin/${user.id}/business-type`;
+  } else {
+    url = `/api/dashboard/${user.role}/${user.id}/business-type`;
   }
-}
 
+const params = new URLSearchParams();
+
+if (start) params.append("start", start);
+if (end) params.append("end", end);
+if (product) params.append("product", product);
+
+  const res = await fetch(`${url}?${params.toString()}`);
+  const data = await res.json();
+
+  const bar = document.getElementById("businessTypeBar");
+  bar.innerHTML = "";
+
+  if (!data.length) {
+    bar.innerHTML = "<p>No disbursed data</p>";
+    return;
+  }
+
+  const max = Math.max(...data.map(d => d.count));
+
+  data.forEach(row => {
+    const div = document.createElement("div");
+    div.className = "bar-fill";
+    div.style.width = (row.count / max) * 100 + "%";
+    div.textContent = `${row.loan_type} (${row.count})`;
+    bar.appendChild(div);
+  });
+}
 
 loadDashboard();
 loadBusinessType();
@@ -423,7 +439,17 @@ async function loadBestEmployee() {
     if (!nameEl || !amountEl || !casesEl || !cardEl) return;
     if (!user || !user.role || !user.id) return;
 
-    const url = `/api/dashboard/${encodeURIComponent(user.role)}/${encodeURIComponent(user.id)}/best-employee`;
+const start = document.getElementById("startDate").value;
+const end = document.getElementById("endDate").value;
+const product = document.getElementById("productType").value;
+
+const params = new URLSearchParams({
+  start,
+  end,
+  product
+});
+
+const url = `/api/dashboard/${encodeURIComponent(user.role)}/${encodeURIComponent(user.id)}/best-employee?${params}`;
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
@@ -483,5 +509,16 @@ async function loadBestEmployee() {
 
 // Initial load of best employee data
 loadBestEmployee();
+document.addEventListener("DOMContentLoaded", () => {
 
+  const filterBtn = document.getElementById("filterSearch");
 
+  if (filterBtn) {
+    filterBtn.addEventListener("click", () => {
+      loadDashboard();
+      loadBusinessType();
+      loadBestEmployee();
+    });
+  }
+
+});

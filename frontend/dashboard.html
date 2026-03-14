@@ -72,17 +72,18 @@
           </div>
         </div>
 
-        <div class="filters">
-          <input type="date" />
-          <input type="date" />
-          <select>
-            <option>Product Type</option>
-            <option>New Car</option>
-            <option>Used Car</option>
-          </select>
-          <button>Search</button>
-        </div>
-      </div>
+<div class="filters">
+  <input type="date" id="startDate" />
+  <input type="date" id="endDate" />
+
+<select id="productType">
+  <option value="">Product Type</option>
+  <option value="used-car-loan">Used Car</option>
+  <option value="new-car-loan">New Car</option>
+</select>
+
+  <button id="filterSearch">Search</button>
+</div>
     </header>
 
     <!-- Cards -->

@@ -103,6 +103,27 @@ console.log("View Cases JS loaded");
 let allLeads = [];
 let filteredLeads = [];
 let currentPage = 1;
+let dealerMap = {}; // Map dealer IDs to dealer names
+
+// Load dealer data for ID to name mapping
+async function loadDealerMap() {
+  try {
+    const res = await fetch('/api/all-users');
+    if (res.ok) {
+      const allUsers = await res.json();
+      const dealers = allUsers.filter(user => user.role === 'dealer');
+      
+      // Create ID to name mapping
+      dealers.forEach(dealer => {
+        dealerMap[dealer.id] = dealer.username;
+      });
+      
+      console.log('Dealer map created:', dealerMap);
+    }
+  } catch (err) {
+    console.error('Failed to load dealer map:', err);
+  }
+}
 const paginationEl = document.getElementById("pagination");
 const tbody = document.querySelector("#leadsTable tbody");
 const searchInput = document.getElementById("searchInput");
@@ -243,7 +264,15 @@ function renderTable() {
     const loanStage = highlightText(lead.data?.loanStage || '-', searchTerm);
     
     // Get Select Dealer and Ref Name / Mob No fields
-    const selectDealer = highlightText(lead.data?.basicCaseDealerSelect || lead.data?.caseDealer || '-', searchTerm);
+    let selectDealer = lead.data?.basicCaseDealerSelect || lead.data?.caseDealer || '-';
+    
+    // Convert dealer ID to dealer name using the dealer map
+    if (selectDealer && selectDealer !== '-' && !isNaN(selectDealer)) {
+      // This is a dealer ID, convert it to dealer name
+      selectDealer = dealerMap[selectDealer] || `Unknown Dealer (${selectDealer})`;
+    }
+    
+    const finalDealerName = highlightText(selectDealer, searchTerm);
     const refNameMobile = highlightText(lead.data?.basicRefNameMobile || '-', searchTerm);
     
     // Get UTR payment information
@@ -263,7 +292,7 @@ function renderTable() {
       <td>${mobile}</td>
       <td>${loanAmount}</td>
       <td>${bankFinance}</td>
-      <td>${selectDealer}</td>
+      <td>${finalDealerName}</td>
       <td>${refNameMobile}</td>
       <td>${utrInfo}</td>
       <td>${loanStage}</td>
@@ -436,4 +465,6 @@ if (refreshBtn) refreshBtn.addEventListener('click', () => fetchLeads());
 if (filterRole) filterRole.addEventListener("change", applyFilters);
 
 // initial load
-fetchLeads();
+loadDealerMap().then(() => {
+  fetchLeads();
+});

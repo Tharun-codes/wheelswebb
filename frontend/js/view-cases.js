@@ -105,6 +105,18 @@ let filteredLeads = [];
 let currentPage = 1;
 let dealerMap = {}; // Map dealer IDs to dealer names
 
+// Check if employee has submitted the application for green highlighting
+function hasEmployeeSubmitted(data) {
+  if (!data) return false;
+  
+  // If loan stage is anything other than 'Lead', employee has submitted
+  const loanStage = data.loanStage;
+  const hasSubmitted = loanStage && loanStage !== 'Lead';
+  
+  console.log('Loan stage:', loanStage, '-> Submitted:', hasSubmitted);
+  return hasSubmitted;
+}
+
 // Load dealer data for ID to name mapping
 async function loadDealerMap() {
   try {
@@ -254,6 +266,26 @@ function renderTable() {
 
   paged.forEach(lead => {
     const tr = document.createElement('tr');
+    
+    // Check if employee has submitted the application for employee dealer view
+    const hasSubmitted = (user.role === "employee" && dealerView === "1") 
+      ? hasEmployeeSubmitted(lead.data || {}) 
+      : false;
+    
+    // Apply red row styling if not submitted (dealer created, needs work)
+    if (!hasSubmitted) {
+      tr.style.backgroundColor = '#fef2f2';
+      tr.style.color = '#dc2626';
+      tr.style.fontWeight = '600';
+      tr.style.border = '1px solid #fecaca';
+    }
+    // Apply green row styling if employee has submitted
+    else {
+      tr.style.backgroundColor = '#f0fdf4';
+      tr.style.color = '#16a34a';
+      tr.style.fontWeight = '600';
+      tr.style.border = '1px solid #bbf7d0';
+    }
     
     // Apply highlighting to key fields
     const loanId = highlightText(lead.loan_id || '-', searchTerm);

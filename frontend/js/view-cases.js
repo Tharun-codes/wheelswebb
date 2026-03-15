@@ -105,16 +105,41 @@ let filteredLeads = [];
 let currentPage = 1;
 let dealerMap = {}; // Map dealer IDs to dealer names
 
-// Check if employee has submitted the application for green highlighting
-function hasEmployeeSubmitted(data) {
+// Check if any field is empty for red/green highlighting
+function hasEmptyFields(data) {
+  if (!data) return true;
+  
+  const importantFields = ['name', 'mobile', 'loanAmount', 'applicantDob', 'applicantEmail', 'employmentType'];
+  
+  console.log('Checking lead data:', data);
+  
+  const emptyFields = importantFields.filter(field => {
+    const value = data[field];
+    const isEmpty = !value || value.toString().trim() === '';
+    console.log(`Field ${field}: "${value}" -> Empty: ${isEmpty}`);
+    return isEmpty;
+  });
+  
+  console.log('Empty fields found:', emptyFields);
+  return emptyFields.length > 0;
+}
+
+// Check if all fields are filled for green highlighting
+function hasAllFieldsFilled(data) {
   if (!data) return false;
   
-  // If loan stage is anything other than 'Lead', employee has submitted
-  const loanStage = data.loanStage;
-  const hasSubmitted = loanStage && loanStage !== 'Lead';
+  const importantFields = ['name', 'mobile', 'loanAmount', 'applicantDob', 'applicantEmail', 'employmentType'];
   
-  console.log('Loan stage:', loanStage, '-> Submitted:', hasSubmitted);
-  return hasSubmitted;
+  const filledFields = importantFields.filter(field => {
+    const value = data[field];
+    const isFilled = value && value.toString().trim() !== '';
+    console.log(`Field ${field}: "${value}" -> Filled: ${isFilled}`);
+    return isFilled;
+  });
+  
+  console.log('Filled fields found:', filledFields);
+  console.log('All fields filled?', filledFields.length === importantFields.length);
+  return filledFields.length === importantFields.length;
 }
 
 // Load dealer data for ID to name mapping
@@ -267,20 +292,25 @@ function renderTable() {
   paged.forEach(lead => {
     const tr = document.createElement('tr');
     
-    // Check if employee has submitted the application for employee dealer view
-    const hasSubmitted = (user.role === "employee" && dealerView === "1") 
-      ? hasEmployeeSubmitted(lead.data || {}) 
+    // Check if lead has empty fields for employee dealer view
+    const hasEmpty = (user.role === "employee" && dealerView === "1") 
+      ? hasEmptyFields(lead.data || {}) 
       : false;
     
-    // Apply red row styling if not submitted (dealer created, needs work)
-    if (!hasSubmitted) {
+    // Check if lead has all fields filled for green highlighting
+    const isComplete = (user.role === "employee" && dealerView === "1") 
+      ? hasAllFieldsFilled(lead.data || {}) 
+      : false;
+    
+    // Apply red row styling if has empty fields
+    if (hasEmpty) {
       tr.style.backgroundColor = '#fef2f2';
       tr.style.color = '#dc2626';
       tr.style.fontWeight = '600';
       tr.style.border = '1px solid #fecaca';
     }
-    // Apply green row styling if employee has submitted
-    else {
+    // Apply green row styling if all fields are filled
+    else if (isComplete) {
       tr.style.backgroundColor = '#f0fdf4';
       tr.style.color = '#16a34a';
       tr.style.fontWeight = '600';

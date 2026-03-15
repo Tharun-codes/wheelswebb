@@ -2977,15 +2977,10 @@ function initAdditionalApplicantBusinessProof(index) {
 async function loadDealers(selectedDealerId = null) {
   try {
 
-    const user = JSON.parse(localStorage.getItem("user"));
+    const res = await fetch("/api/all-users");
+    const users = await res.json();
 
-    const res = await fetch("/api/khata/dealers", {
-      headers: {
-        "x-admin-id": user.id
-      }
-    });
-
-    const dealers = await res.json();
+    const dealers = users.filter(u => u.role === "dealer");
 
     const select = document.getElementById("basicCaseDealerSelect");
 
@@ -2996,11 +2991,11 @@ async function loadDealers(selectedDealerId = null) {
     dealers.forEach(dealer => {
       const option = document.createElement("option");
       option.value = dealer.id;
-      option.textContent = dealer.display_name || dealer.username;
+      option.textContent = dealer.username || dealer.display_name || "Dealer";
       select.appendChild(option);
     });
 
-    // 👇 restore selected dealer
+    // restore saved dealer
     if (selectedDealerId) {
       select.value = selectedDealerId;
     }
@@ -3009,6 +3004,3 @@ async function loadDealers(selectedDealerId = null) {
     console.error("Dealer load error:", err);
   }
 }
-document.addEventListener("DOMContentLoaded", () => {
-  loadDealers();
-});

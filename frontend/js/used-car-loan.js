@@ -2481,8 +2481,7 @@ if (loanId) {
       // 5️⃣ Apply field visibility based on Source
       // =========================
       toggleBasicFieldsBySource();
-
-
+      loadDealers(data.basicCaseDealerSelect);
 
 
 
@@ -2972,3 +2971,41 @@ function initAdditionalApplicantBusinessProof(index) {
   renderBusinessProofDropdown();
   updateBusinessProofDisplay();
 }
+async function loadDealers(selectedDealerId = null) {
+  try {
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    const res = await fetch("/api/khata/dealers", {
+      headers: {
+        "x-admin-id": user.id
+      }
+    });
+
+    const dealers = await res.json();
+
+    const select = document.getElementById("basicCaseDealerSelect");
+
+    if (!select) return;
+
+    select.innerHTML = `<option value="">Select Dealer</option>`;
+
+    dealers.forEach(dealer => {
+      const option = document.createElement("option");
+      option.value = dealer.id;
+      option.textContent = dealer.display_name || dealer.username;
+      select.appendChild(option);
+    });
+
+    // 👇 restore selected dealer
+    if (selectedDealerId) {
+      select.value = selectedDealerId;
+    }
+
+  } catch (err) {
+    console.error("Dealer load error:", err);
+  }
+}
+document.addEventListener("DOMContentLoaded", () => {
+  loadDealers();
+});

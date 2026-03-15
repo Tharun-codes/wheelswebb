@@ -396,6 +396,9 @@
                 showToast('Failed to load dealers', 'error');
             }
         }
+        document.addEventListener("DOMContentLoaded", () => {
+    loadDealers();
+});
 
         // Load all transactions
         async function loadTransactions() {

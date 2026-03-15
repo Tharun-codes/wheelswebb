@@ -2265,11 +2265,14 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
   }
 
   // if new lead, redirect into edit mode
-  if (!loanId) {
-    window.location.href = `/used-car-loan.html?loanId=${result.loan_id}`;
-  } else {
-  window.location.href = "/view-cases.html";
-  }
+
+if (!res.ok) {
+  alert(`Failed to save: ${result.error || "Unknown error"}`);
+  return;
+}
+
+// redirect after save
+window.location.href = "/view-cases.html";
 });
 
 

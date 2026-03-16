@@ -109,18 +109,19 @@ let dealerMap = {}; // Map dealer IDs to dealer names
 function hasEmptyFields(data) {
   if (!data) return true;
   
-  const importantFields = ['name', 'mobile', 'loanAmount', 'applicantDob', 'applicantEmail', 'employmentType'];
+  const importantFields = ['name', 'mobile', 'loanAmount', 'applicantDob', 'email', 'employmentCustomerProfile'];
   
-  console.log('Checking lead data:', data);
+  console.log('🔍 Checking lead data:', data);
   
   const emptyFields = importantFields.filter(field => {
     const value = data[field];
     const isEmpty = !value || value.toString().trim() === '';
-    console.log(`Field ${field}: "${value}" -> Empty: ${isEmpty}`);
+    console.log(`📝 Field ${field}: "${value}" -> Empty: ${isEmpty}`);
     return isEmpty;
   });
   
-  console.log('Empty fields found:', emptyFields);
+  console.log('❌ Empty fields found:', emptyFields);
+  console.log('🔢 Total empty fields:', emptyFields.length);
   return emptyFields.length > 0;
 }
 
@@ -128,7 +129,7 @@ function hasEmptyFields(data) {
 function hasAllFieldsFilled(data) {
   if (!data) return false;
   
-  const importantFields = ['name', 'mobile', 'loanAmount', 'applicantDob', 'applicantEmail', 'employmentType'];
+  const importantFields = ['name', 'mobile', 'loanAmount', 'applicantDob', 'email', 'employmentCustomerProfile'];
   
   const filledFields = importantFields.filter(field => {
     const value = data[field];
@@ -140,6 +141,28 @@ function hasAllFieldsFilled(data) {
   console.log('Filled fields found:', filledFields);
   console.log('All fields filled?', filledFields.length === importantFields.length);
   return filledFields.length === importantFields.length;
+}
+
+// Check if lead was marked as completed by employee submission
+function isLeadMarkedCompleted(loanId) {
+  console.log('🔍 Checking lead for completion:', loanId);
+  
+  // Check if employee just submitted this lead in current session
+  const submittedLead = sessionStorage.getItem('employee_submitted_lead');
+  console.log('📝 Session storage value:', submittedLead);
+  console.log('🆔 Comparing:', { submittedLead, currentLeadId: loanId });
+  
+  if (submittedLead === loanId || submittedLead === 'new_lead') {
+    console.log('✅ Lead marked as completed via session flag');
+    // Clear the flag after checking to prevent false positives
+    sessionStorage.removeItem('employee_submitted_lead');
+    console.log('🗑️ Session flag cleared');
+    return true;
+  }
+  
+  const localStorageResult = localStorage.getItem(`lead_${loanId}_completed`) === 'true';
+  console.log('💾 LocalStorage result:', localStorageResult);
+  return localStorageResult;
 }
 
 // Load dealer data for ID to name mapping
@@ -297,13 +320,34 @@ function renderTable() {
       ? hasEmptyFields(lead.data || {}) 
       : false;
     
-    // Check if lead has all fields filled for green highlighting
+    // Check if lead was marked as completed by employee submission (store result to avoid double call)
+    const isMarkedCompleted = isLeadMarkedCompleted(lead.loan_id);
+    
+    // Check if lead has all fields filled for green highlighting (use stored result)
     const isComplete = (user.role === "employee" && dealerView === "1") 
-      ? hasAllFieldsFilled(lead.data || {}) 
+      ? (hasAllFieldsFilled(lead.data || {}) || isMarkedCompleted)
       : false;
     
-    // Apply red row styling if has empty fields
-    if (hasEmpty) {
+    console.log(`🎨 Lead ${lead.loan_id} color logic:`, {
+      userRole: user.role,
+      dealerView: dealerView,
+      hasEmpty,
+      isMarkedCompleted,
+      isComplete,
+      loanId: lead.loan_id
+    });
+    
+    // 🎯 PRIORITY: If marked as completed, show green regardless of empty fields
+    if (isMarkedCompleted) {
+      console.log(`🟢 Applying GREEN color (marked completed) to lead ${lead.loan_id}`);
+      tr.style.backgroundColor = '#f0fdf4';
+      tr.style.color = '#16a34a';
+      tr.style.fontWeight = '600';
+      tr.style.border = '1px solid #bbf7d0';
+    }
+    // Apply red row styling if has empty fields and not marked as completed
+    else if (hasEmpty) {
+      console.log(`🔴 Applying RED color to lead ${lead.loan_id}`);
       tr.style.backgroundColor = '#fef2f2';
       tr.style.color = '#dc2626';
       tr.style.fontWeight = '600';
@@ -311,10 +355,13 @@ function renderTable() {
     }
     // Apply green row styling if all fields are filled
     else if (isComplete) {
+      console.log(`🟢 Applying GREEN color (all fields filled) to lead ${lead.loan_id}`);
       tr.style.backgroundColor = '#f0fdf4';
       tr.style.color = '#16a34a';
       tr.style.fontWeight = '600';
       tr.style.border = '1px solid #bbf7d0';
+    } else {
+      console.log(`⚪ Applying NORMAL color to lead ${lead.loan_id}`);
     }
     
     // Apply highlighting to key fields

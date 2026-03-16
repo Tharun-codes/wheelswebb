@@ -2259,20 +2259,29 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
 
   const result = await res.json();
 
+  console.log('Submit response:', { ok: res.ok, status: res.status, result });
+  console.log('User role:', user.role);
+  console.log('Loan ID:', loanId);
+
   if (!res.ok) {
     alert(`Failed to save: ${result.error || "Unknown error"}`);
     return;
   }
 
-  // if new lead, redirect into edit mode
+  // 🎯 Mark lead as completed for green color immediately
+  if (res.ok && user.role === 'employee') {
+    console.log('✅ Employee submitted successfully, marking lead as completed');
+    console.log('Setting sessionStorage for lead:', loanId || 'new_lead');
+    // Set a session flag that will be checked on view-cases page
+    sessionStorage.setItem('employee_submitted_lead', loanId || 'new_lead');
+    console.log('Session storage set:', sessionStorage.getItem('employee_submitted_lead'));
+  } else {
+    console.log('❌ Conditions not met for green color:', { resOk: res.ok, userRole: user.role });
+  }
 
-if (!res.ok) {
-  alert(`Failed to save: ${result.error || "Unknown error"}`);
-  return;
-}
-
-// redirect after save
-window.location.href = "/view-cases.html";
+  // redirect after save
+  console.log('Redirecting to view-cases.html...');
+  window.location.href = "/view-cases.html";
 });
 
 

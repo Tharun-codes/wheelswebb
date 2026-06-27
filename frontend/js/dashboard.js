@@ -522,3 +522,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
+// Open messaging system
+function openMessaging() {
+  window.location.href = '/messaging.html';
+}

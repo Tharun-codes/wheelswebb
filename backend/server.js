@@ -4346,15 +4346,132 @@ app.get("/api/user/manager-info/:id", async (req, res) => {
 
 
 
+// ==================== MESSAGING SYSTEM ====================
+
+// Get user conversations
+app.get("/api/messages", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    // Get conversations where user is either sender or receiver
+    const { rows } = await pool.query(`
+      SELECT DISTINCT 
+        m.id,
+        m.sender_id,
+        m.receiver_ids,
+        m.message,
+        m.type,
+        m.timestamp,
+        CASE 
+          WHEN m.sender_id = $1 THEN (
+            SELECT json_agg(u.username) 
+            FROM jsonb_array_elements_text(m.receiver_ids) AS rid
+            JOIN users u ON u.id::text = rid
+          )
+          ELSE (
+            SELECT u.username
+            FROM users u 
+            WHERE u.id = m.sender_id
+          )
+        END as participant_name,
+        CASE 
+          WHEN m.sender_id = $1 THEN (
+            SELECT json_agg(u.id) 
+            FROM jsonb_array_elements_text(m.receiver_ids) AS rid
+            JOIN users u ON u.id::text = rid
+          )
+          ELSE m.sender_id::text
+        END as participant_id
+      FROM messages m
+      WHERE m.sender_id = $1 OR $1 = ANY(m.receiver_ids)
+      ORDER BY m.timestamp DESC
+    `, [userId]);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Error getting conversations:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Send new message
+app.post("/api/messages", async (req, res) => {
+  try {
+    const { senderId, receiverIds, message, type } = req.body;
+
+    if (!senderId || !receiverIds || !message) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Insert message into database
+    const { rows } = await pool.query(`
+      INSERT INTO messages (sender_id, receiver_ids, message, type)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `, [senderId, JSON.stringify(receiverIds), message, type || 'individual']);
+
+    // Create read receipts for sender
+    for (const receiverId of receiverIds) {
+      await pool.query(`
+        INSERT INTO message_reads (message_id, user_id)
+        VALUES ($1, $2)
+        ON CONFLICT (message_id, user_id) DO NOTHING
+      `, [rows[0].id, receiverId]);
+    }
+
+    console.log("📤 Message sent successfully:", {
+      senderId,
+      receiverIds,
+      message,
+      type: type || 'individual'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Message sent successfully",
+      data: rows[0]
+    });
+
+  } catch (err) {
+    console.error("Error sending message:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Get conversation between two users
+app.get("/api/conversations/:userId1/:userId2", async (req, res) => {
+  try {
+    const { userId1, userId2 } = req.params;
+
+    const { rows } = await pool.query(`
+      SELECT 
+        m.id,
+        m.sender_id,
+        m.receiver_ids,
+        m.message,
+        m.type,
+        m.timestamp
+      FROM messages m
+      WHERE (m.sender_id = $1 AND $2 = ANY(m.receiver_ids))
+         OR (m.sender_id = $2 AND $1 = ANY(m.receiver_ids))
+      ORDER BY m.timestamp ASC
+    `, [userId1, userId2]);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Error getting conversation:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 
 
 
-
-
-
-
-// Start server in non-production; also export app for tests
+ // Start server in non-production; also export app for tests
 
 const PORT = process.env.PORT || 3001;
 

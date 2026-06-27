@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WheelsWeb | Messages</title>
+  <link rel="stylesheet" href="/css/dashboard.css?v=3" />
+  <style>
+    .messaging-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+    
+    .messaging-header {
+      background: #075e54;
+      color: white;
+      padding: 20px;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .messaging-header h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+    
+    .messaging-content {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 100px);
+    }
+    
+    .conversations-panel {
+      flex: 1;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .chat-panel {
+      flex: 2;
+      background: white;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .conversations-header {
+      padding: 15px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f8fafc;
+    }
+    
+    .conversation-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid #f3f4f6;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    
+    .conversation-item:hover {
+      background: #f1f5f9;
+    }
+    
+    .conversation-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-weight: bold;
+    }
+    
+    .conversation-info {
+      flex: 1;
+    }
+    
+    .conversation-name {
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .conversation-last-message {
+      font-size: 14px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    
+    .chat-header {
+      padding: 15px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background: #fafafa;
+    }
+    
+    .message {
+      margin-bottom: 15px;
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .message.sent {
+      justify-content: flex-end;
+    }
+    
+    .message.received {
+      justify-content: flex-start;
+    }
+    
+    .message-bubble {
+      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 18px;
+      word-wrap: break-word;
+    }
+    
+    .message.sent .message-bubble {
+      background: #075e54;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    
+    .message.received .message-bubble {
+      background: #f1f5f9;
+      color: #1f2937;
+      border-bottom-left-radius: 4px;
+    }
+    
+    .chat-input {
+      padding: 15px;
+      border-top: 1px solid #e5e7eb;
+      background: white;
+    }
+    
+    .chat-input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .chat-input-field {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 24px;
+      font-size: 14px;
+      outline: none;
+    }
+    
+    .chat-input-field:focus {
+      border-color: #075e54;
+    }
+    
+    .send-button {
+      background: #075e54;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    
+    .send-button:hover {
+      background: #059669;
+    }
+    
+    .back-button {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .back-button:hover {
+      background: #4b5563;
+    }
+    
+    .selected-recipients {
+      padding: 15px;
+      border-top: 1px solid #e5e7eb;
+      background: #f8fafc;
+    }
+    
+    .selected-recipients h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #374151;
+    }
+    
+    .selected-user-tag {
+      display: inline-flex;
+      align-items: center;
+      background: #075e54;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin: 2px 4px 2px 0;
+    }
+    
+    .selected-user-tag .remove {
+      margin-left: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 15px;
+      border-bottom: 1px solid #f3f4f6;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .user-item:hover {
+      background: #f1f5f9;
+    }
+    
+    .user-checkbox {
+      margin-right: 10px;
+    }
+    
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .user-info {
+      flex: 1;
+    }
+    
+    .user-name {
+      font-weight: 500;
+      font-size: 14px;
+      color: #374151;
+    }
+    
+    .user-role {
+      font-size: 11px;
+      color: #6b7280;
+    }
+    
+    #userSearch {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    
+    #userSearch:focus {
+      outline: none;
+      border-color: #075e54;
+    }
+  </style>
+</head>
+<body>
+  <div class="messaging-container">
+    <div class="messaging-header">
+      <h2>💬 Messages</h2>
+      <button class="back-button" onclick="goBack()">← Back to Dashboard</button>
+    </div>
+    
+    <div class="messaging-content">
+      <!-- Recipients Panel -->
+      <div class="conversations-panel">
+        <div class="conversations-header">
+          <h3>Select Recipients</h3>
+          <input type="text" id="userSearch" placeholder="Search users..." />
+        </div>
+        <div id="recipientsList">
+          <div style="padding: 20px; text-align: center; color: #6b7280;">
+            Loading users...
+          </div>
+        </div>
+        
+        <!-- Selected Recipients Display -->
+        <div class="selected-recipients" id="selectedRecipients" style="display: none;">
+          <h4>Selected Recipients:</h4>
+          <div id="selectedUsersList"></div>
+        </div>
+      </div>
+      
+      <!-- Chat Panel -->
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div id="chatHeader">
+            <h3>Compose Message</h3>
+          </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+          <div style="padding: 20px; text-align: center; color: #6b7280;">
+            Select recipients and type your message below
+          </div>
+        </div>
+        
+        <div class="chat-input">
+          <div class="chat-input-container">
+            <input type="text" class="chat-input-field" id="messageInput" placeholder="Type a message..." />
+            <button class="send-button" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/js/messaging.js"></script>
+</body>
+</html>

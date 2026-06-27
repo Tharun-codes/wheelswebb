@@ -10,23 +10,17 @@ let endDateFilter = null;
 // Date range filter event listeners
 const startDateInput = document.getElementById("startDate");
 const endDateInput = document.getElementById("endDate");
-const applyDateFilterBtn = document.getElementById("applyDateFilter");
-const clearDateFilterBtn = document.getElementById("clearDateFilter");
 
-if (applyDateFilterBtn) {
-  applyDateFilterBtn.addEventListener("click", () => {
+if (startDateInput) {
+  startDateInput.addEventListener("change", () => {
     startDateFilter = startDateInput.value;
-    endDateFilter = endDateInput.value;
     applyFilters();
   });
 }
 
-if (clearDateFilterBtn) {
-  clearDateFilterBtn.addEventListener("click", () => {
-    startDateInput.value = "";
-    endDateInput.value = "";
-    startDateFilter = null;
-    endDateFilter = null;
+if (endDateInput) {
+  endDateInput.addEventListener("change", () => {
+    endDateFilter = endDateInput.value;
     applyFilters();
   });
 }

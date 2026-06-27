@@ -20,8 +20,12 @@ const assignMenu = document.getElementById("assignEmployeesMenu");
 const dealerKhataMenu = document.getElementById("dealerKhataMenu");
 const myKhataMenu = document.getElementById("myKhataMenu");
 const profileMenu = document.getElementById("profileMenu");
+const startNewApplicationBtn = document.getElementById("startNewApplicationBtn");
 
 if (user.role === "admin") {
+  // Hide Start New Application for admin
+  if (startNewApplicationBtn) startNewApplicationBtn.style.display = "none";
+  
   if (adminMenu) adminMenu.style.display = "block";
   if (assignMenu) assignMenu.style.display = "block";
   if (dealerKhataMenu) dealerKhataMenu.style.display = "block";

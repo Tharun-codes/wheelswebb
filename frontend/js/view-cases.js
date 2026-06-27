@@ -3,6 +3,34 @@ if (filterRole) filterRole.addEventListener("change", applyFilters);
 const filterUser = document.getElementById("filterUser");
 if (filterUser) filterUser.addEventListener("change", applyFilters);
 
+// Date range filter variables
+let startDateFilter = null;
+let endDateFilter = null;
+
+// Date range filter event listeners
+const startDateInput = document.getElementById("startDate");
+const endDateInput = document.getElementById("endDate");
+const applyDateFilterBtn = document.getElementById("applyDateFilter");
+const clearDateFilterBtn = document.getElementById("clearDateFilter");
+
+if (applyDateFilterBtn) {
+  applyDateFilterBtn.addEventListener("click", () => {
+    startDateFilter = startDateInput.value;
+    endDateFilter = endDateInput.value;
+    applyFilters();
+  });
+}
+
+if (clearDateFilterBtn) {
+  clearDateFilterBtn.addEventListener("click", () => {
+    startDateInput.value = "";
+    endDateInput.value = "";
+    startDateFilter = null;
+    endDateFilter = null;
+    applyFilters();
+  });
+}
+
 let allUsers = [];
 
 const user = JSON.parse(localStorage.getItem("user"));
@@ -534,6 +562,24 @@ if (selectedUserId) {
 
     // 🔵 STAGE FILTER
     if (stage && l.data?.loanStage !== stage) return false;
+
+    // 🔵 DATE RANGE FILTER
+    if (startDateFilter || endDateFilter) {
+      const leadDate = l.data?.dateAndTime || l.created_at;
+      if (!leadDate) return false;
+      
+      const leadDateObj = new Date(leadDate);
+      const startDateObj = startDateFilter ? new Date(startDateFilter) : null;
+      const endDateObj = endDateFilter ? new Date(endDateFilter) : null;
+      
+      // Set time to start/end of day for accurate comparison
+      if (startDateObj) startDateObj.setHours(0, 0, 0, 0);
+      if (endDateObj) endDateObj.setHours(23, 59, 59, 999);
+      
+      // Check if lead date is within range
+      if (startDateObj && leadDateObj < startDateObj) return false;
+      if (endDateObj && leadDateObj > endDateObj) return false;
+    }
 
     // 🔵 SEARCH FILTER
     if (q) {

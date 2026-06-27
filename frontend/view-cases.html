@@ -112,6 +112,64 @@
       transform: translateY(-1px);
     }
     
+    .date-range-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+    }
+    
+    .date-range-filter span {
+      font-size: 14px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    
+    .date-range-filter input[type="date"] {
+      min-width: 140px;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    
+    .date-range-filter .apply-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .date-range-filter .apply-btn:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+    
+    .date-range-filter .clear-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .date-range-filter .clear-btn:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+    
     select, button {
       padding: 12px 16px;
       border-radius: 8px;
@@ -424,7 +482,13 @@
 
     </select>
 
-
+    <div class="date-range-filter">
+      <input type="date" id="startDate" placeholder="Start Date (dd-mm-yyyy)" />
+      <span>to</span>
+      <input type="date" id="endDate" placeholder="End Date (dd-mm-yyyy)" />
+      <button id="applyDateFilter" class="apply-btn">Apply</button>
+      <button id="clearDateFilter" class="clear-btn">Clear</button>
+    </div>
 
     <div class="spacer"></div>
     <button id="refreshBtn">Refresh</button>

@@ -4474,10 +4474,8 @@ app.get("/api/conversations/:userId1/:userId2", async (req, res) => {
 // Get all banks
 app.get("/api/banks", async (req, res) => {
   try {
-    const adminId = parseInt(req.headers["x-admin-id"]);
-    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
-    const isAdmin = await validateUserRole(adminId, 'admin');
-    if (!isAdmin) return res.status(403).json({ error: "Admin access only" });
+    const userId = parseInt(req.headers["x-user-id"] || req.headers["x-admin-id"] || req.headers["x-dealer-id"]);
+    if (!userId) return res.status(403).json({ error: "Authentication required" });
 
     const { rows } = await pool.query("SELECT * FROM banks ORDER BY bank_name ASC");
     res.json(rows);
@@ -4490,10 +4488,8 @@ app.get("/api/banks", async (req, res) => {
 // Get specific bank and its branches
 app.get("/api/banks/:id", async (req, res) => {
   try {
-    const adminId = parseInt(req.headers["x-admin-id"]);
-    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
-    const isAdmin = await validateUserRole(adminId, 'admin');
-    if (!isAdmin) return res.status(403).json({ error: "Admin access only" });
+    const userId = parseInt(req.headers["x-user-id"] || req.headers["x-admin-id"] || req.headers["x-dealer-id"]);
+    if (!userId) return res.status(403).json({ error: "Authentication required" });
 
     const bankId = parseInt(req.params.id);
     if (isNaN(bankId)) return res.status(400).json({ error: "Invalid bank ID" });

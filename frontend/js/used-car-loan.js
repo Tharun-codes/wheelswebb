@@ -540,6 +540,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Populate BT dropdowns
   populateBtDropdowns();
 
+  // Initialize Bank / Finance dropdown and autocomplete
+  initializeBankDropdown();
+
   // Add form validation
   const form = document.getElementById('leadForm');
   if (form) {
@@ -643,6 +646,7 @@ function populateBtDropdowns() {
     // Copy options from the main bankFinance dropdown
     const bankFinanceSelect = document.getElementById('bankFinance');
     if (bankFinanceSelect) {
+      btBankFinanceSelect.innerHTML = ''; // Clear first to avoid duplicates
       Array.from(bankFinanceSelect.options).forEach(option => {
         const newOption = document.createElement('option');
         newOption.value = option.value;
@@ -3011,5 +3015,183 @@ async function loadDealers(selectedDealerId = null) {
 
   } catch (err) {
     console.error("Dealer load error:", err);
+  }
+}
+
+// Dynamic Bank dropdown and Branch/Loan auto-population
+let fetchedBanksForForm = [];
+let selectedBankDetails = null;
+
+async function initializeBankDropdown() {
+  const bankSelect = document.getElementById("bankFinance");
+  const branchInput = document.getElementById("bankBranch");
+  const loanInput = document.getElementById("loginExecutive");
+
+  if (!bankSelect) return;
+
+  // 1. Fetch banks from backend dynamically
+  try {
+    const user = getUserFromStorage() || {};
+    const res = await fetch("/api/banks", {
+      headers: {
+        "x-user-id": user.id || ""
+      }
+    });
+    if (!res.ok) throw new Error("Failed to fetch banks");
+    fetchedBanksForForm = await res.json();
+
+    // 2. Populate options
+    bankSelect.innerHTML = `
+      <option value="">BANK / FINANCE *</option>
+      <option value="NONE">NONE</option>
+    `;
+
+    fetchedBanksForForm.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.bank_name;
+      opt.textContent = b.bank_name;
+      bankSelect.appendChild(opt);
+    });
+
+    // Sync option copy to BT dropdown
+    populateBtDropdowns();
+  } catch (err) {
+    console.error("Error populating banks dropdown:", err);
+  }
+
+  // 3. Setup change listener to load branch options
+  bankSelect.addEventListener("change", async () => {
+    const bankName = bankSelect.value;
+    
+    // Clear dynamic datalist and remove list attribute
+    let datalist = document.getElementById("bankBranchDatalist");
+    if (datalist) datalist.remove();
+    if (branchInput) branchInput.removeAttribute("list");
+
+    if (!bankName || bankName === "NONE") {
+      if (branchInput) {
+        branchInput.value = "";
+        branchInput.dispatchEvent(new Event("change"));
+      }
+      if (loanInput) {
+        loanInput.value = "";
+        loanInput.dispatchEvent(new Event("change"));
+      }
+      selectedBankDetails = null;
+      return;
+    }
+
+    const matchedBank = fetchedBanksForForm.find(b => b.bank_name === bankName);
+    if (!matchedBank) {
+      selectedBankDetails = null;
+      return;
+    }
+
+    try {
+      const user = getUserFromStorage() || {};
+      const res = await fetch(`/api/banks/${matchedBank.id}`, {
+        headers: {
+          "x-user-id": user.id || ""
+        }
+      });
+      if (!res.ok) throw new Error("Failed to fetch bank details");
+      selectedBankDetails = await res.json();
+
+      const branches = selectedBankDetails.branches || [];
+
+      if (branches.length === 1) {
+        // Auto-fill branch name and loan assigned immediately
+        if (branchInput) {
+          branchInput.value = branches[0].branch_name;
+          branchInput.dispatchEvent(new Event("change"));
+        }
+        if (loanInput) {
+          loanInput.value = branches[0].loan_assigned || "";
+          loanInput.dispatchEvent(new Event("change"));
+        }
+      } else if (branches.length > 1) {
+        // Create dynamic datalist for branch selection
+        datalist = document.createElement("datalist");
+        datalist.id = "bankBranchDatalist";
+        branches.forEach(br => {
+          const opt = document.createElement("option");
+          opt.value = br.branch_name;
+          datalist.appendChild(opt);
+        });
+        document.body.appendChild(datalist);
+        
+        if (branchInput) {
+          branchInput.setAttribute("list", "bankBranchDatalist");
+          branchInput.value = "";
+          branchInput.dispatchEvent(new Event("change"));
+        }
+        if (loanInput) {
+          loanInput.value = "";
+          loanInput.dispatchEvent(new Event("change"));
+        }
+      } else {
+        if (branchInput) {
+          branchInput.value = "";
+          branchInput.dispatchEvent(new Event("change"));
+        }
+        if (loanInput) {
+          loanInput.value = "";
+          loanInput.dispatchEvent(new Event("change"));
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching branches details:", err);
+    }
+  });
+
+  // 4. Hook up branch selection/typing to populate Loan Assigned dynamically
+  if (branchInput) {
+    branchInput.addEventListener("input", () => {
+      if (!selectedBankDetails || !loanInput) return;
+      const typedBranch = branchInput.value.trim().toLowerCase();
+      const branches = selectedBankDetails.branches || [];
+      const matched = branches.find(br => br.branch_name.toLowerCase() === typedBranch);
+      if (matched) {
+        loanInput.value = matched.loan_assigned || "";
+        loanInput.dispatchEvent(new Event("change"));
+      }
+    });
+
+    // Also support focus trigger for edit modes to fetch datalist on demand
+    branchInput.addEventListener("focus", async () => {
+      if (selectedBankDetails) return;
+      const bankName = bankSelect.value;
+      if (!bankName || bankName === "NONE") return;
+
+      const matchedBank = fetchedBanksForForm.find(b => b.bank_name === bankName);
+      if (!matchedBank) return;
+
+      try {
+        const user = getUserFromStorage() || {};
+        const res = await fetch(`/api/banks/${matchedBank.id}`, {
+          headers: { "x-user-id": user.id || "" }
+        });
+        if (res.ok) {
+          selectedBankDetails = await res.json();
+          const branches = selectedBankDetails.branches || [];
+          if (branches.length > 1) {
+            let datalist = document.getElementById("bankBranchDatalist");
+            if (datalist) datalist.remove();
+            
+            datalist = document.createElement("datalist");
+            datalist.id = "bankBranchDatalist";
+            branches.forEach(br => {
+              const opt = document.createElement("option");
+              opt.value = br.branch_name;
+              datalist.appendChild(opt);
+            });
+            document.body.appendChild(datalist);
+            branchInput.setAttribute("list", "bankBranchDatalist");
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
   }
 }

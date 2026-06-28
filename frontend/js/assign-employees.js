@@ -126,7 +126,7 @@ function renderEmployees() {
   const div = document.getElementById("employeeList");
   div.innerHTML = "";
 
-  const assignableUsers = [...employees, ...dealers];
+  const assignableUsers = employees;
   const searchInput = document.getElementById("employeeSearch");
 const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
   
@@ -264,21 +264,11 @@ async function saveAssignments() {
 
   // VALIDATION
   for (const childId of checked) {
-    const child = [...employees, ...dealers].find(u => u.id === childId);
+    const child = employees.find(u => u.id === childId);
     if (!child) continue;
-
-    if (child.role === "employee" && selectedBoss.role === "employee") {
-      showToast("❌ Employee cannot be assigned to Employee");
-      return;
-    }
 
     if (child.role === "manager") {
       showToast("❌ Manager cannot be assigned");
-      return;
-    }
-
-    if (child.role === "dealer" && selectedBoss.role === "dealer") {
-      showToast("❌ Dealer cannot be assigned to Dealer");
       return;
     }
   }
@@ -289,52 +279,28 @@ async function saveAssignments() {
   try {
     /* ---------- ADD ---------- */
     for (const childId of toAdd) {
-      if (selectedBoss.role === "employee") {
-        // EMPLOYEE → DEALER
-        await fetch("/api/admin/assign-dealer", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            employeeId: managerId,
-            dealerId: childId
-          })
-        });
-      } else {
-        // MANAGER → EMPLOYEE
-        await fetch("/api/admin/assign-employee", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            managerId,
-            employeeId: childId
-          })
-        });
-      }
+      // MANAGER → EMPLOYEE
+      await fetch("/api/admin/assign-employee", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          managerId,
+          employeeId: childId
+        })
+      });
     }
 
     /* ---------- REMOVE ---------- */
     for (const childId of toRemove) {
-      if (selectedBoss.role === "employee") {
-        // EMPLOYEE → DEALER
-        await fetch("/api/admin/unassign-dealer", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            employeeId: managerId,
-            dealerId: childId
-          })
-        });
-      } else {
-        // MANAGER → EMPLOYEE
-        await fetch("/api/admin/unassign-employee", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            managerId,
-            employeeId: childId
-          })
-        });
-      }
+      // MANAGER → EMPLOYEE
+      await fetch("/api/admin/unassign-employee", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          managerId,
+          employeeId: childId
+        })
+      });
     }
 
     showToast("Assignments updated successfully");
@@ -539,57 +505,7 @@ async function unassignAllFromManager(managerId, managerName) {
 }
 
 async function loadEmployeeAssignments() {
-  try {
-    const tbody = document.getElementById("employeeAssignmentsTableBody");
-    tbody.innerHTML = '<tr><td colspan="4" class="loading-row"><div class="loading"><div class="spinner"></div>Loading employee assignments...</div></td></tr>';
-
-    const employeeAssignments = [];
-    
-    // Get assignments for each employee
-    console.log('Processing employees for employee assignments table:', employees);
-    console.log('Available dealers:', dealers);
-    
-    for (const employee of employees) {
-      try {
-        const res = await fetch(`/api/admin/employee-dealers/${employee.id}`);
-        console.log(`API response for employee ${employee.username}:`, res.status, res.ok);
-        
-        if (res.ok) {
-          const dealerIds = await res.json();
-          console.log(`Employee ${employee.username} assigned dealers:`, dealerIds);
-          console.log('Dealer IDs type:', typeof dealerIds, Array.isArray(dealerIds) ? 'array' : 'not array');
-          
-          if (dealerIds && dealerIds.length > 0) {
-            const assignedDealers = dealers.filter(dealer =>
-              dealerIds.some(id => Number(id) === Number(dealer.id))
-            );
-
-            console.log(`Found assigned dealers for ${employee.username}:`, assignedDealers);
-
-            if (assignedDealers.length > 0) {
-              employeeAssignments.push({
-                employee: employee,
-                dealers: assignedDealers
-              });
-            }
-          }
-        } else {
-          console.error(`Failed to load assignments for employee ${employee.username}`);
-        }
-      } catch (err) {
-        console.error(`Error loading assignments for employee ${employee.username}:`, err);
-      }
-    }
-
-    console.log('Final employee assignments data:', employeeAssignments);
-    console.log('Employee assignments count:', employeeAssignments.length);
-    
-    renderEmployeeAssignmentsTable(employeeAssignments);
-  } catch (err) {
-    console.error(err);
-    const tbody = document.getElementById("employeeAssignmentsTableBody");
-    tbody.innerHTML = '<tr><td colspan="4" class="no-assignments">Failed to load employee assignments</td></tr>';
-  }
+  return;
 }
 
 function renderEmployeeAssignmentsTable(employeeAssignments) {
@@ -770,6 +686,7 @@ async function unassignSingle(managerId, employeeId, managerName, employeeName) 
 
 function renderManagersGrid() {
   const div = document.getElementById("managerList");
+  if (!div) return;
   div.innerHTML = "";
 
   managers.forEach(m => {
@@ -797,6 +714,7 @@ async function renderAvailableEmployeesGrid() {
   const assignedIds = (await res.json()).map(Number);
 
   const div = document.getElementById("availableEmployees");
+  if (!div) return;
   div.innerHTML = "";
 
   employees.forEach(emp => {
@@ -844,6 +762,7 @@ async function renderAvailableEmployeesGrid() {
 
 function renderEmployeesGrid() {
   const div = document.getElementById("employeeListGrid");
+  if (!div) return;
   div.innerHTML = "";
 
   employees.forEach(e => {
@@ -870,6 +789,7 @@ async function renderAvailableDealersGrid() {
   const assignedIds = (await res.json()).map(Number);
 
   const div = document.getElementById("availableDealers");
+  if (!div) return;
   div.innerHTML = "";
 
   dealers.forEach(d => {
@@ -1003,20 +923,13 @@ function populateManagerSelect() {
   if (!select) return;
 
   select.innerHTML = `
-    <option value="">Select manager or employee</option>
+    <option value="">Select manager</option>
   `;
 
   // managers
   managers.forEach(m => {
     select.innerHTML += `
       <option value="${m.id}">👔 ${m.username} (manager)</option>
-    `;
-  });
-
-  // employees (can also be boss of dealers)
-  employees.forEach(e => {
-    select.innerHTML += `
-      <option value="${e.id}">🧑‍💼 ${e.username} (employee)</option>
     `;
   });
 

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank Management | WheelsWeb</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <style>
+    .split-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 28px;
+      margin-top: 24px;
+      min-height: calc(100vh - 180px);
+    }
+
+    .left-pane {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .left-pane-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .left-pane-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .bank-search {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .bank-search:focus {
+      border-color: var(--primary);
+    }
+
+    .bank-list-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 550px;
+      padding-right: 4px;
+    }
+
+    .bank-list-wrapper::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .bank-list-wrapper::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 2px;
+    }
+
+    .bank-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0;
+      margin: 0;
+    }
+
+    .bank-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fcfdfe;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .bank-item:hover {
+      background: #f8fafc;
+      border-color: var(--primary);
+    }
+
+    .bank-item.active {
+      background: #eff6ff;
+      color: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    }
+
+    .right-pane {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.04);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-height: 400px;
+    }
+
+    .pane-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 15px;
+      height: 100%;
+      min-height: 350px;
+      text-align: center;
+      padding: 40px;
+      gap: 12px;
+    }
+
+    .pane-placeholder .icon {
+      font-size: 40px;
+      opacity: 0.5;
+    }
+
+    .pane-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+
+    .pane-header h2 {
+      font-size: 20px;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .pane-header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .branch-list-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .branch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .branch-card {
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .branch-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .branch-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary);
+    }
+
+    .branch-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .branch-geo {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Modal styles */
+    .branch-input-list {
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-top: 10px;
+    }
+
+    .branch-input-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .branch-input-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 2px;
+    }
+
+    .branch-input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 140px 40px;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .branch-input-row input {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    .branch-input-row input:focus {
+      border-color: var(--primary);
+    }
+
+    .remove-branch-btn {
+      background: none;
+      border: none;
+      color: var(--error);
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0;
+      border-radius: 6px;
+      transition: background 0.2s ease;
+      width: 100%;
+      height: 100%;
+    }
+
+    .remove-branch-btn:hover {
+      background: #fef2f2;
+      border-radius: 8px;
+    }
+
+    .btn-ghost-primary {
+      background: none;
+      border: 1px dashed var(--primary);
+      color: var(--primary);
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-ghost-primary:hover {
+      background: #eff6ff;
+    }
+
+    .back-button {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 14px;
+      transition: color 0.2s ease;
+    }
+
+    .back-button:hover {
+      color: var(--text);
+    }
+
+    .action-btn.danger {
+      background: #fef2f2;
+      color: var(--error);
+      border: 1px solid #fee2e2;
+    }
+
+    .action-btn.danger:hover {
+      background: #fee2e2;
+    }
+
+    .modal-backdrop {
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="admin-container">
+    <div class="admin-header">
+      <div class="admin-title">
+        <h1>Bank Management</h1>
+        <div class="admin-subtitle">Configure banks and geo limits for branches</div>
+      </div>
+
+      <div class="admin-actions">
+        <a href="/dashboard.html" class="back-button">← Back to Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Split view layout -->
+    <div class="split-layout">
+      <!-- Left Panel: Banks List -->
+      <div class="left-pane">
+        <div class="left-pane-header">
+          <h3>All Banks</h3>
+          <button class="btn-primary" id="openCreateBtn" style="padding: 8px 12px; font-size: 13px;">Create New</button>
+        </div>
+        <input type="text" id="bankSearch" class="bank-search" placeholder="Search banks..." />
+        <div class="bank-list-wrapper">
+          <ul class="bank-list" id="bankList">
+            <!-- Dynamic elements loaded here -->
+            <li class="pane-placeholder" style="min-height: unset; padding: 20px;">Loading banks...</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right Panel: Bank details and branches -->
+      <div class="right-pane" id="detailsPane">
+        <div class="pane-placeholder">
+          <div class="icon">🏦</div>
+          <p>Select a bank from the left panel to view its branch details</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Creating/Editing Bank -->
+  <div id="bankModalBackdrop" class="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Create New Bank</h3>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <label for="modalBankName" style="display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px;">Bank
+            Name</label>
+          <input type="text" id="modalBankName" placeholder="e.g. HDFC" required />
+        </div>
+
+        <div style="margin-top: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="font-weight: 600; font-size: 13px;">Branches</label>
+          </div>
+
+          <div class="branch-input-list" id="branchInputList">
+            <!-- Dynamic branch input rows will go here -->
+          </div>
+
+          <div style="margin-top: 10px;">
+            <button type="button" class="btn-ghost-primary" id="addBranchBtn">
+              <span>+ Add Branch</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="action-btn" id="modalCancel"
+          style="background: #f1f5f9; color: var(--muted);">Cancel</button>
+        <button type="button" class="btn-primary" id="modalSubmit">Save Bank</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast">Successfully completed action</div>
+
+  <script src="/js/bank-management.js"></script>
+</body>
+
+</html>

@@ -106,21 +106,21 @@ app.get("/api/dashboard/:role/:userId", async (req, res) => {
 
     let query = "";
     let params = [];
-let filterIndex = role === "admin" ? 1 : 2;
+    let filterIndex = role === "admin" ? 1 : 2;
     // Common filters
     let filters = "";
 
-if (product) {
-  filters += ` AND loan_type = $${filterIndex}`;
-  params.push(product);
-  filterIndex++;
-}
+    if (product) {
+      filters += ` AND loan_type = $${filterIndex}`;
+      params.push(product);
+      filterIndex++;
+    }
 
-if (start && end) {
-  filters += ` AND created_at::date BETWEEN $${filterIndex} AND $${filterIndex + 1}`;
-  params.push(start, end);
-  filterIndex += 2;
-}
+    if (start && end) {
+      filters += ` AND created_at::date BETWEEN $${filterIndex} AND $${filterIndex + 1}`;
+      params.push(start, end);
+      filterIndex += 2;
+    }
 
     /* ================= ADMIN ================= */
 
@@ -777,7 +777,7 @@ app.get("/api/users/:id", async (req, res) => {
 
     if (!userId) return res.status(400).json({ error: "Invalid user ID" });
 
-    
+
 
     const { rows } = await pool.query(`
 
@@ -789,7 +789,7 @@ app.get("/api/users/:id", async (req, res) => {
 
     `, [userId]);
 
-    
+
 
     if (rows.length === 0) {
 
@@ -797,7 +797,7 @@ app.get("/api/users/:id", async (req, res) => {
 
     }
 
-    
+
 
     res.json(rows[0]);
 
@@ -821,7 +821,7 @@ app.post("/api/leads", async (req, res) => {
 
     const userId = Number(req.body.userId);
 
-    
+
 
     // HARD VALIDATION - Never allow NULL created_by
 
@@ -843,7 +843,7 @@ app.post("/api/leads", async (req, res) => {
 
     const loanId = generateLoanId();
 
-    
+
 
     console.log("CREATING LEAD:", {
 
@@ -871,7 +871,7 @@ app.post("/api/leads", async (req, res) => {
 
         console.log("🎯 Dealer lead detected, finding assignment...");
 
-        
+
 
         // Find available employees/managers to assign the lead to
 
@@ -895,7 +895,7 @@ app.post("/api/leads", async (req, res) => {
 
         );
 
-        
+
 
         if (assignmentResult.rows.length > 0) {
 
@@ -961,7 +961,7 @@ app.post("/api/leads", async (req, res) => {
 
       console.log(" Starting notification creation process...");
 
-      
+
 
       // Get creator details
 
@@ -973,11 +973,11 @@ app.post("/api/leads", async (req, res) => {
 
       );
 
-      
+
 
       console.log("Creator query result:", creatorResult.rows);
 
-      
+
 
       if (creatorResult.rows.length > 0) {
 
@@ -985,7 +985,7 @@ app.post("/api/leads", async (req, res) => {
 
         console.log("Creator found:", creator);
 
-        
+
 
         // DEALER LEAD NOTIFICATION: Notify assigned employee/manager
 
@@ -993,7 +993,7 @@ app.post("/api/leads", async (req, res) => {
 
           console.log(" Dealer lead with assignment, notifying assigned user...");
 
-          
+
 
           const assignedUserResult = await pool.query(
 
@@ -1003,7 +1003,7 @@ app.post("/api/leads", async (req, res) => {
 
           );
 
-          
+
 
           if (assignedUserResult.rows.length > 0) {
 
@@ -1011,7 +1011,7 @@ app.post("/api/leads", async (req, res) => {
 
             const notificationMessage = `New dealer lead ${loanId} assigned to you from ${creator.username}`;
 
-            
+
 
             await pool.query(
 
@@ -1023,7 +1023,7 @@ app.post("/api/leads", async (req, res) => {
 
             );
 
-            
+
 
             console.log(` Notified ${assignedUser.role} ${assignedUser.username}: ${notificationMessage}`);
 
@@ -1037,7 +1037,7 @@ app.post("/api/leads", async (req, res) => {
 
           console.log(" Creator is employee/manager, creating notifications...");
 
-          
+
 
           // Get all admin users
 
@@ -1047,11 +1047,11 @@ app.post("/api/leads", async (req, res) => {
 
           );
 
-          
+
 
           console.log("Admin users found:", adminsResult.rows.length);
 
-          
+
 
           if (adminsResult.rows.length > 0) {
 
@@ -1059,7 +1059,7 @@ app.post("/api/leads", async (req, res) => {
 
             console.log("Notification message:", notificationMessage);
 
-            
+
 
             // Insert notification for each admin
 
@@ -1079,7 +1079,7 @@ app.post("/api/leads", async (req, res) => {
 
             }
 
-            
+
 
             console.log(` Created notifications for ${adminsResult.rows.length} admins: ${notificationMessage}`);
 
@@ -1119,11 +1119,11 @@ app.post("/api/leads", async (req, res) => {
 
     console.error("LEAD CREATION ERROR:", err);
 
-    res.status(500).json({ 
+    res.status(500).json({
 
       success: false,
 
-      error: "Failed to create lead" 
+      error: "Failed to create lead"
 
     });
 
@@ -1232,9 +1232,9 @@ LEFT JOIN users u ON u.id = l.created_by
 
     /* ================= MANAGER ================= */
 
-else if (role === "manager") {
+    else if (role === "manager") {
 
-  query = `
+      query = `
 
     SELECT 
 
@@ -1288,9 +1288,9 @@ else if (role === "manager") {
 
   `;
 
-  params = [userId];
+      params = [userId];
 
-}
+    }
 
 
 
@@ -1338,9 +1338,9 @@ else if (role === "manager") {
 
     /* ================= DEALER ================= */
 
-else if (role === "dealer") {
+    else if (role === "dealer") {
 
-  query = `
+      query = `
 
     SELECT 
 
@@ -1360,8 +1360,8 @@ else if (role === "dealer") {
 
   `;
 
-  params = [userId];
-}
+      params = [userId];
+    }
 
 
     const { rows } = await pool.query(query, params);
@@ -1706,93 +1706,93 @@ app.post("/api/admin/users", async (req, res) => {
 
     // }
 
-if (roleNormalized === "manager") {
+    if (roleNormalized === "manager") {
 
-  if (
+      if (
 
-    !profile ||
+        !profile ||
 
-    !profile.firstName ||
+        !profile.firstName ||
 
-    !profile.mobile ||
+        !profile.mobile ||
 
-    (!profile.personalEmail && !profile.officeEmail) ||
+        (!profile.personalEmail && !profile.officeEmail) ||
 
-    !profile.bank ||
+        !profile.bank ||
 
-    !profile.bank.accountNo ||
+        !profile.bank.accountNo ||
 
-    !profile.bank.ifsc ||
+        !profile.bank.ifsc ||
 
-    !profile.bank.bankName
+        !profile.bank.bankName
 
-  ) {
+      ) {
 
-    return res.status(400).json({ error: "Incomplete manager profile" });
+        return res.status(400).json({ error: "Incomplete manager profile" });
 
-  }
+      }
 
-}
-
-
-
-
-
-if (roleNormalized === "employee") {
-
-  if (
-
-    !employeeProfile ||
-
-    !employeeProfile.employeeId ||
-
-    !employeeProfile.firstName ||
-
-    !employeeProfile.mobileNo ||
-
-    !employeeProfile.bank ||
-
-    !employeeProfile.bank.accountNo ||
-
-    !employeeProfile.bank.ifsc
-
-  ) {
-
-    return res.status(400).json({ error: "Incomplete employee profile" });
-
-  }
-
-}
+    }
 
 
 
 
 
-if (roleNormalized === "dealer") {
+    if (roleNormalized === "employee") {
 
-  if (
+      if (
 
-    !profile ||
+        !employeeProfile ||
 
-    !profile.dealerName ||
+        !employeeProfile.employeeId ||
 
-    !profile.mobile ||
+        !employeeProfile.firstName ||
 
-    !profile.bank ||
+        !employeeProfile.mobileNo ||
 
-    !profile.bank.accountNo ||
+        !employeeProfile.bank ||
 
-    !profile.bank.ifsc ||
+        !employeeProfile.bank.accountNo ||
 
-    !profile.bank.bankName
+        !employeeProfile.bank.ifsc
 
-  ) {
+      ) {
 
-    return res.status(400).json({ error: "Incomplete dealer profile" });
+        return res.status(400).json({ error: "Incomplete employee profile" });
 
-  }
+      }
 
-}
+    }
+
+
+
+
+
+    if (roleNormalized === "dealer") {
+
+      if (
+
+        !profile ||
+
+        !profile.dealerName ||
+
+        !profile.mobile ||
+
+        !profile.bank ||
+
+        !profile.bank.accountNo ||
+
+        !profile.bank.ifsc ||
+
+        !profile.bank.bankName
+
+      ) {
+
+        return res.status(400).json({ error: "Incomplete dealer profile" });
+
+      }
+
+    }
 
 
 
@@ -1822,7 +1822,7 @@ if (roleNormalized === "dealer") {
 
       await pool.query(
 
-  `INSERT INTO manager_profiles
+        `INSERT INTO manager_profiles
 
   (
 
@@ -1864,61 +1864,61 @@ if (roleNormalized === "dealer") {
 
   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
 
-  [
+        [
 
-    userId,
+          userId,
 
-    profile.firstName,
+          profile.firstName,
 
-    profile.lastName,
+          profile.lastName,
 
-    profile.dob || null,
+          profile.dob || null,
 
-    profile.joiningDate || null,
+          profile.joiningDate || null,
 
-    profile.pan,
+          profile.pan,
 
-    profile.aadhar,
+          profile.aadhar,
 
-    profile.mobile,
+          profile.mobile,
 
-    profile.fatherMobile,
+          profile.fatherMobile,
 
-    profile.motherMobile,
+          profile.motherMobile,
 
-    profile.personalEmail,
+          profile.personalEmail,
 
-    profile.officeEmail,
+          profile.officeEmail,
 
-    profile.location,
+          profile.location,
 
-    profile.bank.accountNo,
+          profile.bank.accountNo,
 
-    profile.bank.ifsc,
+          profile.bank.ifsc,
 
-    profile.bank.bankName,
+          profile.bank.bankName,
 
-    profile.bank.bankBranch
+          profile.bank.bankBranch
 
-  ]
+        ]
 
-);
+      );
 
 
 
     }
 
-console.log("EMPLOYEE PROFILE INSERT:", employeeProfile);
+    console.log("EMPLOYEE PROFILE INSERT:", employeeProfile);
 
 
 
-    
+
 
     if (roleNormalized === "employee") {
 
-  const empRes = await pool.query(
+      const empRes = await pool.query(
 
-    `INSERT INTO employee_profiles
+        `INSERT INTO employee_profiles
 
     (user_id, employee_id, first_name, last_name,
 
@@ -1932,87 +1932,87 @@ console.log("EMPLOYEE PROFILE INSERT:", employeeProfile);
 
     RETURNING id`,
 
-    [
+        [
 
-      userId,
+          userId,
 
-      employeeProfile.employeeId,
+          employeeProfile.employeeId,
 
-      employeeProfile.firstName,
+          employeeProfile.firstName,
 
-      employeeProfile.lastName,
+          employeeProfile.lastName,
 
-      employeeProfile.panNo,
+          employeeProfile.panNo,
 
-      employeeProfile.aadharNo,
+          employeeProfile.aadharNo,
 
-      employeeProfile.dob && employeeProfile.dob !== "" ? employeeProfile.dob : null,
+          employeeProfile.dob && employeeProfile.dob !== "" ? employeeProfile.dob : null,
 
-      employeeProfile.joiningDate && employeeProfile.joiningDate !== "" ? employeeProfile.joiningDate : null,
+          employeeProfile.joiningDate && employeeProfile.joiningDate !== "" ? employeeProfile.joiningDate : null,
 
-      employeeProfile.mobileNo,
+          employeeProfile.mobileNo,
 
-      employeeProfile.fatherMobileNo,
+          employeeProfile.fatherMobileNo,
 
-      employeeProfile.motherMobileNo,
+          employeeProfile.motherMobileNo,
 
-      employeeProfile.personalEmail,
+          employeeProfile.personalEmail,
 
-      employeeProfile.officeEmail,
+          employeeProfile.officeEmail,
 
-      employeeProfile.location
+          employeeProfile.location
 
-    ]
+        ]
 
-  );
-
-
-
-  const employeeProfileId = empRes.rows[0].id;
+      );
 
 
 
-  await pool.query(
+      const employeeProfileId = empRes.rows[0].id;
 
-    `INSERT INTO employee_bank_details
+
+
+      await pool.query(
+
+        `INSERT INTO employee_bank_details
 
      (employee_profile_id, account_no, ifsc, bank_name, bank_branch)
 
      VALUES ($1,$2,$3,$4,$5)`,
 
-    [
+        [
 
-      employeeProfileId,
+          employeeProfileId,
 
-      employeeProfile.bank.accountNo,
+          employeeProfile.bank.accountNo,
 
-      employeeProfile.bank.ifsc,
+          employeeProfile.bank.ifsc,
 
-      employeeProfile.bank.bankName,
+          employeeProfile.bank.bankName,
 
-      employeeProfile.bank.bankBranch
+          employeeProfile.bank.bankBranch
 
-    ]
+        ]
 
-  );
+      );
 
-}
+    }
 
-// INSERT DEALER
+    // INSERT DEALER
 
-// Insert dealer profile
+    // Insert dealer profile
 
-if (roleNormalized === "dealer") {
-
-
-
-  const dealerCode = generateDealerCode();
+    if (roleNormalized === "dealer") {
 
 
 
-  const dealerRes = await pool.query(
+      const dealerCode = generateDealerCode();
 
-    `INSERT INTO dealer_profiles
+
+
+      const dealerRes = await pool.query(
+
+        `INSERT INTO dealer_profiles
 
     (user_id, dealer_code, dealer_name, pan_no, aadhar_no, dob,
 
@@ -2024,85 +2024,85 @@ if (roleNormalized === "dealer") {
 
     RETURNING id`,
 
-    [
+        [
 
-      userId,
+          userId,
 
-      dealerCode,
+          dealerCode,
 
-      profile.dealerName,
+          profile.dealerName,
 
-      profile.pan,
+          profile.pan,
 
-      profile.aadhar,
+          profile.aadhar,
 
-      profile.dob || null,
+          profile.dob || null,
 
-      profile.mobile,
+          profile.mobile,
 
-      profile.fatherMobile,
+          profile.fatherMobile,
 
-      profile.motherMobile,
+          profile.motherMobile,
 
-      profile.email,
+          profile.email,
 
-      profile.location
+          profile.location
 
-    ]
+        ]
 
-  );
-
-
-
-  const dealerProfileId = dealerRes.rows[0].id;
+      );
 
 
 
-  // Insert bank details
+      const dealerProfileId = dealerRes.rows[0].id;
 
-  await pool.query(
 
-    `INSERT INTO dealer_bank_details
+
+      // Insert bank details
+
+      await pool.query(
+
+        `INSERT INTO dealer_bank_details
 
     (dealer_profile_id, account_no, ifsc, bank_name, bank_branch)
 
     VALUES ($1,$2,$3,$4,$5)`,
 
-    [
+        [
 
-      dealerProfileId,
+          dealerProfileId,
 
-      profile.bank.accountNo,
+          profile.bank.accountNo,
 
-      profile.bank.ifsc,
+          profile.bank.ifsc,
 
-      profile.bank.bankName,
+          profile.bank.bankName,
 
-      profile.bank.bankBranch
+          profile.bank.bankBranch
 
-    ]
+        ]
 
-  );
+      );
 
 
 
-  console.log("✅ Dealer created with code:", dealerCode);
+      console.log("✅ Dealer created with code:", dealerCode);
 
-}
+    }
 
-if (roleNormalized === "rto_agent") {
+    if (roleNormalized === "rto_agent") {
 
-  if (
-    !rtoProfile ||
-    !rtoProfile.firstName ||
-    !rtoProfile.mobile ||
-    !rtoProfile.bank ||
-    !rtoProfile.bank.accountNo
-  ) {
-    return res.status(400).json({ error: "Incomplete RTO profile" });
-  }
+      if (
+        !rtoProfile ||
+        !rtoProfile.firstName ||
+        !rtoProfile.mobile ||
+        !rtoProfile.bank ||
+        !rtoProfile.bank.accountNo
+      ) {
+        return res.status(400).json({ error: "Incomplete RTO profile" });
+      }
 
-  await pool.query(`
+      await pool.query(`
     INSERT INTO rto_agent_profiles
     (user_id, first_name, last_name,
      pan_no, aadhar_no, dob, joining_date,
@@ -2111,27 +2111,27 @@ if (roleNormalized === "rto_agent") {
      account_no, ifsc, bank_name, bank_branch)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
   `, [
-    userId,
-    rtoProfile.firstName,
-    rtoProfile.lastName,
-    rtoProfile.pan,
-    rtoProfile.aadhar,
-    rtoProfile.dob || null,
-    rtoProfile.joiningDate || null,
-    rtoProfile.mobile,
-    rtoProfile.fatherMobile,
-    rtoProfile.motherMobile,
-    rtoProfile.personalEmail,
-    rtoProfile.officeEmail,
-    rtoProfile.location,
-    rtoProfile.bank.accountNo,
-    rtoProfile.bank.ifsc,
-    rtoProfile.bank.bankName,
-    rtoProfile.bank.bankBranch
-  ]);
+        userId,
+        rtoProfile.firstName,
+        rtoProfile.lastName,
+        rtoProfile.pan,
+        rtoProfile.aadhar,
+        rtoProfile.dob || null,
+        rtoProfile.joiningDate || null,
+        rtoProfile.mobile,
+        rtoProfile.fatherMobile,
+        rtoProfile.motherMobile,
+        rtoProfile.personalEmail,
+        rtoProfile.officeEmail,
+        rtoProfile.location,
+        rtoProfile.bank.accountNo,
+        rtoProfile.bank.ifsc,
+        rtoProfile.bank.bankName,
+        rtoProfile.bank.bankBranch
+      ]);
 
-  console.log("✅ RTO agent profile created");
-}
+      console.log("✅ RTO agent profile created");
+    }
 
 
 
@@ -2140,25 +2140,25 @@ if (roleNormalized === "rto_agent") {
 
     res.json({ success: true });
 
-    
-
-} catch (err) {
-
-  console.error("CREATE USER ERROR:", err);
 
 
+  } catch (err) {
 
-  if (err.code === "23505") {
+    console.error("CREATE USER ERROR:", err);
 
-    return res.status(400).json({ error: "Username already exists" });
+
+
+    if (err.code === "23505") {
+
+      return res.status(400).json({ error: "Username already exists" });
+
+    }
+
+
+
+    res.status(500).json({ error: "Failed to create user" });
 
   }
-
-
-
-  res.status(500).json({ error: "Failed to create user" });
-
-}
 
 
 
@@ -2204,7 +2204,7 @@ app.patch("/api/admin/users/:id", async (req, res) => {
 
     if (!userRes.rows.length) return res.status(404).json({ error: 'User not found' });
 
-    
+
 
     // Prevent editing admin users
 
@@ -2282,7 +2282,7 @@ app.patch("/api/admin/users/:id", async (req, res) => {
 
     const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`;
 
-    
+
 
     await pool.query(updateQuery, updateValues);
 
@@ -2477,13 +2477,13 @@ app.get("/api/admin/rto-info/:userId", async (req, res) => {
       FROM users u
       LEFT JOIN rto_agent_profiles r ON u.id = r.user_id
       WHERE u.id=$1
-    `,[userId]);
+    `, [userId]);
 
     res.json(result.rows[0]);
 
-  } catch(err){
+  } catch (err) {
     console.error(err);
-    res.status(500).json({error:"Failed to fetch RTO info"});
+    res.status(500).json({ error: "Failed to fetch RTO info" });
   }
 });
 
@@ -2616,7 +2616,7 @@ app.post("/api/admin/assign-employee", async (req, res) => {
 
     const { parentId, childId, managerId, employeeId } = req.body;
 
-    
+
 
     // Support both parameter naming conventions
 
@@ -2818,7 +2818,7 @@ app.delete("/api/admin/unassign-employee", async (req, res) => {
 
     const { managerId, employeeId, parentId, childId } = req.body;
 
-    
+
 
     // Support both parameter naming conventions
 
@@ -2826,7 +2826,7 @@ app.delete("/api/admin/unassign-employee", async (req, res) => {
 
     const finalEmployeeId = employeeId || childId;
 
-    
+
 
     console.log("Unassign request received:", { managerId: finalManagerId, employeeId: finalEmployeeId });
 
@@ -2842,7 +2842,7 @@ app.delete("/api/admin/unassign-employee", async (req, res) => {
 
     );
 
-    
+
 
     console.log("Existing assignment check:", checkResult.rows);
 
@@ -3072,11 +3072,11 @@ app.post("/api/admin/notifications/read", async (req, res) => {
 
 
 
-    res.json({ 
+    res.json({
 
-      success: true, 
+      success: true,
 
-      markedAsRead: result.rowCount 
+      markedAsRead: result.rowCount
 
     });
 
@@ -3110,11 +3110,11 @@ async function validateUserRole(userId, requiredRole) {
 
   );
 
-  
+
 
   if (!result.rows.length) return false;
 
-  
+
 
   if (requiredRole === 'admin') return result.rows[0].role === 'admin';
 
@@ -3122,7 +3122,7 @@ async function validateUserRole(userId, requiredRole) {
 
   if (requiredRole === 'manager') return result.rows[0].role === 'manager';
 
-  
+
 
   return false;
 
@@ -3140,7 +3140,7 @@ app.post("/api/khata/credit", async (req, res) => {
 
     const adminId = parseInt(req.headers["x-admin-id"]);
 
-    
+
 
     // Strict validation
 
@@ -3154,7 +3154,7 @@ app.post("/api/khata/credit", async (req, res) => {
 
     if (points <= 0) return res.status(400).json({ error: "Points must be greater than 0" });
 
-    
+
 
     // Verify admin role from database (never trust frontend)
 
@@ -3162,7 +3162,7 @@ app.post("/api/khata/credit", async (req, res) => {
 
     if (!isAdmin) return res.status(403).json({ error: "Only admins can credit points" });
 
-    
+
 
     // Verify dealer exists and is dealer role
 
@@ -3176,7 +3176,7 @@ app.post("/api/khata/credit", async (req, res) => {
 
     if (!dealerResult.rows.length) return res.status(404).json({ error: "Dealer not found" });
 
-    
+
 
     // Insert credit transaction
 
@@ -3192,7 +3192,7 @@ app.post("/api/khata/credit", async (req, res) => {
 
     );
 
-    
+
 
     // Create notification for the dealer
 
@@ -3214,17 +3214,17 @@ app.post("/api/khata/credit", async (req, res) => {
 
     );
 
-    
+
 
     console.log(`✅ Admin ${adminId} credited ${points} points to dealer ${dealerId} (${dealerResult.rows[0].username})`);
 
     console.log(`🔔 Notification sent to dealer ${dealerId}`);
 
-    
 
-    res.json({ 
 
-      success: true, 
+    res.json({
+
+      success: true,
 
       transactionId: insertResult.rows[0].id,
 
@@ -3232,7 +3232,7 @@ app.post("/api/khata/credit", async (req, res) => {
 
     });
 
-    
+
 
   } catch (err) {
 
@@ -3256,7 +3256,7 @@ app.post("/api/khata/redeem", async (req, res) => {
 
     const dealerId = parseInt(req.headers["x-dealer-id"]);
 
-    
+
 
     // Strict validation
 
@@ -3270,7 +3270,7 @@ app.post("/api/khata/redeem", async (req, res) => {
 
     if (points <= 0) return res.status(400).json({ error: "Points must be greater than 0" });
 
-    
+
 
     // Verify dealer role from database (never trust frontend)
 
@@ -3278,7 +3278,7 @@ app.post("/api/khata/redeem", async (req, res) => {
 
     if (!isDealer) return res.status(403).json({ error: "Only dealers can redeem points" });
 
-    
+
 
     // Check sufficient balance
 
@@ -3298,25 +3298,25 @@ app.post("/api/khata/redeem", async (req, res) => {
 
     );
 
-    
+
 
     const currentBalance = parseInt(balanceResult.rows[0].balance) || 0;
 
     if (currentBalance < points) {
 
-      return res.status(400).json({ 
+      return res.status(400).json({
 
-        error: "Insufficient balance", 
+        error: "Insufficient balance",
 
         currentBalance,
 
-        requestedPoints: points 
+        requestedPoints: points
 
       });
 
     }
 
-    
+
 
     // Insert debit transaction
 
@@ -3332,15 +3332,15 @@ app.post("/api/khata/redeem", async (req, res) => {
 
     );
 
-    
+
 
     console.log(`✅ Dealer ${dealerId} redeemed ${points} points`);
 
-    
 
-    res.json({ 
 
-      success: true, 
+    res.json({
+
+      success: true,
 
       transactionId: insertResult.rows[0].id,
 
@@ -3350,7 +3350,7 @@ app.post("/api/khata/redeem", async (req, res) => {
 
     });
 
-    
+
 
   } catch (err) {
 
@@ -3374,7 +3374,7 @@ app.get("/api/khata", async (req, res) => {
 
     const userRole = req.headers["x-user-role"];
 
-    
+
 
     if (!userId || !userRole) {
 
@@ -3382,7 +3382,7 @@ app.get("/api/khata", async (req, res) => {
 
     }
 
-    
+
 
     // Verify role from database (never trust frontend)
 
@@ -3394,13 +3394,13 @@ app.get("/api/khata", async (req, res) => {
 
     );
 
-    
+
 
     if (!actualRoleResult.rows.length) return res.status(404).json({ error: "User not found" });
 
     const actualRole = actualRoleResult.rows[0].role;
 
-    
+
 
     // Managers and employees are forbidden from khata routes
 
@@ -3410,13 +3410,13 @@ app.get("/api/khata", async (req, res) => {
 
     }
 
-    
+
 
     let query = "";
 
     let params = [];
 
-    
+
 
     if (actualRole === 'admin') {
 
@@ -3496,13 +3496,13 @@ app.get("/api/khata", async (req, res) => {
 
     }
 
-    
+
 
     const { rows } = await pool.query(query, params);
 
     res.json(rows);
 
-    
+
 
   } catch (err) {
 
@@ -3524,11 +3524,11 @@ app.get("/api/khata/balance", async (req, res) => {
 
     const dealerId = parseInt(req.headers["x-dealer-id"]);
 
-    
+
 
     if (!dealerId) return res.status(403).json({ error: "Dealer authentication required" });
 
-    
+
 
     // Verify dealer role from database (never trust frontend)
 
@@ -3536,7 +3536,7 @@ app.get("/api/khata/balance", async (req, res) => {
 
     if (!isDealer) return res.status(403).json({ error: "Only dealers can check balance" });
 
-    
+
 
     // Calculate balance
 
@@ -3556,15 +3556,15 @@ app.get("/api/khata/balance", async (req, res) => {
 
     );
 
-    
+
 
     const balance = parseInt(balanceResult.rows[0].balance) || 0;
 
-    
+
 
     res.json({ balance });
 
-    
+
 
   } catch (err) {
 
@@ -3586,11 +3586,11 @@ app.get("/api/khata/dealers", async (req, res) => {
 
     const adminId = parseInt(req.headers["x-admin-id"]);
 
-    
+
 
     if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
 
-    
+
 
     // Verify admin role
 
@@ -3598,7 +3598,7 @@ app.get("/api/khata/dealers", async (req, res) => {
 
     if (!isAdmin) return res.status(403).json({ error: "Admin access required" });
 
-    
+
 
     // Get all active dealers with their proper names
 
@@ -3622,11 +3622,11 @@ app.get("/api/khata/dealers", async (req, res) => {
 
     );
 
-    
+
 
     res.json(rows);
 
-    
+
 
   } catch (err) {
 
@@ -3756,11 +3756,11 @@ app.post("/api/dealer/notifications/read", async (req, res) => {
 
 
 
-    res.json({ 
+    res.json({
 
-      success: true, 
+      success: true,
 
-      markedAsRead: result.rowCount 
+      markedAsRead: result.rowCount
 
     });
 
@@ -4208,21 +4208,21 @@ app.get("/api/user/employee-info/:id", async (req, res) => {
 
       WHERE ep.user_id = $1
 
-    `,[id]);
+    `, [id]);
 
 
 
-    if (!rows.length) return res.status(404).json({ error:"Employee not found" });
+    if (!rows.length) return res.status(404).json({ error: "Employee not found" });
 
 
 
     res.json(rows[0]);
 
-  } catch(err){
+  } catch (err) {
 
     console.error(err);
 
-    res.status(500).json({error:"Server error"});
+    res.status(500).json({ error: "Server error" });
 
   }
 
@@ -4280,21 +4280,21 @@ app.get("/api/user/dealer-info/:id", async (req, res) => {
 
       WHERE dp.user_id = $1
 
-    `,[id]);
+    `, [id]);
 
 
 
-    if (!rows.length) return res.status(404).json({ error:"Dealer not found" });
+    if (!rows.length) return res.status(404).json({ error: "Dealer not found" });
 
 
 
     res.json(rows[0]);
 
-  } catch(err){
+  } catch (err) {
 
     console.error(err);
 
-    res.status(500).json({error:"Server error"});
+    res.status(500).json({ error: "Server error" });
 
   }
 
@@ -4320,21 +4320,21 @@ app.get("/api/user/manager-info/:id", async (req, res) => {
 
       WHERE user_id = $1
 
-    `,[id]);
+    `, [id]);
 
 
 
-    if (!rows.length) return res.status(404).json({ error:"Manager not found" });
+    if (!rows.length) return res.status(404).json({ error: "Manager not found" });
 
 
 
     res.json(rows[0]);
 
-  } catch(err){
+  } catch (err) {
 
     console.error(err);
 
-    res.status(500).json({error:"Server error"});
+    res.status(500).json({ error: "Server error" });
 
   }
 
@@ -4352,7 +4352,7 @@ app.get("/api/user/manager-info/:id", async (req, res) => {
 app.get("/api/messages", async (req, res) => {
   try {
     const { userId } = req.query;
-    
+
     if (!userId) {
       return res.status(400).json({ error: "User ID is required" });
     }
@@ -4467,11 +4467,249 @@ app.get("/api/conversations/:userId1/:userId2", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+// ==========================================
+// BANK MANAGEMENT MODULE APIs
+// ==========================================
 
+// Get all banks
+app.get("/api/banks", async (req, res) => {
+  try {
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
+    const isAdmin = await validateUserRole(adminId, 'admin');
+    if (!isAdmin) return res.status(403).json({ error: "Admin access only" });
 
+    const { rows } = await pool.query("SELECT * FROM banks ORDER BY bank_name ASC");
+    res.json(rows);
+  } catch (err) {
+    console.error("GET /api/banks error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
+// Get specific bank and its branches
+app.get("/api/banks/:id", async (req, res) => {
+  try {
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
+    const isAdmin = await validateUserRole(adminId, 'admin');
+    if (!isAdmin) return res.status(403).json({ error: "Admin access only" });
 
- // Start server in non-production; also export app for tests
+    const bankId = parseInt(req.params.id);
+    if (isNaN(bankId)) return res.status(400).json({ error: "Invalid bank ID" });
+
+    const bankRes = await pool.query("SELECT * FROM banks WHERE id = $1", [bankId]);
+    if (!bankRes.rows.length) return res.status(404).json({ error: "Bank not found" });
+
+    const branchesRes = await pool.query("SELECT * FROM branches WHERE bank_id = $1 ORDER BY branch_name ASC", [bankId]);
+
+    res.json({
+      ...bankRes.rows[0],
+      branches: branchesRes.rows
+    });
+  } catch (err) {
+    console.error("GET /api/banks/:id error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Create new bank with branches
+app.post("/api/banks", async (req, res) => {
+  try {
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
+    const isAdmin = await validateUserRole(adminId, 'admin');
+    if (!isAdmin) return res.status(403).json({ error: "Admin access only" });
+
+    const { bankName, branches } = req.body;
+
+    // Validate bankName
+    if (!bankName || typeof bankName !== 'string' || !bankName.trim()) {
+      return res.status(400).json({ error: "Bank Name is required" });
+    }
+
+    // Validate branches
+    if (!branches || !Array.isArray(branches)) {
+      return res.status(400).json({ error: "Branches list must be an array" });
+    }
+
+    for (let i = 0; i < branches.length; i++) {
+      const br = branches[i];
+      if (!br.branchName || typeof br.branchName !== 'string' || !br.branchName.trim()) {
+        return res.status(400).json({ error: `Branch Name is required at index ${i + 1}` });
+      }
+      const limit = Number(br.geoLimit);
+      if (isNaN(limit) || limit <= 0) {
+        return res.status(400).json({ error: `GEO Limit must be a number greater than zero at index ${i + 1}` });
+      }
+    }
+
+    // Check if bank name already exists (case-insensitive)
+    const duplicateCheck = await pool.query(
+      "SELECT id FROM banks WHERE LOWER(bank_name) = LOWER($1)",
+      [bankName.trim()]
+    );
+    if (duplicateCheck.rows.length) {
+      return res.status(400).json({ error: "Bank already exists" });
+    }
+
+    // Start database transaction
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      const insertBankRes = await client.query(
+        "INSERT INTO banks (bank_name) VALUES ($1) RETURNING id",
+        [bankName.trim()]
+      );
+      const bankId = insertBankRes.rows[0].id;
+
+      for (const br of branches) {
+        await client.query(
+          "INSERT INTO branches (bank_id, branch_name, geo_limit, loan_assigned) VALUES ($1, $2, $3, $4)",
+          [bankId, br.branchName.trim(), Number(br.geoLimit), br.loanAssigned ? br.loanAssigned.trim() : null]
+        );
+      }
+
+      await client.query("COMMIT");
+      res.status(201).json({ success: true, bankId, message: "Bank created successfully" });
+    } catch (txErr) {
+      await client.query("ROLLBACK");
+      throw txErr;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error("POST /api/banks error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Update bank and its branches
+app.put("/api/banks/:id", async (req, res) => {
+  try {
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
+    const isAdmin = await validateUserRole(adminId, 'admin');
+    if (!isAdmin) return res.status(403).json({ error: "Admin access only" });
+
+    const bankId = parseInt(req.params.id);
+    if (isNaN(bankId)) return res.status(400).json({ error: "Invalid bank ID" });
+
+    const { bankName, branches } = req.body;
+
+    // Validate bankName
+    if (!bankName || typeof bankName !== 'string' || !bankName.trim()) {
+      return res.status(400).json({ error: "Bank Name is required" });
+    }
+
+    // Validate branches
+    if (!branches || !Array.isArray(branches)) {
+      return res.status(400).json({ error: "Branches list must be an array" });
+    }
+
+    for (let i = 0; i < branches.length; i++) {
+      const br = branches[i];
+      if (!br.branchName || typeof br.branchName !== 'string' || !br.branchName.trim()) {
+        return res.status(400).json({ error: `Branch Name is required at index ${i + 1}` });
+      }
+      const limit = Number(br.geoLimit);
+      if (isNaN(limit) || limit <= 0) {
+        return res.status(400).json({ error: `GEO Limit must be a number greater than zero at index ${i + 1}` });
+      }
+    }
+
+    // Check if bank exists
+    const bankCheck = await pool.query("SELECT id FROM banks WHERE id = $1", [bankId]);
+    if (!bankCheck.rows.length) {
+      return res.status(404).json({ error: "Bank not found" });
+    }
+
+    // Check duplicate bank name (excluding current ID)
+    const duplicateCheck = await pool.query(
+      "SELECT id FROM banks WHERE LOWER(bank_name) = LOWER($1) AND id <> $2",
+      [bankName.trim(), bankId]
+    );
+    if (duplicateCheck.rows.length) {
+      return res.status(400).json({ error: "Bank name already exists" });
+    }
+
+    // Start database transaction
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      // Update bank name
+      await client.query("UPDATE banks SET bank_name = $1 WHERE id = $2", [bankName.trim(), bankId]);
+
+      // Delete current branches
+      await client.query("DELETE FROM branches WHERE bank_id = $1", [bankId]);
+
+      // Insert new branches
+      for (const br of branches) {
+        await client.query(
+          "INSERT INTO branches (bank_id, branch_name, geo_limit, loan_assigned) VALUES ($1, $2, $3, $4)",
+          [bankId, br.branchName.trim(), Number(br.geoLimit), br.loanAssigned ? br.loanAssigned.trim() : null]
+        );
+      }
+
+      await client.query("COMMIT");
+      res.json({ success: true, message: "Bank updated successfully" });
+    } catch (txErr) {
+      await client.query("ROLLBACK");
+      throw txErr;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error("PUT /api/banks/:id error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Delete bank and its branches
+app.delete("/api/banks/:id", async (req, res) => {
+  try {
+    const adminId = parseInt(req.headers["x-admin-id"]);
+    if (!adminId) return res.status(403).json({ error: "Admin authentication required" });
+    const isAdmin = await validateUserRole(adminId, 'admin');
+    if (!isAdmin) return res.status(403).json({ error: "Admin access only" });
+
+    const bankId = parseInt(req.params.id);
+    if (isNaN(bankId)) return res.status(400).json({ error: "Invalid bank ID" });
+
+    // Check if bank exists
+    const bankCheck = await pool.query("SELECT id FROM banks WHERE id = $1", [bankId]);
+    if (!bankCheck.rows.length) {
+      return res.status(404).json({ error: "Bank not found" });
+    }
+
+    // Start database transaction
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      // Delete branches
+      await client.query("DELETE FROM branches WHERE bank_id = $1", [bankId]);
+
+      // Delete bank
+      await client.query("DELETE FROM banks WHERE id = $1", [bankId]);
+
+      await client.query("COMMIT");
+      res.json({ success: true, message: "Bank deleted successfully" });
+    } catch (txErr) {
+      await client.query("ROLLBACK");
+      throw txErr;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error("DELETE /api/banks/:id error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Start server in non-production; also export app for tests
 
 const PORT = process.env.PORT || 3001;
 

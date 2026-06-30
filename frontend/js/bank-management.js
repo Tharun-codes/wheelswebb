@@ -209,13 +209,19 @@ function addBranchInputRow(branchName = "", geoLimit = "", loanAssigned = "") {
   const execList = row.querySelector(".executives-list");
 
   // Helper to add executive row
-  function addExecutiveRow(nameVal = "") {
+  function addExecutiveRow(nameVal = "", phoneVal = "") {
     const execRow = document.createElement("div");
     execRow.className = "executive-input-row";
     execRow.innerHTML = `
       <input type="text" class="executive-name-input" placeholder="Executive Name" value="${escapeHtml(nameVal)}" required />
+      <input type="text" class="executive-phone-input" placeholder="Phone Number (10 digits)" value="${escapeHtml(phoneVal)}" pattern="[0-9]{10}" maxlength="10" required style="width: 170px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); outline: none; font-size: 13px;" />
       <button type="button" class="remove-executive-btn" title="Remove Executive">❌</button>
     `;
+
+    // Enforce numbers only
+    execRow.querySelector(".executive-phone-input").addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/[^0-9]/g, "");
+    });
 
     execRow.querySelector(".remove-executive-btn").addEventListener("click", () => {
       // Keep at least one executive input row per branch
@@ -229,20 +235,30 @@ function addBranchInputRow(branchName = "", geoLimit = "", loanAssigned = "") {
     execList.appendChild(execRow);
   }
 
-  // Parse comma separated list of executives
-  const execNames = loanAssigned
-    ? loanAssigned.split(",").map(n => n.trim()).filter(Boolean)
-    : [];
+  // Parse comma separated list of executives (with support for optional phone number in parentheses)
+  const execs = [];
+  if (loanAssigned) {
+    loanAssigned.split(",").forEach(n => {
+      const trimmed = n.trim();
+      if (!trimmed) return;
+      const match = trimmed.match(/^(.+?)\s*\((\d{10})\)$/);
+      if (match) {
+        execs.push({ name: match[1].trim(), phone: match[2].trim() });
+      } else {
+        execs.push({ name: trimmed, phone: "" });
+      }
+    });
+  }
 
-  if (execNames.length === 0) {
-    addExecutiveRow("");
+  if (execs.length === 0) {
+    addExecutiveRow("", "");
   } else {
-    execNames.forEach(name => addExecutiveRow(name));
+    execs.forEach(exec => addExecutiveRow(exec.name, exec.phone));
   }
 
   // Hook up add executive button
   row.querySelector(".add-executive-btn").addEventListener("click", () => {
-    addExecutiveRow("");
+    addExecutiveRow("", "");
   });
 
   // Hook up remove branch button
@@ -287,13 +303,29 @@ async function submitModal() {
     const nameVal = row.querySelector(".branch-name-input").value.trim();
     
     // Get all executives for this branch
-    const execInputs = row.querySelectorAll(".executive-name-input");
-    const execNames = [];
-    for (let j = 0; j < execInputs.length; j++) {
-      const val = execInputs[j].value.trim();
-      if (val) {
-        execNames.push(val);
+    const execRows = row.querySelectorAll(".executive-input-row");
+    const execDetails = [];
+    
+    for (let j = 0; j < execRows.length; j++) {
+      const nameInput = execRows[j].querySelector(".executive-name-input");
+      const phoneInput = execRows[j].querySelector(".executive-phone-input");
+      
+      const execName = nameInput.value.trim();
+      const execPhone = phoneInput.value.trim();
+      
+      if (!execName) {
+        showToast(`Executive Name is required for branch "${nameVal || (i + 1)}"`);
+        nameInput.focus();
+        return;
       }
+      
+      if (!execPhone || execPhone.length !== 10 || isNaN(Number(execPhone))) {
+        showToast(`Executive Phone Number must be exactly 10 digits for "${execName}"`);
+        phoneInput.focus();
+        return;
+      }
+      
+      execDetails.push(`${execName} (${execPhone})`);
     }
 
     const geoVal = row.querySelector(".branch-geo-input").value.trim();
@@ -304,10 +336,8 @@ async function submitModal() {
       return;
     }
 
-    if (execNames.length === 0) {
+    if (execDetails.length === 0) {
       showToast(`At least one executive name is required for branch "${nameVal || (i + 1)}"`);
-      const firstExecInput = row.querySelector(".executive-name-input");
-      if (firstExecInput) firstExecInput.focus();
       return;
     }
 
@@ -321,7 +351,7 @@ async function submitModal() {
     branches.push({
       branchName: nameVal,
       geoLimit: limit,
-      loanAssigned: execNames.join(", ")
+      loanAssigned: execDetails.join(", ")
     });
   }
 

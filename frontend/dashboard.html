@@ -1,56 +1,57 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>WheelsWeb | Dashboard</title>
   <link rel="stylesheet" href="/css/dashboard.css?v=3" />
 </head>
+
 <body>
 
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo" id="logo">WheelsWeb</div>
 
-<nav class="sidebar-nav">
-  <a class="active" href="/dashboard.html">Overview</a>
-  <a href="/new-lead.html" id="startNewApplicationBtn">Start New Application</a>
-  <a href="/view-cases.html">View All Cases</a>
-  <!-- Only for employee -->
-  <a href="#" onclick="openDealerLeads()" id="dealerLeadBtn">View Dealer Leads</a>
-  
-  <!-- Message System -->
-  <a href="#" onclick="openMessaging()" id="messageNavBtn">💬 Message</a>
+    <nav class="sidebar-nav">
+      <a class="active" href="/dashboard.html">Overview</a>
+      <a href="/new-lead.html" id="startNewApplicationBtn">Start New Application</a>
+      <a href="/view-cases.html">View All Cases</a>
+      <!-- Only for employee -->
+      <a href="#" onclick="openDealerLeads()" id="dealerLeadBtn">View Dealer Leads</a>
 
-  <!-- ADMIN ONLY - KHATA -->
-  <a href="/dealer-khata.html" id="dealerKhataMenu" style="display:none">
-     Khata
-  </a>
-  
-  <!-- ADMIN ONLY -->
-  <a href="/admin-users.html" id="adminUsersMenu" style="display:none">
-    User Management
-  </a>
-  
-  <!-- ADMIN ONLY -->
-  <a href="/assign-employees.html" id="assignEmployeesMenu" style="display:none">
-    Assign Employees
-  </a>
-  
-  <!-- ADMIN ONLY -->
-  <a href="/bank-management.html" id="bankManagementMenu" style="display:none">
-    Bank Management
-  </a>
-  
-  
-  <!-- DEALER ONLY - MY KHATA -->
-  <a href="/my-khata.html" id="myKhataMenu" style="display:none">
-    My Khata
-  </a>
-  
-  <!-- Profile -->
-  <a href="/profile.html" id="profileMenu">Profile</a>
-</nav>
+
+      <!-- ADMIN ONLY -->
+      <a href="/admin-users.html" id="adminUsersMenu" style="display:none">
+        User Management
+      </a>
+
+      <!-- ADMIN ONLY -->
+      <a href="/assign-employees.html" id="assignEmployeesMenu" style="display:none">
+        Assign Employees
+      </a>
+
+      <!-- ADMIN ONLY -->
+      <a href="/bank-management.html" id="bankManagementMenu" style="display:none">
+        Bank Management
+      </a>
+
+      <!-- ADMIN ONLY - KHATA -->
+      <a href="/dealer-khata.html" id="dealerKhataMenu" style="display:none">
+        Khata
+      </a>
+
+      <!-- Message System -->
+      <a href="#" onclick="openMessaging()" id="messageNavBtn">💬 Message</a>
+
+      <!-- DEALER ONLY - MY KHATA -->
+      <a href="/my-khata.html" id="myKhataMenu" style="display:none">
+        My Khata
+      </a>
+
+      <!-- Profile -->
+      <a href="/profile.html" id="profileMenu">Profile</a>
+    </nav>
 
 
     <div class="logout" onclick="logout()">Logout</div>
@@ -67,7 +68,7 @@
         <div class="notification-bell" id="notificationBell" style="display: none;">
           <div class="bell-icon">🔔</div>
           <div class="notification-badge" id="notificationBadge">0</div>
-          
+
           <!-- Notification Dropdown -->
           <div class="notification-dropdown" id="notificationDropdown">
             <div class="notification-header">
@@ -80,30 +81,30 @@
           </div>
         </div>
 
-<div class="filters">
-  <input type="date" id="startDate" />
-  <input type="date" id="endDate" />
+        <div class="filters">
+          <input type="date" id="startDate" />
+          <input type="date" id="endDate" />
 
-<select id="productType">
-  <option value="">Product Type</option>
-  <option value="used-car-loan">Used Car</option>
-  <option value="new-car-loan">New Car</option>
-</select>
+          <select id="productType">
+            <option value="">Product Type</option>
+            <option value="used-car-loan">Used Car</option>
+            <option value="new-car-loan">New Car</option>
+          </select>
 
-  <button id="filterSearch">Search</button>
-</div>
+          <button id="filterSearch">Search</button>
+        </div>
     </header>
 
     <!-- Cards -->
     <section class="cards">
       <div class="card">
         <h4>Total Disbursed Amount</h4>
-          <p class="amount">₹ <span id="totalAmount">0</span></p>
+        <p class="amount">₹ <span id="totalAmount">0</span></p>
       </div>
 
       <div class="card">
         <h4>Total Disbursed Cases</h4>
-          <p class="amount"><span id="totalCases">0</span></p>
+        <p class="amount"><span id="totalCases">0</span></p>
       </div>
     </section>
 
@@ -138,19 +139,19 @@
         </div>
       </div>
     </section>
-    
+
     <!-- Profile Section (Hidden by default) -->
     <section id="profileSection" class="profile-section" style="display: none;">
       <div class="profile-header">
         <h2>My Profile</h2>
         <button class="back-btn" onclick="hideProfile()">← Back to Dashboard</button>
       </div>
-      
+
       <div class="profile-card">
         <div class="profile-avatar">
           <div class="avatar-placeholder">👤</div>
         </div>
-        
+
         <div class="profile-info">
           <div class="info-group">
             <h3>Personal Information</h3>
@@ -175,7 +176,7 @@
               <span id="profilePhone">-</span>
             </div>
           </div>
-          
+
           <div class="info-group">
             <h3>Account Information</h3>
             <div class="info-item">
@@ -211,4 +212,5 @@
 
   <script src="/js/dashboard.js"></script>
 </body>
+
 </html>

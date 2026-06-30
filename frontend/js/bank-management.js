@@ -193,7 +193,7 @@ function addBranchInputRow(branchName = "", geoLimit = "", loanAssigned = "") {
   row.className = "branch-input-row";
   row.innerHTML = `
     <input type="text" class="branch-name-input" placeholder="Branch Name" value="${escapeHtml(branchName)}" required />
-    <input type="text" class="branch-loan-input" placeholder="Loan Assigned" value="${escapeHtml(loanAssigned)}" />
+    <input type="text" class="branch-loan-input" placeholder="Executive Name" value="${escapeHtml(loanAssigned)}" />
     <input type="number" class="branch-geo-input" placeholder="GEO Limit (KM)" min="1" step="any" value="${geoLimit}" required />
     <button type="button" class="remove-branch-btn" title="Remove Branch">🗑️</button>
   `;

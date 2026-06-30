@@ -3029,6 +3029,51 @@ async function initializeBankDropdown() {
 
   if (!bankSelect) return;
 
+  function handleLoanAssignedPopulation(loanAssignedStr) {
+    let datalist = document.getElementById("loginExecutiveDatalist");
+    if (datalist) datalist.remove();
+    if (loanInput) loanInput.removeAttribute("list");
+
+    const execNames = loanAssignedStr
+      ? loanAssignedStr.split(",").map(name => name.trim()).filter(Boolean)
+      : [];
+
+    if (execNames.length > 1) {
+      datalist = document.createElement("datalist");
+      datalist.id = "loginExecutiveDatalist";
+      execNames.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        datalist.appendChild(opt);
+      });
+      document.body.appendChild(datalist);
+      
+      if (loanInput) {
+        loanInput.setAttribute("list", "loginExecutiveDatalist");
+        loanInput.value = "";
+        loanInput.placeholder = "Select Executive...";
+        loanInput.dispatchEvent(new Event("change"));
+      }
+    } else {
+      if (loanInput) {
+        loanInput.value = execNames[0] || "";
+        loanInput.placeholder = "LOGIN ASSIGNED *";
+        loanInput.dispatchEvent(new Event("change"));
+      }
+    }
+  }
+
+  function clearLoanAssigned() {
+    let datalist = document.getElementById("loginExecutiveDatalist");
+    if (datalist) datalist.remove();
+    if (loanInput) {
+      loanInput.removeAttribute("list");
+      loanInput.value = "";
+      loanInput.placeholder = "LOGIN ASSIGNED *";
+      loanInput.dispatchEvent(new Event("change"));
+    }
+  }
+
   // 1. Fetch banks from backend dynamically
   try {
     const user = getUserFromStorage() || {};
@@ -3073,10 +3118,7 @@ async function initializeBankDropdown() {
         branchInput.value = "";
         branchInput.dispatchEvent(new Event("change"));
       }
-      if (loanInput) {
-        loanInput.value = "";
-        loanInput.dispatchEvent(new Event("change"));
-      }
+      clearLoanAssigned();
       selectedBankDetails = null;
       return;
     }
@@ -3105,10 +3147,7 @@ async function initializeBankDropdown() {
           branchInput.value = branches[0].branch_name;
           branchInput.dispatchEvent(new Event("change"));
         }
-        if (loanInput) {
-          loanInput.value = branches[0].loan_assigned || "";
-          loanInput.dispatchEvent(new Event("change"));
-        }
+        handleLoanAssignedPopulation(branches[0].loan_assigned);
       } else if (branches.length > 1) {
         // Create dynamic datalist for branch selection
         datalist = document.createElement("datalist");
@@ -3125,19 +3164,13 @@ async function initializeBankDropdown() {
           branchInput.value = "";
           branchInput.dispatchEvent(new Event("change"));
         }
-        if (loanInput) {
-          loanInput.value = "";
-          loanInput.dispatchEvent(new Event("change"));
-        }
+        clearLoanAssigned();
       } else {
         if (branchInput) {
           branchInput.value = "";
           branchInput.dispatchEvent(new Event("change"));
         }
-        if (loanInput) {
-          loanInput.value = "";
-          loanInput.dispatchEvent(new Event("change"));
-        }
+        clearLoanAssigned();
       }
     } catch (err) {
       console.error("Error fetching branches details:", err);
@@ -3152,8 +3185,9 @@ async function initializeBankDropdown() {
       const branches = selectedBankDetails.branches || [];
       const matched = branches.find(br => br.branch_name.toLowerCase() === typedBranch);
       if (matched) {
-        loanInput.value = matched.loan_assigned || "";
-        loanInput.dispatchEvent(new Event("change"));
+        handleLoanAssignedPopulation(matched.loan_assigned);
+      } else {
+        clearLoanAssigned();
       }
     });
 

@@ -116,7 +116,7 @@ function renderBankDetails(bank) {
             <div class="branch-name">${escapeHtml(br.branch_name)}</div>
             <div class="branch-geo">📍 Geo Limit: <strong>${Number(br.geo_limit)} KM</strong></div>
             <div class="branch-loan" style="font-size: 13px; color: var(--muted); margin-top: 6px; display: flex; align-items: center; gap: 4px;">
-              💼 Loan: <strong>${br.loan_assigned ? escapeHtml(br.loan_assigned) : "None"}</strong>
+              💼 Executives: <strong>${br.loan_assigned ? escapeHtml(br.loan_assigned) : "None"}</strong>
             </div>
           </div>
         `).join("")}
@@ -192,12 +192,60 @@ function addBranchInputRow(branchName = "", geoLimit = "", loanAssigned = "") {
   const row = document.createElement("div");
   row.className = "branch-input-row";
   row.innerHTML = `
-    <input type="text" class="branch-name-input" placeholder="Branch Name" value="${escapeHtml(branchName)}" required />
-    <input type="text" class="branch-loan-input" placeholder="Executive Name" value="${escapeHtml(loanAssigned)}" />
-    <input type="number" class="branch-geo-input" placeholder="GEO Limit (KM)" min="1" step="any" value="${geoLimit}" required />
-    <button type="button" class="remove-branch-btn" title="Remove Branch">🗑️</button>
+    <div class="branch-meta-row">
+      <input type="text" class="branch-name-input" placeholder="Branch Name" value="${escapeHtml(branchName)}" required />
+      <input type="number" class="branch-geo-input" placeholder="GEO Limit" min="1" step="any" value="${geoLimit}" required />
+      <button type="button" class="remove-branch-btn" title="Remove Branch">🗑️</button>
+    </div>
+    <div class="branch-executives-section">
+      <div class="branch-executives-title">EXECUTIVES</div>
+      <div class="executives-list"></div>
+      <button type="button" class="add-executive-btn">
+        <span>+ Add Executive</span>
+      </button>
+    </div>
   `;
 
+  const execList = row.querySelector(".executives-list");
+
+  // Helper to add executive row
+  function addExecutiveRow(nameVal = "") {
+    const execRow = document.createElement("div");
+    execRow.className = "executive-input-row";
+    execRow.innerHTML = `
+      <input type="text" class="executive-name-input" placeholder="Executive Name" value="${escapeHtml(nameVal)}" required />
+      <button type="button" class="remove-executive-btn" title="Remove Executive">❌</button>
+    `;
+
+    execRow.querySelector(".remove-executive-btn").addEventListener("click", () => {
+      // Keep at least one executive input row per branch
+      if (execList.children.length > 1) {
+        execRow.remove();
+      } else {
+        showToast("Each branch must have at least one executive");
+      }
+    });
+
+    execList.appendChild(execRow);
+  }
+
+  // Parse comma separated list of executives
+  const execNames = loanAssigned
+    ? loanAssigned.split(",").map(n => n.trim()).filter(Boolean)
+    : [];
+
+  if (execNames.length === 0) {
+    addExecutiveRow("");
+  } else {
+    execNames.forEach(name => addExecutiveRow(name));
+  }
+
+  // Hook up add executive button
+  row.querySelector(".add-executive-btn").addEventListener("click", () => {
+    addExecutiveRow("");
+  });
+
+  // Hook up remove branch button
   row.querySelector(".remove-branch-btn").addEventListener("click", () => {
     // Keep at least one branch input row
     if (list.children.length > 1) {
@@ -237,12 +285,29 @@ async function submitModal() {
   for (let i = 0; i < branchRows.length; i++) {
     const row = branchRows[i];
     const nameVal = row.querySelector(".branch-name-input").value.trim();
-    const loanVal = row.querySelector(".branch-loan-input").value.trim();
+    
+    // Get all executives for this branch
+    const execInputs = row.querySelectorAll(".executive-name-input");
+    const execNames = [];
+    for (let j = 0; j < execInputs.length; j++) {
+      const val = execInputs[j].value.trim();
+      if (val) {
+        execNames.push(val);
+      }
+    }
+
     const geoVal = row.querySelector(".branch-geo-input").value.trim();
 
     if (!nameVal) {
       showToast(`Branch Name is required at row ${i + 1}`);
       row.querySelector(".branch-name-input").focus();
+      return;
+    }
+
+    if (execNames.length === 0) {
+      showToast(`At least one executive name is required for branch "${nameVal || (i + 1)}"`);
+      const firstExecInput = row.querySelector(".executive-name-input");
+      if (firstExecInput) firstExecInput.focus();
       return;
     }
 
@@ -256,7 +321,7 @@ async function submitModal() {
     branches.push({
       branchName: nameVal,
       geoLimit: limit,
-      loanAssigned: loanVal
+      loanAssigned: execNames.join(", ")
     });
   }
 

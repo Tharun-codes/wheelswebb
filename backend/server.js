@@ -4705,6 +4705,216 @@ app.delete("/api/banks/:id", async (req, res) => {
   }
 });
 
+// ==========================================
+// Indian Blue Book (IBB) API Proxy endpoints
+// ==========================================
+const https = require("https");
+const querystring = require("querystring");
+
+let ibbSessionCookies = null;
+
+function parseIbbCookies(cookieHeaders) {
+  if (!cookieHeaders) return {};
+  const cookies = {};
+  cookieHeaders.forEach(header => {
+    const parts = header.split(";")[0].split("=");
+    const name = parts[0].trim();
+    const value = parts.slice(1).join("=").trim();
+    if (name) cookies[name] = value;
+  });
+  return cookies;
+}
+
+function stringifyIbbCookies(cookies) {
+  return Object.keys(cookies).map(name => `${name}=${cookies[name]}`).join("; ");
+}
+
+function loginToIbb() {
+  return new Promise((resolve, reject) => {
+    const email = process.env.IBB_EMAIL || "vineesh1.nair@tatacapital.com";
+    const password = process.env.IBB_PASSWORD || "9539373355";
+    
+    https.get("https://partner.indianbluebook.com/auth/login?return_to=/dealer", (res) => {
+      let data = "";
+      const initialCookies = parseIbbCookies(res.headers["set-cookie"]);
+      
+      res.on("data", (chunk) => { data += chunk; });
+      res.on("end", () => {
+        const tokenMatch = data.match(/name="_token"\s+value="([^"]+)"/);
+        if (!tokenMatch) {
+          return reject(new Error("CSRF token not found on IBB login page"));
+        }
+        const token = tokenMatch[1];
+        
+        const postData = querystring.stringify({
+          _token: token,
+          email,
+          password
+        });
+        
+        const reqOptions = {
+          hostname: "partner.indianbluebook.com",
+          port: 443,
+          path: "/auth/login",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Length": Buffer.byteLength(postData),
+            "Cookie": stringifyIbbCookies(initialCookies),
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          }
+        };
+        
+        const postReq = https.request(reqOptions, (postRes) => {
+          const finalCookies = { ...initialCookies, ...parseIbbCookies(postRes.headers["set-cookie"]) };
+          postRes.on("data", () => {});
+          postRes.on("end", () => {
+            console.log("Logged in to IBB successfully");
+            ibbSessionCookies = finalCookies;
+            resolve(finalCookies);
+          });
+        });
+        
+        postReq.on("error", (err) => {
+          reject(err);
+        });
+        
+        postReq.write(postData);
+        postReq.end();
+      });
+    }).on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+function requestIbbMaster(postData, cookies) {
+  const payload = querystring.stringify(postData);
+  const options = {
+    hostname: "partner.indianbluebook.com",
+    port: 443,
+    path: "/api/partnermasters",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Length": Buffer.byteLength(payload),
+      "Cookie": stringifyIbbCookies(cookies),
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+  };
+  
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let body = "";
+      res.on("data", (chunk) => { body += chunk; });
+      res.on("end", () => {
+        try {
+          resolve(JSON.parse(body));
+        } catch (e) {
+          reject(new Error("Invalid JSON response from IBB API"));
+        }
+      });
+    });
+    req.on("error", reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+async function callIbbMasterWithRetry(postData) {
+  let cookies = ibbSessionCookies;
+  if (!cookies) {
+    cookies = await loginToIbb();
+  }
+  try {
+    let result = await requestIbbMaster(postData, cookies);
+    if (result.status === 422 && result.message === 'Invalid month.') {
+      return result;
+    }
+    if (result.status === 401 || (result.status !== 200 && result.status !== "success")) {
+      console.log("IBB API returned non-success status, retrying login...");
+      ibbSessionCookies = null;
+      cookies = await loginToIbb();
+      result = await requestIbbMaster(postData, cookies);
+    }
+    return result;
+  } catch (err) {
+    console.log("Error in IBB API request, retrying login...", err);
+    ibbSessionCookies = null;
+    cookies = await loginToIbb();
+    return requestIbbMaster(postData, cookies);
+  }
+}
+
+app.get("/api/ibb/makes", async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    if (!year || !month) {
+      return res.status(400).json({ error: "year and month are required" });
+    }
+    const result = await callIbbMasterWithRetry({
+      for: "make",
+      year,
+      month
+    });
+    if (result.status === 200 || result.status === "success") {
+      res.json({ success: true, makes: result.make || [] });
+    } else {
+      res.status(result.status === 422 ? 422 : 500).json({ error: result.message || "Failed to fetch makes" });
+    }
+  } catch (err) {
+    console.error("GET /api/ibb/makes error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/ibb/models", async (req, res) => {
+  try {
+    const { year, month, make } = req.query;
+    if (!year || !month || !make) {
+      return res.status(400).json({ error: "year, month, and make are required" });
+    }
+    const result = await callIbbMasterWithRetry({
+      for: "model",
+      year,
+      month,
+      make
+    });
+    if (result.status === 200 || result.status === "success") {
+      res.json({ success: true, models: result.model || [] });
+    } else {
+      res.status(result.status === 422 ? 422 : 500).json({ error: result.message || "Failed to fetch models" });
+    }
+  } catch (err) {
+    console.error("GET /api/ibb/models error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/ibb/variants", async (req, res) => {
+  try {
+    const { year, month, make, model } = req.query;
+    if (!year || !month || !make || !model) {
+      return res.status(400).json({ error: "year, month, make, and model are required" });
+    }
+    const result = await callIbbMasterWithRetry({
+      for: "variant",
+      year,
+      month,
+      make,
+      model
+    });
+    if (result.status === 200 || result.status === "success") {
+      res.json({ success: true, variants: result.variant || [] });
+    } else {
+      res.status(result.status === 422 ? 422 : 500).json({ error: result.message || "Failed to fetch variants" });
+    }
+  } catch (err) {
+    console.error("GET /api/ibb/variants error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Start server in non-production; also export app for tests
 
 const PORT = process.env.PORT || 3001;

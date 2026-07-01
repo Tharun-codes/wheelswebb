@@ -632,6 +632,990 @@ document.addEventListener('DOMContentLoaded', function() {
     mfgYear.addEventListener("change", updateVehicleAge);
   }
 
+  // ----------------- Make & Model Dynamic Options -----------------
+  const VEHICLE_MAKE_BY_YEAR = {
+    2012: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "DATSUN",
+      "DC",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "SSANGYONG",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2013: [
+      "ASHOK LEYLAND",
+      "ASTON MARTIN",
+      "AUDI",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "CHEVROLET",
+      "DATSUN",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HINDUSTAN MOTORS",
+      "HONDA",
+      "HYUNDAI",
+      "ICML",
+      "JAGUAR",
+      "KOENIGSEGG",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "PREMIER",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SAN",
+      "SKODA",
+      "SSANGYONG",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2014: [
+      "ASHOK LEYLAND",
+      "ASTON MARTIN",
+      "AUDI",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "CHEVROLET",
+      "DATSUN",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HINDUSTAN MOTORS",
+      "HONDA",
+      "HYUNDAI",
+      "ICML",
+      "ISUZU",
+      "JAGUAR",
+      "KOENIGSEGG",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SAN",
+      "SKODA",
+      "SSANGYONG",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2015: [
+      "ASHOK LEYLAND",
+      "ASTON MARTIN",
+      "AUDI",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "CHEVROLET",
+      "DATSUN",
+      "EICHER POLARIS",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HINDUSTAN MOTORS",
+      "HONDA",
+      "HYUNDAI",
+      "ICML",
+      "ISUZU",
+      "JAGUAR",
+      "KOENIGSEGG",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "POST",
+      "PREMIER",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SAN",
+      "SKODA",
+      "SSANGYONG",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2016: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "CHEVROLET",
+      "DATSUN",
+      "DC",
+      "EICHER POLARIS",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "SSANGYONG",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2017: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "CHEVROLET",
+      "DATSUN",
+      "DC",
+      "EICHER POLARIS",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "SSANGYONG",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2018: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "DATSUN",
+      "DC",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2019: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "DATSUN",
+      "DC",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2020: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BUGATTI",
+      "DATSUN",
+      "FERRARI",
+      "FIAT",
+      "FORCE MOTORS",
+      "FORD",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "KIA",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MG",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2021: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "DATSUN",
+      "FERRARI",
+      "FORCE MOTORS",
+      "FORD",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "KIA",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MERCEDES BENZ",
+      "MG",
+      "MINI COOPER",
+      "MITSUBISHI",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2022: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BYD",
+      "CITROEN",
+      "DATSUN",
+      "FERRARI",
+      "FORCE MOTORS",
+      "FORD",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "KIA",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MCLAREN",
+      "MERCEDES BENZ",
+      "MG",
+      "MINI COOPER",
+      "NISSAN",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2023: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BYD",
+      "CITROEN",
+      "DATSUN",
+      "FERRARI",
+      "FORCE MOTORS",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "KIA",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "LOTUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MCLAREN",
+      "MERCEDES BENZ",
+      "MG",
+      "MINI COOPER",
+      "NISSAN",
+      "PMV",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2024: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BYD",
+      "CITROEN",
+      "FERRARI",
+      "FORCE MOTORS",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "KIA",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "LOTUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MCLAREN",
+      "MERCEDES BENZ",
+      "MG",
+      "MINI COOPER",
+      "NISSAN",
+      "PMV",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TOYOTA",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2025: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BYD",
+      "CITROEN",
+      "FERRARI",
+      "FORCE MOTORS",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "KIA",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "LOTUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MCLAREN",
+      "MERCEDES BENZ",
+      "MG",
+      "MINI COOPER",
+      "NISSAN",
+      "PMV",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TOYOTA",
+      "VAYVE",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ],
+    2026: [
+      "ASTON MARTIN",
+      "AUDI",
+      "BAJAJ",
+      "BENTLEY",
+      "BMW",
+      "BYD",
+      "CITROEN",
+      "FERRARI",
+      "FORCE MOTORS",
+      "HONDA",
+      "HYUNDAI",
+      "ISUZU",
+      "JAGUAR",
+      "JEEP",
+      "KIA",
+      "LAMBORGHINI",
+      "LAND ROVER",
+      "LEXUS",
+      "LOTUS",
+      "MAHINDRA",
+      "MARUTI SUZUKI",
+      "MASERATI",
+      "MCLAREN",
+      "MERCEDES BENZ",
+      "MG",
+      "MINI COOPER",
+      "NISSAN",
+      "PMV",
+      "PORSCHE",
+      "RENAULT",
+      "ROLLS ROYCE",
+      "SKODA",
+      "TATA",
+      "TESLA",
+      "TOYOTA",
+      "VAYVE",
+      "VINFAST",
+      "VOLKSWAGEN",
+      "VOLVO"
+    ]
+  };
+
+  const VEHICLE_CATALOG = {
+    "ASTON MARTIN": [
+      { name: "DB 11", startYear: 2021, endYear: 2030 },
+      { name: "DB11", startYear: 2017, endYear: 2020, label: "DB11(2017-2020)" },
+      { name: "DB12", startYear: 2023, endYear: 2030 },
+      { name: "DBX", startYear: 2020, endYear: 2030 },
+      { name: "V8 VANTAGE", startYear: 2020, endYear: 2030 },
+      { name: "V8 VANTAGE", startYear: 2015, endYear: 2018, label: "V8 VANTAGE(2015-2018)" },
+      { name: "VANQUISH", startYear: 2020, endYear: 2030 },
+      { name: "VANQUISH", startYear: 2012, endYear: 2019, label: "VANQUISH(2012-2019)" },
+      { name: "RAPIDE", startYear: 2017, endYear: 2020, label: "RAPIDE(2017-2020)" },
+      { name: "V12 VANTAGE", startYear: 2015, endYear: 2019, label: "V12 VANTAGE(2015-2019)" }
+    ],
+    "AUDI": [
+      { name: "A3", startYear: 2010, endYear: 2030 },
+      { name: "A4", startYear: 2010, endYear: 2030 },
+      { name: "A6", startYear: 2010, endYear: 2030 },
+      { name: "Q3", startYear: 2012, endYear: 2030 },
+      { name: "Q5", startYear: 2010, endYear: 2030 },
+      { name: "Q7", startYear: 2010, endYear: 2030 }
+    ],
+    "BAJAJ": [
+      { name: "RE", startYear: 2010, endYear: 2030 },
+      { name: "QUTE", startYear: 2018, endYear: 2030 }
+    ],
+    "BENTLEY": [
+      { name: "CONTINENTAL", startYear: 2010, endYear: 2030 },
+      { name: "BENTAYGA", startYear: 2016, endYear: 2030 },
+      { name: "FLYING SPUR", startYear: 2010, endYear: 2030 }
+    ],
+    "BMW": [
+      { name: "3 SERIES", startYear: 2010, endYear: 2030 },
+      { name: "5 SERIES", startYear: 2010, endYear: 2030 },
+      { name: "7 SERIES", startYear: 2010, endYear: 2030 },
+      { name: "X1", startYear: 2010, endYear: 2030 },
+      { name: "X3", startYear: 2010, endYear: 2030 },
+      { name: "X5", startYear: 2010, endYear: 2030 }
+    ],
+    "BUGATTI": [
+      { name: "VEYRON", startYear: 2010, endYear: 2016 },
+      { name: "CHIRON", startYear: 2016, endYear: 2030 }
+    ],
+    "DATSUN": [
+      { name: "GO", startYear: 2014, endYear: 2022 },
+      { name: "GO+", startYear: 2015, endYear: 2022 },
+      { name: "REDI-GO", startYear: 2016, endYear: 2022 }
+    ],
+    "DC": [
+      { name: "AVANTI", startYear: 2015, endYear: 2022 }
+    ],
+    "FERRARI": [
+      { name: "488", startYear: 2015, endYear: 2020 },
+      { name: "ROMA", startYear: 2020, endYear: 2030 },
+      { name: "PORTOFINO", startYear: 2017, endYear: 2030 },
+      { name: "SF90", startYear: 2019, endYear: 2030 }
+    ],
+    "FIAT": [
+      { name: "PUNTO", startYear: 2010, endYear: 2020 },
+      { name: "LINEA", startYear: 2010, endYear: 2020 },
+      { name: "500", startYear: 2010, endYear: 2020 }
+    ],
+    "FORCE MOTORS": [
+      { name: "GURKHA", startYear: 2013, endYear: 2030 },
+      { name: "TRAX", startYear: 2010, endYear: 2030 }
+    ],
+    "FORD": [
+      { name: "ECOSPORT", startYear: 2013, endYear: 2021 },
+      { name: "FIGO", startYear: 2010, endYear: 2021 },
+      { name: "ENDEAVOUR", startYear: 2010, endYear: 2021 }
+    ],
+    "HONDA": [
+      { name: "CITY", startYear: 2010, endYear: 2030 },
+      { name: "AMAZE", startYear: 2013, endYear: 2030 },
+      { name: "CIVIC", startYear: 2010, endYear: 2030 },
+      { name: "CR-V", startYear: 2010, endYear: 2030 }
+    ],
+    "HYUNDAI": [
+      { name: "I10", startYear: 2010, endYear: 2030 },
+      { name: "I20", startYear: 2010, endYear: 2030 },
+      { name: "VERNA", startYear: 2010, endYear: 2030 },
+      { name: "CRETA", startYear: 2015, endYear: 2030 },
+      { name: "VENUE", startYear: 2019, endYear: 2030 },
+      { name: "TUCSON", startYear: 2010, endYear: 2030 }
+    ],
+    "ISUZU": [
+      { name: "D-MAX", startYear: 2012, endYear: 2030 },
+      { name: "MU-X", startYear: 2013, endYear: 2030 }
+    ],
+    "JAGUAR": [
+      { name: "XE", startYear: 2015, endYear: 2030 },
+      { name: "XF", startYear: 2010, endYear: 2030 },
+      { name: "F-PACE", startYear: 2016, endYear: 2030 },
+      { name: "F-TYPE", startYear: 2013, endYear: 2030 }
+    ],
+    "JEEP": [
+      { name: "COMPASS", startYear: 2017, endYear: 2030 },
+      { name: "MERIDIAN", startYear: 2022, endYear: 2030 },
+      { name: "WRANGLER", startYear: 2010, endYear: 2030 },
+      { name: "CHEROKEE", startYear: 2010, endYear: 2030 }
+    ],
+    "LAMBORGHINI": [
+      { name: "HURACAN", startYear: 2014, endYear: 2030 },
+      { name: "AVENTADOR", startYear: 2011, endYear: 2022 },
+      { name: "URUS", startYear: 2018, endYear: 2030 }
+    ],
+    "LAND ROVER": [
+      { name: "DEFENDER", startYear: 2010, endYear: 2030 },
+      { name: "DISCOVERY", startYear: 2010, endYear: 2030 },
+      { name: "RANGE ROVER", startYear: 2010, endYear: 2030 },
+      { name: "RANGE ROVER SPORT", startYear: 2010, endYear: 2030 },
+      { name: "RANGE ROVER EVOQUE", startYear: 2011, endYear: 2030 }
+    ],
+    "LEXUS": [
+      { name: "ES", startYear: 2010, endYear: 2030 },
+      { name: "NX", startYear: 2014, endYear: 2030 },
+      { name: "RX", startYear: 2010, endYear: 2030 },
+      { name: "LX", startYear: 2010, endYear: 2030 }
+    ],
+    "MAHINDRA": [
+      { name: "THAR", startYear: 2010, endYear: 2030 },
+      { name: "SCORPIO", startYear: 2010, endYear: 2030 },
+      { name: "XUV500", startYear: 2011, endYear: 2021 },
+      { name: "XUV700", startYear: 2021, endYear: 2030 },
+      { name: "BOLERO", startYear: 2010, endYear: 2030 }
+    ],
+    "MARUTI SUZUKI": [
+      { name: "ALTO", startYear: 2010, endYear: 2030 },
+      { name: "SWIFT", startYear: 2010, endYear: 2030 },
+      { name: "DZIRE", startYear: 2010, endYear: 2030 },
+      { name: "BALENO", startYear: 2015, endYear: 2030 },
+      { name: "BREZZA", startYear: 2016, endYear: 2030 },
+      { name: "ERTIGA", startYear: 2012, endYear: 2030 },
+      { name: "WAGON R", startYear: 2010, endYear: 2030 }
+    ],
+    "MASERATI": [
+      { name: "GHIBLI", startYear: 2013, endYear: 2030 },
+      { name: "QUATTROPORTE", startYear: 2010, endYear: 2030 },
+      { name: "LEVANTE", startYear: 2016, endYear: 2030 }
+    ],
+    "MERCEDES BENZ": [
+      { name: "C-CLASS", startYear: 2010, endYear: 2030 },
+      { name: "E-CLASS", startYear: 2010, endYear: 2030 },
+      { name: "S-CLASS", startYear: 2010, endYear: 2030 },
+      { name: "GLA", startYear: 2014, endYear: 2030 },
+      { name: "GLC", startYear: 2015, endYear: 2030 },
+      { name: "GLE", startYear: 2015, endYear: 2030 },
+      { name: "GLS", startYear: 2016, endYear: 2030 }
+    ],
+    "MINI COOPER": [
+      { name: "3-DOOR", startYear: 2010, endYear: 2030 },
+      { name: "COUNTRYMAN", startYear: 2010, endYear: 2030 },
+      { name: "CLUBMAN", startYear: 2015, endYear: 2030 }
+    ],
+    "MITSUBISHI": [
+      { name: "LANCER", startYear: 2010, endYear: 2015 },
+      { name: "PAJERO", startYear: 2010, endYear: 2021 },
+      { name: "OUTLANDER", startYear: 2010, endYear: 2021 }
+    ],
+    "NISSAN": [
+      { name: "MICRA", startYear: 2010, endYear: 2020 },
+      { name: "SUNNY", startYear: 2011, endYear: 2020 },
+      { name: "TERRANO", startYear: 2013, endYear: 2020 },
+      { name: "MAGNITE", startYear: 2020, endYear: 2030 }
+    ],
+    "PORSCHE": [
+      { name: "MACAN", startYear: 2014, endYear: 2030 },
+      { name: "CAYENNE", startYear: 2010, endYear: 2030 },
+      { name: "PANAMERA", startYear: 2010, endYear: 2030 },
+      { name: "911", startYear: 2010, endYear: 2030 }
+    ],
+    "RENAULT": [
+      { name: "KWID", startYear: 2015, endYear: 2030 },
+      { name: "DUSTER", startYear: 2012, endYear: 2022 },
+      { name: "TRIBER", startYear: 2019, endYear: 2030 }
+    ],
+    "ROLLS ROYCE": [
+      { name: "GHOST", startYear: 2010, endYear: 2030 },
+      { name: "WRAITH", startYear: 2013, endYear: 2030 },
+      { name: "PHANTOM", startYear: 2010, endYear: 2030 },
+      { name: "CULLINAN", startYear: 2018, endYear: 2030 }
+    ],
+    "SKODA": [
+      { name: "OCTAVIA", startYear: 2010, endYear: 2030 },
+      { name: "SUPERB", startYear: 2010, endYear: 2030 },
+      { name: "RAPID", startYear: 2011, endYear: 2021 },
+      { name: "SLAVIA", startYear: 2022, endYear: 2030 },
+      { name: "KUSHAQ", startYear: 2021, endYear: 2030 }
+    ],
+    "SSANGYONG": [
+      { name: "REXTON", startYear: 2012, endYear: 2018 }
+    ],
+    "TATA": [
+      { name: "NANO", startYear: 2010, endYear: 2020 },
+      { name: "TIAGO", startYear: 2016, endYear: 2030 },
+      { name: "ALTROZ", startYear: 2020, endYear: 2030 },
+      { name: "NEXON", startYear: 2017, endYear: 2030 },
+      { name: "HARRIER", startYear: 2019, endYear: 2030 },
+      { name: "SAFARI", startYear: 2010, endYear: 2030 }
+    ],
+    "TOYOTA": [
+      { name: "FORTUNER", startYear: 2010, endYear: 2030 },
+      { name: "INNOVA", startYear: 2010, endYear: 2030 },
+      { name: "INNOVA CRYSTA", startYear: 2016, endYear: 2030 },
+      { name: "CAMRY", startYear: 2010, endYear: 2030 },
+      { name: "GLANZA", startYear: 2019, endYear: 2030 }
+    ],
+    "VOLKSWAGEN": [
+      { name: "POLO", startYear: 2010, endYear: 2022 },
+      { name: "VENTO", startYear: 2010, endYear: 2022 },
+      { name: "VIRTUS", startYear: 2022, endYear: 2030 },
+      { name: "TAIGUN", startYear: 2021, endYear: 2030 }
+    ],
+    "VOLVO": [
+      { name: "S60", startYear: 2010, endYear: 2030 },
+      { name: "S90", startYear: 2016, endYear: 2030 },
+      { name: "XC40", startYear: 2017, endYear: 2030 },
+      { name: "XC60", startYear: 2010, endYear: 2030 },
+      { name: "XC90", startYear: 2010, endYear: 2030 }
+    ]
+  };
+
+  const vehicleMake = document.getElementById("vehicleMake");
+  const vehicleModel = document.getElementById("vehicleModel");
+  const vehicleVariant = document.getElementById("vehicleVariant");
+
+  async function populateVehicleMakes(selectedMake = "", selectedModel = "", selectedVariant = "") {
+    if (!vehicleMake) return;
+
+    const yearValue = mfgYear?.value;
+    const monthValue = mfgMonth?.value ? Number(mfgMonth.value) : "";
+
+    if (!yearValue || !monthValue) {
+      vehicleMake.innerHTML = '<option value="">Select Make</option>';
+      vehicleMake.disabled = true;
+      if (vehicleModel) {
+        vehicleModel.innerHTML = '<option value="">Select Model</option>';
+        vehicleModel.disabled = true;
+      }
+      if (vehicleVariant) {
+        vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+        vehicleVariant.disabled = true;
+      }
+      return;
+    }
+
+    vehicleMake.disabled = true;
+    vehicleMake.innerHTML = '<option value="">Loading Makes...</option>';
+
+    try {
+      const res = await fetch(`/api/ibb/makes?year=${yearValue}&month=${monthValue}`);
+      const data = await res.json();
+      
+      vehicleMake.innerHTML = '<option value="">Select Make</option>';
+      if (data.success && data.makes) {
+        data.makes.forEach((make) => {
+          const opt = document.createElement("option");
+          opt.value = make;
+          opt.textContent = make;
+          vehicleMake.appendChild(opt);
+        });
+        vehicleMake.disabled = false;
+        
+        if (selectedMake && data.makes.includes(selectedMake)) {
+          vehicleMake.value = selectedMake;
+          await window.updateModelOptions(selectedModel, selectedVariant);
+        } else {
+          vehicleMake.value = "";
+          if (vehicleModel) {
+            vehicleModel.innerHTML = '<option value="">Select Model</option>';
+            vehicleModel.disabled = true;
+          }
+          if (vehicleVariant) {
+            vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+            vehicleVariant.disabled = true;
+          }
+        }
+      } else {
+        vehicleMake.innerHTML = '<option value="">Failed to load makes</option>';
+      }
+    } catch (e) {
+      console.error("Error loading makes:", e);
+      vehicleMake.innerHTML = '<option value="">Error loading makes</option>';
+    }
+  }
+
+  window.updateModelOptions = async function(selectedModel = "", selectedVariant = "") {
+    if (!vehicleMake || !vehicleModel || !mfgYear || !mfgMonth) return;
+
+    const makeVal = vehicleMake.value;
+    const yearVal = mfgYear.value;
+    const monthVal = mfgMonth.value ? Number(mfgMonth.value) : "";
+
+    vehicleModel.innerHTML = '<option value="">Select Model</option>';
+    vehicleModel.disabled = true;
+    if (vehicleVariant) {
+      vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+      vehicleVariant.disabled = true;
+    }
+
+    if (!makeVal || !yearVal || !monthVal) {
+      return;
+    }
+
+    vehicleModel.innerHTML = '<option value="">Loading Models...</option>';
+
+    try {
+      const res = await fetch(`/api/ibb/models?year=${yearVal}&month=${monthVal}&make=${encodeURIComponent(makeVal)}`);
+      const data = await res.json();
+
+      vehicleModel.innerHTML = '<option value="">Select Model</option>';
+      if (data.success && data.models) {
+        data.models.forEach(model => {
+          const opt = document.createElement("option");
+          opt.value = model;
+          opt.textContent = model;
+          vehicleModel.appendChild(opt);
+        });
+        vehicleModel.disabled = false;
+
+        if (selectedModel && data.models.includes(selectedModel)) {
+          vehicleModel.value = selectedModel;
+          await window.updateVariantOptions(selectedVariant);
+        } else {
+          vehicleModel.value = "";
+          if (vehicleVariant) {
+            vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+            vehicleVariant.disabled = true;
+          }
+        }
+      } else {
+        vehicleModel.innerHTML = '<option value="">Failed to load models</option>';
+      }
+    } catch (e) {
+      console.error("Error loading models:", e);
+      vehicleModel.innerHTML = '<option value="">Error loading models</option>';
+    }
+  };
+
+  window.updateVariantOptions = async function(selectedVariant = "") {
+    if (!vehicleMake || !vehicleModel || !vehicleVariant || !mfgYear || !mfgMonth) return;
+
+    const makeVal = vehicleMake.value;
+    const modelVal = vehicleModel.value;
+    const yearVal = mfgYear.value;
+    const monthVal = mfgMonth.value ? Number(mfgMonth.value) : "";
+
+    vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+    vehicleVariant.disabled = true;
+
+    if (!makeVal || !modelVal || !yearVal || !monthVal) {
+      return;
+    }
+
+    vehicleVariant.innerHTML = '<option value="">Loading Variants...</option>';
+
+    try {
+      const res = await fetch(`/api/ibb/variants?year=${yearVal}&month=${monthVal}&make=${encodeURIComponent(makeVal)}&model=${encodeURIComponent(modelVal)}`);
+      const data = await res.json();
+
+      vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+      if (data.success && data.variants) {
+        data.variants.forEach(variant => {
+          const opt = document.createElement("option");
+          opt.value = variant;
+          opt.textContent = variant;
+          vehicleVariant.appendChild(opt);
+        });
+        vehicleVariant.disabled = false;
+
+        if (selectedVariant && data.variants.includes(selectedVariant)) {
+          vehicleVariant.value = selectedVariant;
+        } else {
+          vehicleVariant.value = "";
+        }
+      } else {
+        vehicleVariant.innerHTML = '<option value="">Failed to load variants</option>';
+      }
+    } catch (e) {
+      console.error("Error loading variants:", e);
+      vehicleVariant.innerHTML = '<option value="">Error loading variants</option>';
+    }
+  };
+
+  if (vehicleMake && vehicleModel && vehicleVariant && mfgYear && mfgMonth) {
+    vehicleMake.addEventListener("change", () => window.updateModelOptions());
+    vehicleModel.addEventListener("change", () => window.updateVariantOptions());
+    
+    mfgYear.addEventListener("change", () => {
+      populateVehicleMakes(vehicleMake.value, vehicleModel.value, vehicleVariant.value);
+    });
+    mfgMonth.addEventListener("change", () => {
+      populateVehicleMakes(vehicleMake.value, vehicleModel.value, vehicleVariant.value);
+    });
+    
+    populateVehicleMakes();
+  }
+
   // Initialize input validations
   enforceUppercase();
   enforceAlphabetsOnly();
@@ -2492,6 +3476,10 @@ if (loanId) {
         const el = document.getElementById(key);
         if (el) el.value = data[key];
       });
+
+      if (data.mfgYear && data.mfgMonth) {
+        populateVehicleMakes(data.vehicleMake || "", data.vehicleModel || "", data.vehicleVariant || "");
+      }
 
       // =========================
       // 5️⃣ Apply field visibility based on Source

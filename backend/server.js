@@ -4729,6 +4729,18 @@ function stringifyIbbCookies(cookies) {
   return Object.keys(cookies).map(name => `${name}=${cookies[name]}`).join("; ");
 }
 
+function extractToken(html) {
+  let match = html.match(/name="_token"\s+(?:type="hidden"\s+)?value="([^"]+)"/);
+  if (match) return match[1];
+  match = html.match(/value="([^"]+)"\s+(?:type="hidden"\s+)?name="_token"/);
+  if (match) return match[1];
+  match = html.match(/_token"[^>]*value="([^"]+)"/);
+  if (match) return match[1];
+  match = html.match(/value="([^"]+)"[^>]*_token"/);
+  if (match) return match[1];
+  return null;
+}
+
 function loginToIbb() {
   return new Promise((resolve, reject) => {
     const email = process.env.IBB_EMAIL || "vineesh1.nair@tatacapital.com";
@@ -4740,11 +4752,10 @@ function loginToIbb() {
       
       res.on("data", (chunk) => { data += chunk; });
       res.on("end", () => {
-        const tokenMatch = data.match(/name="_token"\s+value="([^"]+)"/);
-        if (!tokenMatch) {
+        const token = extractToken(data);
+        if (!token) {
           return reject(new Error("CSRF token not found on IBB login page"));
         }
-        const token = tokenMatch[1];
         
         const postData = querystring.stringify({
           _token: token,
@@ -4911,6 +4922,164 @@ app.get("/api/ibb/variants", async (req, res) => {
     }
   } catch (err) {
     console.error("GET /api/ibb/variants error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+function extractCategoryPrices(html, paneId) {
+  const paneRegex = new RegExp(`<div\\s+id="${paneId}"[\\s\\S]*?<\\/table>`, "i");
+  const paneMatch = html.match(paneRegex);
+  if (!paneMatch) return null;
+  
+  const paneHtml = paneMatch[0];
+  const priceRegex = /<strong>(Fair|Market|Best)\s+Price<\/strong>[\s\S]*?<td[^>]*>[\s\S]*?([\d,]+)/gi;
+  let match;
+  const prices = {};
+  
+  while ((match = priceRegex.exec(paneHtml)) !== null) {
+    const type = match[1].toLowerCase();
+    const value = parseInt(match[2].replace(/,/g, ""), 10);
+    prices[type] = value;
+  }
+  
+  return prices;
+}
+
+function fetchValuationPrice(params, cookies) {
+  const options = {
+    hostname: "partner.indianbluebook.com",
+    port: 443,
+    path: "/dealer/tools/price_check/premium",
+    method: "GET",
+    headers: {
+      "Cookie": stringifyIbbCookies(cookies),
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+  };
+  
+  return new Promise((resolve, reject) => {
+    https.get(options, (res) => {
+      let data = "";
+      res.on("data", (chunk) => { data += chunk; });
+      res.on("end", () => {
+        console.log("fetchValuationPrice status:", res.statusCode);
+        console.log("fetchValuationPrice headers:", res.headers);
+        console.log("fetchValuationPrice data length:", data.length);
+        const token = extractToken(data);
+        if (!token) {
+          return reject(new Error("Could not find CSRF token on IBB price check page"));
+        }
+        
+        const postData = {
+          _token: token,
+          pricefor: "0",
+          location: "KOTTAYAM",
+          manufacture_year: params.year,
+          manufacture_month: params.month,
+          make: params.make,
+          model: params.model,
+          variant: params.variant,
+          color: params.color,
+          kms: params.kms,
+          owner: params.owner
+        };
+        
+        const payload = querystring.stringify(postData);
+        const postOptions = {
+          hostname: "partner.indianbluebook.com",
+          port: 443,
+          path: "/dealer/tools/getComprehensivePrice",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Length": Buffer.byteLength(payload),
+            "Cookie": stringifyIbbCookies(cookies),
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          }
+        };
+        
+        const postReq = https.request(postOptions, (postRes) => {
+          let postBody = "";
+          postRes.on("data", (chunk) => { postBody += chunk; });
+          postRes.on("end", () => {
+            resolve(postBody);
+          });
+        });
+        
+        postReq.on("error", reject);
+        postReq.write(payload);
+        postReq.end();
+      });
+    }).on("error", reject);
+  });
+}
+
+async function callIbbValuationWithRetry(params) {
+  let cookies = ibbSessionCookies;
+  if (!cookies) {
+    cookies = await loginToIbb();
+  }
+  try {
+    let html = await fetchValuationPrice(params, cookies);
+    if (html.includes("/auth/login") || html.length < 500) {
+      console.log("Valuation returned guest redirect, relogging...");
+      ibbSessionCookies = null;
+      cookies = await loginToIbb();
+      html = await fetchValuationPrice(params, cookies);
+    }
+    return html;
+  } catch (err) {
+    console.log("Error in valuation request, retrying login...", err);
+    ibbSessionCookies = null;
+    cookies = await loginToIbb();
+    return fetchValuationPrice(params, cookies);
+  }
+}
+
+app.get("/api/ibb/colors", async (req, res) => {
+  try {
+    const result = await callIbbMasterWithRetry({
+      for: "color"
+    });
+    if (result.status === 200 || result.status === "success") {
+      res.json({ success: true, colors: result.color || [] });
+    } else {
+      res.status(500).json({ error: result.message || "Failed to fetch colors" });
+    }
+  } catch (err) {
+    console.error("GET /api/ibb/colors error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.get("/api/ibb/price", async (req, res) => {
+  try {
+    const { year, month, make, model, variant, color, kms, owner } = req.query;
+    if (!year || !month || !make || !model || !variant || !color || !kms || !owner) {
+      return res.status(400).json({ error: "All parameters are required (year, month, make, model, variant, color, kms, owner)" });
+    }
+    
+    const htmlResponse = await callIbbValuationWithRetry({
+      year,
+      month,
+      make,
+      model,
+      variant,
+      color,
+      kms,
+      owner
+    });
+    
+    const valuation = {
+      tradeIn: extractCategoryPrices(htmlResponse, "Trade-In-Price"),
+      private: extractCategoryPrices(htmlResponse, "Private-Price"),
+      retail: extractCategoryPrices(htmlResponse, "Retail-Price"),
+      cpo: extractCategoryPrices(htmlResponse, "CPO-Price")
+    };
+    
+    res.json({ success: true, valuation });
+  } catch (err) {
+    console.error("GET /api/ibb/price error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

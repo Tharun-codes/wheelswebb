@@ -1602,6 +1602,129 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
+  const vehicleColor = document.getElementById("vehicleColor");
+  async function populateVehicleColors(selectedColor = "") {
+    if (!vehicleColor) return;
+    vehicleColor.innerHTML = '<option value="">Loading Colors...</option>';
+    try {
+      const res = await fetch("/api/ibb/colors");
+      const data = await res.json();
+      vehicleColor.innerHTML = '<option value="">Select Color</option>';
+      if (data.success && data.colors) {
+        data.colors.forEach(col => {
+          const opt = document.createElement("option");
+          opt.value = col;
+          opt.textContent = col;
+          vehicleColor.appendChild(opt);
+        });
+        if (selectedColor && data.colors.includes(selectedColor)) {
+          vehicleColor.value = selectedColor;
+        }
+      } else {
+        vehicleColor.innerHTML = '<option value="">Failed to load colors</option>';
+      }
+    } catch (e) {
+      console.error("Error loading colors:", e);
+      vehicleColor.innerHTML = '<option value="">Error loading colors</option>';
+    }
+  }
+
+  const btnCheckIbbPrice = document.getElementById("btnCheckIbbPrice");
+  const ibbValuationModal = document.getElementById("ibbValuationModal");
+  const btnCloseValuation = document.getElementById("btnCloseValuation");
+  
+  if (btnCheckIbbPrice && ibbValuationModal) {
+    btnCheckIbbPrice.addEventListener("click", async () => {
+      const year = mfgYear?.value;
+      const month = mfgMonth?.value ? Number(mfgMonth.value) : "";
+      const make = vehicleMake?.value;
+      const model = vehicleModel?.value;
+      const variant = vehicleVariant?.value;
+      const color = vehicleColor?.value;
+      const kms = document.getElementById("kilometreReading")?.value;
+      const ownerSelect = document.getElementById("osNo");
+      
+      let ownerVal = "";
+      if (ownerSelect) {
+        const rawOwner = ownerSelect.value;
+        if (rawOwner && rawOwner !== "None") {
+          ownerVal = rawOwner;
+        }
+      }
+      
+      if (!year || !month || !make || !model || !variant || !color || !kms || !ownerVal) {
+        alert("Please fill all required fields before checking price: Year, Month, Make, Model, Variant, Color, Odometer (KMS), and Owner Serial Number.");
+        return;
+      }
+      
+      const originalText = btnCheckIbbPrice.innerHTML;
+      btnCheckIbbPrice.disabled = true;
+      btnCheckIbbPrice.innerHTML = "⏳ Calculating Valuation...";
+      
+      try {
+        const url = `/api/ibb/price?year=${year}&month=${month}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&variant=${encodeURIComponent(variant)}&color=${encodeURIComponent(color)}&kms=${kms}&owner=${ownerVal}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.success && data.valuation) {
+          const val = data.valuation;
+          const cats = ["tradeIn", "private", "retail", "cpo"];
+          const conditions = ["fair", "market", "best"];
+          
+          cats.forEach(cat => {
+            conditions.forEach(cond => {
+              const elId = `price-${cat}-${cond}`;
+              const el = document.getElementById(elId);
+              if (el) {
+                 const price = val[cat] ? val[cat][cond] : null;
+                 el.textContent = price ? `₹ ${price.toLocaleString("en-IN")}` : "N/A";
+              }
+            });
+          });
+          
+          ibbValuationModal.classList.remove("hidden");
+        } else {
+          alert("Failed to calculate price: " + (data.error || "Unknown error"));
+        }
+      } catch (err) {
+        console.error("Valuation pricing error:", err);
+        alert("Error checking IBB price. Please try again.");
+      } finally {
+        btnCheckIbbPrice.disabled = false;
+        btnCheckIbbPrice.innerHTML = originalText;
+      }
+    });
+  }
+  
+  if (btnCloseValuation && ibbValuationModal) {
+    btnCloseValuation.addEventListener("click", () => {
+      ibbValuationModal.classList.add("hidden");
+    });
+    
+    ibbValuationModal.addEventListener("click", (e) => {
+      if (e.target === ibbValuationModal) {
+        ibbValuationModal.classList.add("hidden");
+      }
+    });
+  }
+  
+  const tabBtns = document.querySelectorAll(".ibb-tab-btn");
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      tabBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      
+      const tabName = btn.getAttribute("data-tab");
+      const contents = document.querySelectorAll(".ibb-tab-content");
+      contents.forEach(c => c.classList.remove("active"));
+      
+      const targetPane = document.getElementById(`pane-${tabName}`);
+      if (targetPane) {
+        targetPane.classList.add("active");
+      }
+    });
+  });
+
   if (vehicleMake && vehicleModel && vehicleVariant && mfgYear && mfgMonth) {
     vehicleMake.addEventListener("change", () => window.updateModelOptions());
     vehicleModel.addEventListener("change", () => window.updateVariantOptions());
@@ -1614,6 +1737,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     populateVehicleMakes();
+    populateVehicleColors();
   }
 
   // Initialize input validations
@@ -3480,6 +3604,7 @@ if (loanId) {
       if (data.mfgYear && data.mfgMonth) {
         populateVehicleMakes(data.vehicleMake || "", data.vehicleModel || "", data.vehicleVariant || "");
       }
+      populateVehicleColors(data.vehicleColor || "");
 
       // =========================
       // 5️⃣ Apply field visibility based on Source

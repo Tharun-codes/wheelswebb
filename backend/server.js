@@ -5086,9 +5086,12 @@ app.get("/api/ibb/price", async (req, res) => {
 
 // ==================== POLICY MANAGEMENT APIs ====================
 
-// Ensure loan_policies table exists
+// ==================== POLICY MANAGEMENT APIs ====================
+
+// Setup tables on startup
 (async () => {
   try {
+    // Main policies table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS loan_policies (
         id SERIAL PRIMARY KEY,
@@ -5107,16 +5110,38 @@ app.get("/api/ibb/price", async (req, res) => {
         abb NUMERIC NOT NULL,
         ltv NUMERIC NOT NULL,
         cibil INTEGER NOT NULL,
+        custom_field_values JSONB NOT NULL DEFAULT '{}',
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
+    // Add custom_field_values column if it doesn't exist (migration)
+    await pool.query(`
+      ALTER TABLE loan_policies ADD COLUMN IF NOT EXISTS custom_field_values JSONB NOT NULL DEFAULT '{}'
+    `);
+
+    // Custom field definitions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS policy_field_schemas (
+        id SERIAL PRIMARY KEY,
+        bank_id INTEGER NOT NULL,
+        product_type TEXT NOT NULL,
+        field_label TEXT NOT NULL,
+        field_type TEXT NOT NULL DEFAULT 'text',
+        field_options JSONB DEFAULT '[]',
+        is_required BOOLEAN DEFAULT false,
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     console.log("✅ loan_policies table ready");
+    console.log("✅ policy_field_schemas table ready");
   } catch (err) {
-    console.error("❌ Could not create loan_policies table:", err.message);
+    console.error("❌ Policy table setup error:", err.message);
   }
 })();
 
-// GET /api/policies?bankId=X — list policies for a bank
+// ── GET /api/policies?bankId=X ──────────────────────────────────
 app.get("/api/policies", async (req, res) => {
   try {
     const { bankId } = req.query;
@@ -5132,13 +5157,14 @@ app.get("/api/policies", async (req, res) => {
   }
 });
 
-// POST /api/policies — create a new policy
+// ── POST /api/policies ──────────────────────────────────────────
 app.post("/api/policies", async (req, res) => {
   try {
     const {
       bankId, bankName, productType, schemeName, loanAmt,
       tenure, ohp, incomeProfiles, panAadhar,
-      minAge, maxAge, applicant, abb, ltv, cibil
+      minAge, maxAge, applicant, abb, ltv, cibil,
+      customFieldValues
     } = req.body;
 
     if (!bankId || !productType || !schemeName) {
@@ -5148,13 +5174,15 @@ app.post("/api/policies", async (req, res) => {
     const { rows } = await pool.query(`
       INSERT INTO loan_policies
         (bank_id, bank_name, product_type, scheme_name, loan_amt, tenure, ohp,
-         income_profiles, pan_aadhar, min_age, max_age, applicant, abb, ltv, cibil)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         income_profiles, pan_aadhar, min_age, max_age, applicant, abb, ltv, cibil,
+         custom_field_values)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
       RETURNING *
     `, [
       bankId, bankName, productType, schemeName, loanAmt,
       tenure, ohp, JSON.stringify(incomeProfiles || []),
-      panAadhar, minAge, maxAge, applicant, abb, ltv, cibil
+      panAadhar, minAge, maxAge, applicant, abb, ltv, cibil,
+      JSON.stringify(customFieldValues || {})
     ]);
 
     res.status(201).json({ success: true, policy: rows[0] });
@@ -5164,7 +5192,7 @@ app.post("/api/policies", async (req, res) => {
   }
 });
 
-// DELETE /api/policies/:id — delete a policy
+// ── DELETE /api/policies/:id ────────────────────────────────────
 app.delete("/api/policies/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -5176,6 +5204,57 @@ app.delete("/api/policies/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete policy" });
   }
 });
+
+// ── GET /api/policy-fields?bankId=X&productType=Y ───────────────
+app.get("/api/policy-fields", async (req, res) => {
+  try {
+    const { bankId, productType } = req.query;
+    if (!bankId || !productType) {
+      return res.status(400).json({ error: "bankId and productType are required" });
+    }
+    const { rows } = await pool.query(
+      "SELECT * FROM policy_field_schemas WHERE bank_id=$1 AND product_type=$2 ORDER BY sort_order ASC, created_at ASC",
+      [bankId, productType]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("GET /api/policy-fields error:", err);
+    res.status(500).json({ error: "Failed to load custom fields" });
+  }
+});
+
+// ── POST /api/policy-fields ─────────────────────────────────────
+app.post("/api/policy-fields", async (req, res) => {
+  try {
+    const { bankId, productType, fieldLabel, fieldType, fieldOptions, isRequired, sortOrder } = req.body;
+    if (!bankId || !productType || !fieldLabel) {
+      return res.status(400).json({ error: "bankId, productType and fieldLabel are required" });
+    }
+    const { rows } = await pool.query(`
+      INSERT INTO policy_field_schemas (bank_id, product_type, field_label, field_type, field_options, is_required, sort_order)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `, [bankId, productType, fieldLabel, fieldType || "text", JSON.stringify(fieldOptions || []), !!isRequired, sortOrder || 0]);
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error("POST /api/policy-fields error:", err);
+    res.status(500).json({ error: "Failed to create custom field" });
+  }
+});
+
+// ── DELETE /api/policy-fields/:id ──────────────────────────────
+app.delete("/api/policy-fields/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rowCount } = await pool.query("DELETE FROM policy_field_schemas WHERE id = $1", [id]);
+    if (rowCount === 0) return res.status(404).json({ error: "Field not found" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /api/policy-fields error:", err);
+    res.status(500).json({ error: "Failed to delete field" });
+  }
+});
+
 
 // Start server in non-production; also export app for tests
 

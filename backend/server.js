@@ -4745,24 +4745,24 @@ function loginToIbb() {
   return new Promise((resolve, reject) => {
     const email = process.env.IBB_EMAIL || "vineesh1.nair@tatacapital.com";
     const password = process.env.IBB_PASSWORD || "9539373355";
-    
+
     https.get("https://partner.indianbluebook.com/auth/login?return_to=/dealer", (res) => {
       let data = "";
       const initialCookies = parseIbbCookies(res.headers["set-cookie"]);
-      
+
       res.on("data", (chunk) => { data += chunk; });
       res.on("end", () => {
         const token = extractToken(data);
         if (!token) {
           return reject(new Error("CSRF token not found on IBB login page"));
         }
-        
+
         const postData = querystring.stringify({
           _token: token,
           email,
           password
         });
-        
+
         const reqOptions = {
           hostname: "partner.indianbluebook.com",
           port: 443,
@@ -4775,21 +4775,21 @@ function loginToIbb() {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           }
         };
-        
+
         const postReq = https.request(reqOptions, (postRes) => {
           const finalCookies = { ...initialCookies, ...parseIbbCookies(postRes.headers["set-cookie"]) };
-          postRes.on("data", () => {});
+          postRes.on("data", () => { });
           postRes.on("end", () => {
             console.log("Logged in to IBB successfully");
             ibbSessionCookies = finalCookies;
             resolve(finalCookies);
           });
         });
-        
+
         postReq.on("error", (err) => {
           reject(err);
         });
-        
+
         postReq.write(postData);
         postReq.end();
       });
@@ -4813,7 +4813,7 @@ function requestIbbMaster(postData, cookies) {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
   };
-  
+
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
       let body = "";
@@ -4930,18 +4930,18 @@ function extractCategoryPrices(html, paneId) {
   const paneRegex = new RegExp(`<div\\s+id="${paneId}"[\\s\\S]*?<\\/table>`, "i");
   const paneMatch = html.match(paneRegex);
   if (!paneMatch) return null;
-  
+
   const paneHtml = paneMatch[0];
   const priceRegex = /<strong>(Fair|Market|Best)\s+Price<\/strong>[\s\S]*?<td[^>]*>[\s\S]*?([\d,]+)/gi;
   let match;
   const prices = {};
-  
+
   while ((match = priceRegex.exec(paneHtml)) !== null) {
     const type = match[1].toLowerCase();
     const value = parseInt(match[2].replace(/,/g, ""), 10);
     prices[type] = value;
   }
-  
+
   return prices;
 }
 
@@ -4956,7 +4956,7 @@ function fetchValuationPrice(params, cookies) {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
   };
-  
+
   return new Promise((resolve, reject) => {
     https.get(options, (res) => {
       let data = "";
@@ -4969,7 +4969,7 @@ function fetchValuationPrice(params, cookies) {
         if (!token) {
           return reject(new Error("Could not find CSRF token on IBB price check page"));
         }
-        
+
         const postData = {
           _token: token,
           pricefor: "0",
@@ -4983,7 +4983,7 @@ function fetchValuationPrice(params, cookies) {
           kms: params.kms,
           owner: params.owner
         };
-        
+
         const payload = querystring.stringify(postData);
         const postOptions = {
           hostname: "partner.indianbluebook.com",
@@ -4997,7 +4997,7 @@ function fetchValuationPrice(params, cookies) {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
           }
         };
-        
+
         const postReq = https.request(postOptions, (postRes) => {
           let postBody = "";
           postRes.on("data", (chunk) => { postBody += chunk; });
@@ -5005,7 +5005,7 @@ function fetchValuationPrice(params, cookies) {
             resolve(postBody);
           });
         });
-        
+
         postReq.on("error", reject);
         postReq.write(payload);
         postReq.end();
@@ -5058,7 +5058,7 @@ app.get("/api/ibb/price", async (req, res) => {
     if (!year || !month || !make || !model || !variant || !color || !kms || !owner) {
       return res.status(400).json({ error: "All parameters are required (year, month, make, model, variant, color, kms, owner)" });
     }
-    
+
     const htmlResponse = await callIbbValuationWithRetry({
       year,
       month,
@@ -5069,14 +5069,14 @@ app.get("/api/ibb/price", async (req, res) => {
       kms,
       owner
     });
-    
+
     const valuation = {
       tradeIn: extractCategoryPrices(htmlResponse, "Trade-In-Price"),
       private: extractCategoryPrices(htmlResponse, "Private-Price"),
       retail: extractCategoryPrices(htmlResponse, "Retail-Price"),
       cpo: extractCategoryPrices(htmlResponse, "CPO-Price")
     };
-    
+
     res.json({ success: true, valuation });
   } catch (err) {
     console.error("GET /api/ibb/price error:", err);

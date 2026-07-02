@@ -1453,31 +1453,22 @@
               </div>
 
 
-
               <div class="form-field">
 
-                <label for="vehicle">VEHICLE / VARIANT *</label>
+                <label for="vehicleLocation">VEHICLE LOCATION *</label>
 
-                <input id="vehicle" required data-uppercase />
+                <input id="vehicleLocation" required data-uppercase />
 
               </div>
 
 
-
               <div class="form-field">
 
-                <label for="osNo">O. S NO *</label>
+                <label for="mfgYear">MFG YEAR *</label>
 
-                <select id="osNo" required>
+                <select id="mfgYear" required>
 
-                  <option value="">O. S NO *</option>
-
-                  <option>None</option>
-                  <option>1</option>
-                  <option>2</option>
-                  <option>3</option>
-                  <option>4</option>
-                  <option>5</option>
+                  <option value="">MFG YEAR *</option>
 
                 </select>
 
@@ -1498,18 +1489,6 @@
               </div>
 
 
-
-              <div class="form-field">
-
-                <label for="mfgYear">MFG YEAR *</label>
-
-                <select id="mfgYear" required>
-
-                  <option value="">MFG YEAR *</option>
-
-                </select>
-
-              </div>
 
               <div class="form-field">
                 <label for="vehicleMake">MAKE *</label>
@@ -1539,6 +1518,11 @@
                 </select>
               </div>
 
+
+
+
+
+
               <div class="form-field">
 
                 <label for="vehicleAge">VEHICLE AGE</label>
@@ -1558,6 +1542,26 @@
               </div>
 
 
+              <div class="form-field">
+
+                <label for="osNo">O. S NO *</label>
+
+                <select id="osNo" required>
+
+                  <option value="">O. S NO *</option>
+
+                  <option>None</option>
+                  <option>1</option>
+                  <option>2</option>
+                  <option>3</option>
+                  <option>4</option>
+                  <option>4+</option>
+
+                </select>
+
+              </div>
+
+
 
               <div class="form-field">
 
@@ -1569,16 +1573,11 @@
 
 
 
-              <div class="form-field">
 
-                <label for="vehicleLocation">VEHICLE LOCATION *</label>
-
-                <input id="vehicleLocation" required data-uppercase />
-
-              </div>
 
               <div class="ibb-price-check-wrapper" style="margin-top: 1.5rem; text-align: center; grid-column: span 4;">
-                <button type="button" id="btnCheckIbbPrice" class="icon-btn plus-state" style="background: linear-gradient(135deg, #4f46e5, #06b6d4); font-size: 1rem; padding: 0.75rem 1.5rem; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                <button type="button" id="btnCheckIbbPrice" class="icon-btn plus-state"
+                  style="background: linear-gradient(135deg, #4f46e5, #06b6d4); font-size: 1rem; padding: 0.75rem 1.5rem; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                   🔍 Check IBB Valuation Price
                 </button>
               </div>
@@ -2855,13 +2854,13 @@
 
                 <option value="">STAGE *</option>
 
-                <option>Lead</option>
-                <option>Pitched</option>
-                <option>Login</option>
-                <option>Sanction</option>
+                <option>Open</option>
+                <option>Filed</option>
+                <option>Approved</option>
                 <option>Rejected</option>
                 <option>Disbursed</option>
-                <option>Loan Cancelled</option>
+                <option>Washout</option>
+                <option>Cancelled</option>
 
               </select>
 
@@ -3253,7 +3252,7 @@
           <button type="button" class="ibb-tab-btn" data-tab="retail">Retail</button>
           <button type="button" class="ibb-tab-btn" data-tab="cpo">CPO</button>
         </div>
-        
+
         <!-- Trade-In Pane -->
         <div class="ibb-tab-content active" id="pane-tradeIn">
           <div class="ibb-price-cards">
@@ -3357,9 +3356,11 @@
       z-index: 10000;
       transition: all 0.3s ease;
     }
+
     .ibb-modal.hidden {
       display: none !important;
     }
+
     .ibb-modal-content {
       background: white;
       border-radius: 20px;
@@ -3369,16 +3370,19 @@
       overflow: hidden;
       animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
+
     @keyframes modalSlideUp {
       from {
         opacity: 0;
         transform: translateY(30px) scale(0.95);
       }
+
       to {
         opacity: 1;
         transform: translateY(0) scale(1);
       }
     }
+
     .ibb-modal-header {
       background: linear-gradient(135deg, #4f46e5, #06b6d4);
       color: white;
@@ -3387,11 +3391,13 @@
       justify-content: space-between;
       align-items: center;
     }
+
     .ibb-modal-header h4 {
       margin: 0;
       font-size: 1.25rem;
       font-weight: 700;
     }
+
     .ibb-modal-close {
       font-size: 1.75rem;
       font-weight: 700;
@@ -3399,12 +3405,15 @@
       opacity: 0.8;
       transition: opacity 0.2s;
     }
+
     .ibb-modal-close:hover {
       opacity: 1;
     }
+
     .ibb-modal-body {
       padding: 1.5rem;
     }
+
     .ibb-tabs {
       display: flex;
       gap: 0.5rem;
@@ -3412,6 +3421,7 @@
       padding-bottom: 0.75rem;
       margin-bottom: 1.5rem;
     }
+
     .ibb-tab-btn {
       flex: 1;
       background: #f8fafc;
@@ -3424,27 +3434,33 @@
       cursor: pointer;
       transition: all 0.2s;
     }
+
     .ibb-tab-btn:hover {
       background: #f1f5f9;
       color: #475569;
     }
+
     .ibb-tab-btn.active {
       background: #4f46e5;
       color: white;
       border-color: #4f46e5;
       box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
     }
+
     .ibb-tab-content {
       display: none;
     }
+
     .ibb-tab-content.active {
       display: block;
     }
+
     .ibb-price-cards {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
     }
+
     .ibb-price-card {
       background: #f8fafc;
       border: 2px solid #e2e8f0;
@@ -3456,32 +3472,52 @@
       gap: 0.5rem;
       transition: all 0.2s;
     }
-    .ibb-price-card.fair { border-color: #cbd5e1; }
+
+    .ibb-price-card.fair {
+      border-color: #cbd5e1;
+    }
+
     .ibb-price-card.market.active {
       border-color: #10b981;
       background: #f0fdf4;
       transform: scale(1.03);
       box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.1);
     }
-    .ibb-price-card.best { border-color: #0ea5e9; background: #f0f9ff; }
-    
+
+    .ibb-price-card.best {
+      border-color: #0ea5e9;
+      background: #f0f9ff;
+    }
+
     .price-title {
       font-size: 0.85rem;
       font-weight: 700;
       text-transform: uppercase;
       color: #64748b;
     }
-    .ibb-price-card.market .price-title { color: #059669; }
-    .ibb-price-card.best .price-title { color: #0284c7; }
-    
+
+    .ibb-price-card.market .price-title {
+      color: #059669;
+    }
+
+    .ibb-price-card.best .price-title {
+      color: #0284c7;
+    }
+
     .price-value {
       font-size: 1.3rem;
       font-weight: 800;
       color: #0f172a;
     }
-    .ibb-price-card.market .price-value { color: #047857; }
-    .ibb-price-card.best .price-value { color: #0369a1; }
-    
+
+    .ibb-price-card.market .price-value {
+      color: #047857;
+    }
+
+    .ibb-price-card.best .price-value {
+      color: #0369a1;
+    }
+
     .price-desc {
       font-size: 0.75rem;
       color: #94a3b8;

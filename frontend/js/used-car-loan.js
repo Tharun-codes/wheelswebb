@@ -27,33 +27,33 @@ const isEditMode = !!loanId;
 function calculateAge() {
   const dobInput = document.getElementById('applicantDob');
   const ageDisplay = document.getElementById('currentAge');
-  
+
   if (!dobInput || !ageDisplay) return;
-  
+
   const dob = new Date(dobInput.value);
   const today = new Date();
-  
+
   if (isNaN(dob.getTime())) {
     ageDisplay.textContent = '';
     return;
   }
-  
+
   let years = today.getFullYear() - dob.getFullYear();
   let months = today.getMonth() - dob.getMonth();
   let days = today.getDate() - dob.getDate();
-  
+
   // Adjust for negative months or days
   if (days < 0) {
     months--;
     const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
     days += lastMonth.getDate();
   }
-  
+
   if (months < 0) {
     years--;
     months += 12;
   }
-  
+
   // Format the age display
   let ageText = 'Current Age: ';
   if (years > 0) {
@@ -66,7 +66,7 @@ function calculateAge() {
   if (years === 0 && months === 0) {
     ageText += 'Less than 1 month';
   }
-  
+
   ageDisplay.textContent = ageText;
 }
 
@@ -141,7 +141,7 @@ function toggleBasicFieldsBySource() {
 
   function applyVisibility() {
     const val = (source.value || '').toLowerCase().trim();
-    
+
     // 🎯 Auto-populate dealer name when dealer selects "Dealer" source
     if (val === 'dealer') {
       const user = getUserFromStorage();
@@ -217,26 +217,26 @@ function initializeRoleBasedVisibility() {
   if (user.role === 'dealer') {
     // Add dealer mode class to body
     document.body.classList.add('dealer-mode');
-    
+
     // Hide all dealer-hidden sections
     const hiddenSections = document.querySelectorAll('.dealer-hidden');
     hiddenSections.forEach(section => {
       section.style.display = 'none';
     });
-    
+
     // Show only dealer-visible sections (they're already visible by default)
     const visibleSections = document.querySelectorAll('.dealer-visible');
     visibleSections.forEach(section => {
       section.style.display = 'block';
     });
-    
+
     // Remove required attribute from hidden fields to prevent validation issues
     const hiddenFields = document.querySelectorAll('.dealer-hidden input[required], .dealer-hidden select[required], .dealer-hidden textarea[required]');
     hiddenFields.forEach(field => {
       field.removeAttribute('required');
       field.dataset.wasRequired = 'true'; // Mark as was required for later
     });
-    
+
     // 🎯 Hide Source dropdown for dealers and auto-set to "Dealer"
     const sourceWrapper = document.getElementById('sourceWrapper');
     const source = document.getElementById('source');
@@ -244,7 +244,7 @@ function initializeRoleBasedVisibility() {
       sourceWrapper.style.display = 'none';
       source.value = 'Dealer'; // Auto-set source to "Dealer"
     }
-    
+
     // 🎯 Show Dealer Name field and auto-populate
     const dealerNameWrapper = document.getElementById('basicDealerNameWrapper');
     const dealerNameInput = document.getElementById('basicDealerName');
@@ -256,7 +256,7 @@ function initializeRoleBasedVisibility() {
       dealerNameInput.required = true;
       console.log(`🏷️ Auto-populated dealer name for dealer: ${user.username}`);
     }
-    
+
     // 🎯 Show Ref Name / Mob No field for dealers
     const refWrapper = document.getElementById('basicRefWrapper');
     const refInput = document.getElementById('basicRefNameMobile');
@@ -264,16 +264,16 @@ function initializeRoleBasedVisibility() {
       refWrapper.classList.remove('hidden');
       refInput.required = true;
     }
-    
+
     // Hide all other dealer-related fields
     const caseDealerWrapper = document.getElementById('basicCaseDealerWrapper');
     const dealerSelectWrapper = document.getElementById('basicCaseDealerSelectWrapper');
     if (caseDealerWrapper) caseDealerWrapper.classList.add('hidden');
     if (dealerSelectWrapper) dealerSelectWrapper.classList.add('hidden');
-    
+
     // Update form header for dealer
     updateFormHeaderForDealer();
-    
+
     // Add submit button for dealer
     addDealerSubmitButton();
   }
@@ -295,11 +295,11 @@ function getUserFromStorage() {
 function updateFormHeaderForDealer() {
   const headerTitle = document.querySelector('.form-header h1');
   const headerDescription = document.querySelector('.form-header p');
-  
+
   if (headerTitle) {
     headerTitle.textContent = 'Used Car Loan Application - Dealer Portal';
   }
-  
+
   if (headerDescription) {
     headerDescription.textContent = 'Fill in the basic information below. Our team will complete the remaining details.';
   }
@@ -309,13 +309,13 @@ function updateFormHeaderForDealer() {
 function addDealerSubmitButton() {
   const form = document.getElementById('leadForm');
   if (!form) return;
-  
+
   // Check if dealer submit button already exists
   if (document.getElementById('dealerSubmitBtn')) return;
-  
+
   const submitSection = document.createElement('div');
   submitSection.style.cssText = 'text-align: center; margin: 2rem 0; padding: 2rem; background: #f8fafc; border-radius: 12px; border: 2px dashed #d1d5db;';
-  
+
   submitSection.innerHTML = `
     <p style="margin: 0 0 1rem 0; color: #6b7280; font-weight: 500;">
       📋 Once you submit this form, our team will review and complete the remaining information.
@@ -324,9 +324,9 @@ function addDealerSubmitButton() {
       Submit Application for Review
     </button>
   `;
-  
+
   form.appendChild(submitSection);
-  
+
   // Add click handler for dealer submit
   document.getElementById('dealerSubmitBtn').addEventListener('click', handleDealerSubmit);
 }
@@ -335,17 +335,17 @@ function addDealerSubmitButton() {
 function handleDealerSubmit() {
   const form = document.getElementById('leadForm');
   if (!form) return;
-  
+
   // Validate only visible fields
   const visibleRequiredFields = form.querySelectorAll('.dealer-visible [required], .dealer-visible input[required], .dealer-visible select[required], .dealer-visible textarea[required]');
   let isValid = true;
   let firstInvalidField = null;
-  
+
   // Clear previous validation states
   visibleRequiredFields.forEach(field => {
     field.style.borderColor = '';
   });
-  
+
   // Validate visible required fields
   visibleRequiredFields.forEach(field => {
     if (!field.value.trim()) {
@@ -354,7 +354,7 @@ function handleDealerSubmit() {
       isValid = false;
     }
   });
-  
+
   if (!isValid) {
     alert('Please fill in all required fields before submitting.');
     if (firstInvalidField) {
@@ -363,15 +363,15 @@ function handleDealerSubmit() {
     }
     return;
   }
-  
+
   // Show confirmation
   if (confirm('Are you sure you want to submit this application? Our team will review and complete the remaining details.')) {
     // Mark as dealer submitted
     markAsDealerSubmitted();
-    
+
     // Submit to server with dealer assignment logic
     submitDealerForm();
-    
+
     // Show success message
     showDealerSuccessMessage();
   }
@@ -381,37 +381,37 @@ function handleDealerSubmit() {
 function submitDealerForm() {
   const form = document.getElementById('leadForm');
   if (!form) return;
-  
+
   const user = getUserFromStorage();
   if (!user) {
     alert('User session not found. Please login again.');
     return;
   }
-  
+
   // Collect all form data
   const formData = new FormData(form);
   const data = {};
-  
+
   // Add all form fields
   for (let [key, value] of formData.entries()) {
     data[key] = value;
   }
-  
+
   // 🎯 Ensure source is set to "Dealer" for dealer submissions
   data.source = 'Dealer';
-  
+
   // Add user information
   data.userId = user.id;
   data.role = user.role;
   data.loanType = data.loanType || 'used-car-loan';
   data.loanStage = 'Lead';
-  
+
   // Mark as dealer submitted
   data.dealerSubmitted = 'true';
   data.dealerSubmittedTime = new Date().toISOString();
-  
+
   console.log('Submitting dealer lead:', data);
-  
+
   // Submit to server
   fetch('/api/leads', {
     method: 'POST',
@@ -420,23 +420,23 @@ function submitDealerForm() {
     },
     body: JSON.stringify(data)
   })
-  .then(response => response.json())
-  .then(result => {
-    if (result.success) {
-      console.log('Dealer lead submitted successfully:', result.loanId);
-      // Update loan ID if server generated a new one
-      if (result.loanId && data.loanId !== result.loanId) {
-        document.getElementById('loanId').value = result.loanId;
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        console.log('Dealer lead submitted successfully:', result.loanId);
+        // Update loan ID if server generated a new one
+        if (result.loanId && data.loanId !== result.loanId) {
+          document.getElementById('loanId').value = result.loanId;
+        }
+      } else {
+        console.error('Failed to submit dealer lead:', result.error);
+        alert('Failed to submit application. Please try again.');
       }
-    } else {
-      console.error('Failed to submit dealer lead:', result.error);
-      alert('Failed to submit application. Please try again.');
-    }
-  })
-  .catch(error => {
-    console.error('Error submitting dealer lead:', error);
-    alert('Error submitting application. Please try again.');
-  });
+    })
+    .catch(error => {
+      console.error('Error submitting dealer lead:', error);
+      alert('Error submitting application. Please try again.');
+    });
 }
 
 // Mark form as dealer submitted
@@ -474,14 +474,14 @@ function generateLoanId() {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
-  
+
   // Get current counter from localStorage or start with 0
   const storageKey = `loanCounter_${year}${month}`;
   let counter = parseInt(localStorage.getItem(storageKey) || '0');
-  
+
   // Generate loan ID: YYYYMM0001 format (don't increment yet)
   const loanId = `${year}${month}${String(counter + 1).padStart(4, '0')}`;
-  
+
   return { loanId, storageKey, counter };
 }
 
@@ -492,21 +492,21 @@ function incrementLoanCounter(storageKey, currentCounter) {
 }
 
 // Set loan ID and initialize form when page loads
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   // Initialize role-based field visibility for dealers only
   initializeRoleBasedVisibility();
-  
+
   // Initialize progress tracking
   updateProgress();
-  
+
   // Initialize loan ID
   const loanIdField = document.getElementById('loanId');
-    if (loanIdField && !loanId) {   // 👈 do NOT generate when editing
-      const { loanId } = generateLoanId();
-      loanIdField.value = loanId;
+  if (loanIdField && !loanId) {   // 👈 do NOT generate when editing
+    const { loanId } = generateLoanId();
+    loanIdField.value = loanId;
 
     loanIdField.readOnly = true;
-    
+
     // Add visual indicator that it's auto-generated
     loanIdField.style.backgroundColor = '#f8fafc';
     loanIdField.style.color = '#6b7280';
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const btToggleBtn = document.getElementById('btToggleBtn');
   const btFields = document.getElementById('btFields');
   if (btToggleBtn && btFields) {
-    btToggleBtn.addEventListener('click', function() {
+    btToggleBtn.addEventListener('click', function () {
       btFields.classList.toggle('hidden');
       // Update button text based on visibility
       this.textContent = btFields.classList.contains('hidden') ? 'Vehicle BT' : 'Hide BT Fields';
@@ -559,7 +559,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const user = getUserFromStorage();
       const source = document.getElementById('source');
       const dealerNameInput = document.getElementById('basicDealerName');
-      
+
       if (user && user.role === 'dealer' && source && source.value === 'dealer' && dealerNameInput) {
         dealerNameInput.value = user.username;
         dealerNameInput.style.backgroundColor = '#f8fafc';
@@ -616,12 +616,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let years = currentYear - yearVal;
     let months = currentMonth - monthVal;
-    
+
     if (months < 0) {
       years--;
       months += 12;
     }
-    
+
     const totalMonths = (years * 12) + months;
     vehicleAgeInput.value = totalMonths + " months";
   }
@@ -1470,7 +1470,7 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const res = await fetch(`/api/ibb/makes?year=${yearValue}&month=${monthValue}`);
       const data = await res.json();
-      
+
       vehicleMake.innerHTML = '<option value="">Select Make</option>';
       if (data.success && data.makes) {
         data.makes.forEach((make) => {
@@ -1480,7 +1480,7 @@ document.addEventListener('DOMContentLoaded', function() {
           vehicleMake.appendChild(opt);
         });
         vehicleMake.disabled = false;
-        
+
         if (selectedMake && data.makes.includes(selectedMake)) {
           vehicleMake.value = selectedMake;
           await window.updateModelOptions(selectedModel, selectedVariant);
@@ -1504,7 +1504,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  window.updateModelOptions = async function(selectedModel = "", selectedVariant = "") {
+  window.updateModelOptions = async function (selectedModel = "", selectedVariant = "") {
     if (!vehicleMake || !vehicleModel || !mfgYear || !mfgMonth) return;
 
     const makeVal = vehicleMake.value;
@@ -1557,7 +1557,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  window.updateVariantOptions = async function(selectedVariant = "") {
+  window.updateVariantOptions = async function (selectedVariant = "") {
     if (!vehicleMake || !vehicleModel || !vehicleVariant || !mfgYear || !mfgMonth) return;
 
     const makeVal = vehicleMake.value;
@@ -1632,7 +1632,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const btnCheckIbbPrice = document.getElementById("btnCheckIbbPrice");
   const ibbValuationModal = document.getElementById("ibbValuationModal");
   const btnCloseValuation = document.getElementById("btnCloseValuation");
-  
+
   if (btnCheckIbbPrice && ibbValuationModal) {
     btnCheckIbbPrice.addEventListener("click", async () => {
       const year = mfgYear?.value;
@@ -1643,7 +1643,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const color = vehicleColor?.value;
       const kms = document.getElementById("kilometreReading")?.value;
       const ownerSelect = document.getElementById("osNo");
-      
+
       let ownerVal = "";
       if (ownerSelect) {
         const rawOwner = ownerSelect.value;
@@ -1651,37 +1651,37 @@ document.addEventListener('DOMContentLoaded', function() {
           ownerVal = rawOwner;
         }
       }
-      
+
       if (!year || !month || !make || !model || !variant || !color || !kms || !ownerVal) {
         alert("Please fill all required fields before checking price: Year, Month, Make, Model, Variant, Color, Odometer (KMS), and Owner Serial Number.");
         return;
       }
-      
+
       const originalText = btnCheckIbbPrice.innerHTML;
       btnCheckIbbPrice.disabled = true;
       btnCheckIbbPrice.innerHTML = "⏳ Calculating Valuation...";
-      
+
       try {
         const url = `/api/ibb/price?year=${year}&month=${month}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&variant=${encodeURIComponent(variant)}&color=${encodeURIComponent(color)}&kms=${kms}&owner=${ownerVal}`;
         const res = await fetch(url);
         const data = await res.json();
-        
+
         if (data.success && data.valuation) {
           const val = data.valuation;
           const cats = ["tradeIn", "private", "retail", "cpo"];
           const conditions = ["fair", "market", "best"];
-          
+
           cats.forEach(cat => {
             conditions.forEach(cond => {
               const elId = `price-${cat}-${cond}`;
               const el = document.getElementById(elId);
               if (el) {
-                 const price = val[cat] ? val[cat][cond] : null;
-                 el.textContent = price ? `₹ ${price.toLocaleString("en-IN")}` : "N/A";
+                const price = val[cat] ? val[cat][cond] : null;
+                el.textContent = price ? `₹ ${price.toLocaleString("en-IN")}` : "N/A";
               }
             });
           });
-          
+
           ibbValuationModal.classList.remove("hidden");
         } else {
           alert("Failed to calculate price: " + (data.error || "Unknown error"));
@@ -1695,29 +1695,29 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-  
+
   if (btnCloseValuation && ibbValuationModal) {
     btnCloseValuation.addEventListener("click", () => {
       ibbValuationModal.classList.add("hidden");
     });
-    
+
     ibbValuationModal.addEventListener("click", (e) => {
       if (e.target === ibbValuationModal) {
         ibbValuationModal.classList.add("hidden");
       }
     });
   }
-  
+
   const tabBtns = document.querySelectorAll(".ibb-tab-btn");
   tabBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       tabBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      
+
       const tabName = btn.getAttribute("data-tab");
       const contents = document.querySelectorAll(".ibb-tab-content");
       contents.forEach(c => c.classList.remove("active"));
-      
+
       const targetPane = document.getElementById(`pane-${tabName}`);
       if (targetPane) {
         targetPane.classList.add("active");
@@ -1728,14 +1728,14 @@ document.addEventListener('DOMContentLoaded', function() {
   if (vehicleMake && vehicleModel && vehicleVariant && mfgYear && mfgMonth) {
     vehicleMake.addEventListener("change", () => window.updateModelOptions());
     vehicleModel.addEventListener("change", () => window.updateVariantOptions());
-    
+
     mfgYear.addEventListener("change", () => {
       populateVehicleMakes(vehicleMake.value, vehicleModel.value, vehicleVariant.value);
     });
     mfgMonth.addEventListener("change", () => {
       populateVehicleMakes(vehicleMake.value, vehicleModel.value, vehicleVariant.value);
     });
-    
+
     populateVehicleMakes();
     populateVehicleColors();
   }
@@ -1796,15 +1796,15 @@ function makeSectionsReadOnlyForEmployees() {
   const isEmployee = user && user.role === 'employee';
   const loanStage = document.getElementById('loanStage');
   const isDisbursed = loanStage && loanStage.value === 'Disbursed';
-  
+
   if (!isEmployee || !isDisbursed) return;
-  
+
   // Make UTR Information section read-only
   const utrFields = document.getElementById('utrFields');
   if (utrFields) {
     utrFields.style.opacity = '0.6';
     utrFields.title = 'Employees cannot edit UTR Information';
-    
+
     // Disable all inputs in UTR section
     utrFields.querySelectorAll('input, select, textarea, button').forEach(el => {
       if (el.type !== 'hidden') {
@@ -1813,13 +1813,13 @@ function makeSectionsReadOnlyForEmployees() {
       }
     });
   }
-  
+
   // Make Motor Insurance section read-only
   const motorInsuranceFields = document.getElementById('motorInsuranceFields');
   if (motorInsuranceFields) {
     motorInsuranceFields.style.opacity = '0.6';
     motorInsuranceFields.title = 'Employees cannot edit Motor Insurance';
-    
+
     // Disable all inputs in Motor Insurance section
     motorInsuranceFields.querySelectorAll('input, select, textarea, button').forEach(el => {
       if (el.type !== 'hidden') {
@@ -1828,25 +1828,25 @@ function makeSectionsReadOnlyForEmployees() {
       }
     });
   }
-  
+
   // Also disable RTO CHARGES and CHALLAN/FINE CHARGES for employees
   const rtoCharges = document.getElementById('disbursedRtoCharges');
   const challanCharges = document.getElementById('disbursedChallanFineCharges');
-  
+
   if (rtoCharges) {
     rtoCharges.disabled = true;
     rtoCharges.style.opacity = '0.6';
     rtoCharges.style.cursor = 'not-allowed';
     rtoCharges.title = 'Employees cannot edit RTO Charges';
   }
-  
+
   if (challanCharges) {
     challanCharges.disabled = true;
     challanCharges.style.opacity = '0.6';
     challanCharges.style.cursor = 'not-allowed';
     challanCharges.title = 'Employees cannot edit Challan/Fine Charges';
   }
-  
+
   // Also disable disbursed Motor Insurance input field EXCEPT for employees
   const disbursedMotorInsurance = document.getElementById('disbursedMotorInsurance');
   if (disbursedMotorInsurance) {
@@ -1872,13 +1872,13 @@ function updateProgress() {
     if (field.type === 'checkbox') return field.checked;
     return field.value.trim() !== '';
   });
-  
+
   const progress = Math.round((filledRequiredFields.length / requiredFields.length) * 100);
   const progressBar = document.getElementById('progressBar');
   if (progressBar) {
     progressBar.style.width = progress + '%';
   }
-  
+
   return progress;
 }
 
@@ -1999,21 +1999,21 @@ async function loadDealerOptions() {
     console.error('Dealer select element not found');
     return;
   }
-  
+
   // Always clear hardcoded options immediately (DSA list in HTML)
   dealerSelect.innerHTML = '';
   const loadingOpt = document.createElement('option');
   loadingOpt.value = '';
   loadingOpt.textContent = 'Loading dealers...';
   dealerSelect.appendChild(loadingOpt);
-  
+
   console.log('Loading dealers using /api/all-users endpoint...');
-  
+
   try {
     // Use the same API as view-cases to get all users
     const res = await fetch('/api/all-users');
     console.log('All users API response status:', res.status);
-    
+
     if (!res.ok) {
       console.error('All users API error:', res.status);
       dealerSelect.innerHTML = '';
@@ -2023,14 +2023,14 @@ async function loadDealerOptions() {
       dealerSelect.appendChild(opt);
       return;
     }
-    
+
     const allUsers = await res.json();
     console.log('All users received:', allUsers);
-    
+
     // Filter only users with role 'dealer'
     const dealers = allUsers.filter(user => user.role === 'dealer');
     console.log('Filtered dealers:', dealers);
-    
+
     if (dealers.length === 0) {
       console.warn('No dealers found in user list');
       dealerSelect.innerHTML = '';
@@ -2040,13 +2040,13 @@ async function loadDealerOptions() {
       dealerSelect.appendChild(opt);
       return;
     }
-    
+
     dealerSelect.innerHTML = '';
     const placeholder = document.createElement('option');
     placeholder.value = '';
     placeholder.textContent = 'Select Dealer';
     dealerSelect.appendChild(placeholder);
-    
+
     // Add dealers to dropdown
     dealers.forEach(d => {
       const opt = document.createElement('option');
@@ -2054,7 +2054,7 @@ async function loadDealerOptions() {
       opt.value = d.id;
       dealerSelect.appendChild(opt);
     });
-    
+
     console.log('Dealer options populated:', dealers.length, 'dealers');
   } catch (err) {
     console.error('Failed to load dealers:', err);
@@ -2069,17 +2069,17 @@ async function loadDealerOptions() {
 // Form validation and submission
 function handleFormSubmit(e) {
   e.preventDefault();
-  
+
   const form = e.target;
   const requiredFields = form.querySelectorAll('[required]');
   let isValid = true;
   let firstInvalidField = null;
-  
+
   // Clear previous validation states
   requiredFields.forEach(field => {
     field.style.borderColor = '';
   });
-  
+
   // Validate required fields
   requiredFields.forEach(field => {
     if (!field.value.trim()) {
@@ -2088,7 +2088,7 @@ function handleFormSubmit(e) {
       if (!firstInvalidField) firstInvalidField = field;
     }
   });
-  
+
   if (!isValid) {
     // Show error message
     showError('Please fill in all required fields');
@@ -2099,10 +2099,10 @@ function handleFormSubmit(e) {
     }
     return;
   }
-  
+
   // Show loading state
   showLoading();
-  
+
   // Simulate form submission (replace with actual submission logic)
   setTimeout(() => {
     hideLoading();
@@ -2131,11 +2131,11 @@ function showNotification(message, type = 'info') {
   // Remove existing notifications
   const existing = document.querySelector('.notification');
   if (existing) existing.remove();
-  
+
   const notification = document.createElement('div');
   notification.className = `notification ${type}`;
   notification.textContent = message;
-  
+
   // Style the notification
   Object.assign(notification.style, {
     position: 'fixed',
@@ -2149,7 +2149,7 @@ function showNotification(message, type = 'info') {
     animation: 'slideIn 0.3s ease-out',
     maxWidth: '400px'
   });
-  
+
   if (type === 'error') {
     notification.style.background = 'var(--error-color)';
   } else if (type === 'success') {
@@ -2157,9 +2157,9 @@ function showNotification(message, type = 'info') {
   } else {
     notification.style.background = 'var(--primary-color)';
   }
-  
+
   document.body.appendChild(notification);
-  
+
   // Auto remove after 5 seconds
   setTimeout(() => {
     notification.style.animation = 'slideOut 0.3s ease-out';
@@ -2174,7 +2174,7 @@ function showLoading() {
     submitBtn.textContent = '⏳ Submitting...';
     submitBtn.classList.add('loading');
   }
-  
+
   // Add loading overlay
   const overlay = document.createElement('div');
   overlay.className = 'loading-overlay';
@@ -2204,7 +2204,7 @@ function hideLoading() {
     submitBtn.textContent = '🚀 Submit Application';
     submitBtn.classList.remove('loading');
   }
-  
+
   // Remove loading overlay
   const overlay = document.querySelector('.loading-overlay');
   if (overlay) overlay.remove();
@@ -2405,8 +2405,8 @@ function toggleSpouseField() {
 
 function toggleProprietorshipInfoField() {
   const needsProprietorshipInfo = employmentCustomerProfile && (
-    employmentCustomerProfile.value === "Self-Employed" || 
-    employmentCustomerProfile.value === "ITR" || 
+    employmentCustomerProfile.value === "Self-Employed" ||
+    employmentCustomerProfile.value === "ITR" ||
     employmentCustomerProfile.value === "Agriculture"
   );
   if (proprietorshipInfoField) {
@@ -2467,8 +2467,8 @@ function createAdditionalApplicantBlock(index) {
           <select id="additionalApplicant${index}Type">
             <option value="">APPLICANT TYPE *</option>
             ${index === 3
-              ? '<option value="Guarantor">Guarantor</option>'
-              : '<option value="Co-Applicant">Co-Applicant</option><option value="Guarantor">Guarantor</option>'}
+      ? '<option value="Guarantor">Guarantor</option>'
+      : '<option value="Co-Applicant">Co-Applicant</option><option value="Guarantor">Guarantor</option>'}
           </select>
         </div>
 
@@ -2874,7 +2874,7 @@ function initializeAdditionalApplicants() {
     if (typeof setupRemoveButtonBehavior === 'function') setupRemoveButtonBehavior(block);
 
     const nameInput = block.querySelector("[id$='Name']");
-if (nameInput) nameInput.required = false;
+    if (nameInput) nameInput.required = false;
 
     block.scrollIntoView({ behavior: "smooth", block: "center" });
 
@@ -3006,21 +3006,21 @@ function toggleDisbursedFields() {
   if (loanStage && disbursedFields) {
     const isDisbursed = loanStage.value === "Disbursed";
     disbursedFields.classList.toggle("hidden", !isDisbursed);
-    
+
     // Apply employee read-only restrictions when disbursed
     if (isDisbursed) {
       makeSectionsReadOnlyForEmployees();
     }
-    
+
     // Toggle UTR fields
     if (utrFields) {
       utrFields.classList.toggle("hidden", !isDisbursed);
-      
+
       // Auto-fill UTR Date if Disbursed and empty
       const utrDateInput = document.getElementById("utrDate1");
       if (isDisbursed && utrDateInput && !utrDateInput.value) {
-         const today = new Date().toISOString().split('T')[0];
-         utrDateInput.value = today;
+        const today = new Date().toISOString().split('T')[0];
+        utrDateInput.value = today;
       }
     }
 
@@ -3047,28 +3047,28 @@ function toggleDisbursedFields() {
 if (addPaymentBtn && removePaymentBtn && paymentContainer) {
   addPaymentBtn.addEventListener("click", () => {
     if (paymentCount >= MAX_PAYMENTS) return;
-    
+
     paymentCount++;
     const newBlock = createPaymentBlock(paymentCount);
     paymentContainer.appendChild(newBlock);
-    
+
     // Re-apply validation to dynamically created fields
     enforceUppercase();
     enforceAlphabetsOnly();
     enforceNumbersOnly();
-    
+
     updatePaymentButtons();
   });
-  
+
   removePaymentBtn.addEventListener("click", () => {
     if (paymentCount <= 0) return;
-    
+
     const blockToRemove = document.getElementById(`paymentBlock${paymentCount}`);
     if (blockToRemove) {
       blockToRemove.remove();
       paymentCount--;
     }
-    
+
     updatePaymentButtons();
   });
 }
@@ -3223,18 +3223,18 @@ if (loanStage) {
 function calculateInsuranceValidity() {
   const expiryDateInput = document.getElementById("motorInsuranceExpiry");
   const validityDaysInput = document.getElementById("motorInsuranceValidity");
-  
+
   if (!expiryDateInput || !validityDaysInput) return;
-  
+
   const expiryDate = new Date(expiryDateInput.value);
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Set to start of day for accurate calculation
   expiryDate.setHours(0, 0, 0, 0); // Set to start of day for accurate calculation
-  
+
   if (expiryDate && !isNaN(expiryDate.getTime())) {
     const timeDiff = expiryDate.getTime() - today.getTime();
     const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-    
+
     if (daysDiff >= 0) {
       validityDaysInput.value = `${daysDiff} days remaining`;
       validityDaysInput.style.color = '#10b981'; // Green
@@ -3249,7 +3249,7 @@ function calculateInsuranceValidity() {
 }
 
 // Add event listener for insurance expiry date
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const motorInsuranceExpiryInput = document.getElementById("motorInsuranceExpiry");
   if (motorInsuranceExpiryInput) {
     motorInsuranceExpiryInput.addEventListener('change', calculateInsuranceValidity);
@@ -3277,7 +3277,7 @@ function calculateDisbursedAmounts() {
   const sanction = getVal(calcFields.sanction);
   const loanIns = getVal(calcFields.loanIns);
   const motorIns = getVal(calcFields.motorIns);
-  
+
   // Total Loan Amount = Sanction + Loan Ins + Motor Ins
   if (calcFields.total) {
     calcFields.total.value = sanction + loanIns + motorIns;
@@ -3330,7 +3330,7 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
   // 🎯 Collect and structure UTR payment data
   const payments = [];
   const paymentBlocks = document.querySelectorAll('.payment-block');
-  
+
   paymentBlocks.forEach((block, index) => {
     const blockIndex = index + 1;
     const paymentData = {
@@ -3343,13 +3343,13 @@ document.getElementById("leadForm").addEventListener("submit", async (e) => {
       ifsc: document.getElementById(`utrIfsc${blockIndex}`)?.value || '',
       remarks: document.getElementById(`utrRemarks${blockIndex}`)?.value || ''
     };
-    
+
     // Only add payment if it has some data
     if (paymentData.date || paymentData.amount || paymentData.utrNo) {
       payments.push(paymentData);
     }
   });
-  
+
   if (payments.length > 0) {
     leadData.payments = payments;
   }
@@ -3420,10 +3420,10 @@ let selectedRtoDocs = [];
 
 function renderRtoDropdown() {
   if (!rtoDropdown) return;
-  
+
   const user = getUserFromStorage();
   const isEmployee = user && user.role === 'employee';
-  
+
   rtoDropdown.innerHTML = "";
   rtoOptions.forEach(opt => {
     const div = document.createElement("div");
@@ -3431,14 +3431,14 @@ function renderRtoDropdown() {
     if (selectedRtoDocs.includes(opt)) {
       div.classList.add("selected");
     }
-    
+
     // Make options non-clickable for employee role (read-only)
     if (isEmployee) {
       div.style.opacity = "0.6";
       div.style.cursor = "not-allowed";
       div.title = "Employees can view but not edit RTO Documents";
     }
-    
+
     div.textContent = opt;
     div.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -3453,18 +3453,18 @@ function renderRtoDropdown() {
 
 function updateRtoDisplay() {
   if (!rtoDisplay) return;
-  
+
   const user = getUserFromStorage();
   const isEmployee = user && user.role === 'employee';
-  
+
   rtoDisplay.innerHTML = "";
-  
+
   if (isEmployee) {
     rtoDisplay.style.opacity = "0.6";
     rtoDisplay.style.cursor = "not-allowed";
     rtoDisplay.title = "Employees can view but not edit RTO Documents";
   }
-  
+
   if (selectedRtoDocs.length === 0) {
     rtoDisplay.innerHTML = '<span class="multi-select-placeholder">Select RTO Documents...</span>';
   } else {
@@ -3472,16 +3472,16 @@ function updateRtoDisplay() {
       const tag = document.createElement("span");
       tag.className = "multi-select-tag";
       tag.textContent = opt;
-      
+
       if (isEmployee) {
         tag.style.opacity = "0.6";
         tag.title = "Employees can view but not edit RTO Documents";
       }
-      
+
       rtoDisplay.appendChild(tag);
     });
   }
-  
+
   if (rtoHiddenInput) {
     rtoHiddenInput.value = selectedRtoDocs.join(", ");
   }
@@ -3500,7 +3500,7 @@ function toggleRtoOption(opt) {
 // Initialize
 if (rtoDisplay && rtoDropdown) {
   renderRtoDropdown();
-  
+
   rtoDisplay.addEventListener("click", (e) => {
     e.stopPropagation();
     rtoDropdown.classList.toggle("active");
@@ -3561,12 +3561,12 @@ if (loanId) {
   loadDealerOptions().then(() => {
     return fetch(`/api/leads/${loanId}`);
   }).then(res => res.json())
-  .then(lead => {
-    if (!lead || !lead.data) {
-      console.error("Invalid lead response", lead);
-      return;
-    }
-    const data = lead.data;
+    .then(lead => {
+      if (!lead || !lead.data) {
+        console.error("Invalid lead response", lead);
+        return;
+      }
+      const data = lead.data;
 
       // ####
       // =========================
@@ -3589,7 +3589,7 @@ if (loanId) {
         enforceUppercase();
         enforceAlphabetsOnly();
         enforceNumbersOnly();
-        
+
         updatePaymentButtons();
       }
 
@@ -3668,34 +3668,34 @@ if (loanId) {
 
 
 
-          // =========================
-          // 🧩 Rebuild Additional Applicants from flat fields
-          // =========================
-          if (!data.additionalApplicants) {
-            const applicants = [];
+      // =========================
+      // 🧩 Rebuild Additional Applicants from flat fields
+      // =========================
+      if (!data.additionalApplicants) {
+        const applicants = [];
 
-            [2, 3].forEach(i => {
-              const prefix = `additionalApplicant${i}`;
+        [2, 3].forEach(i => {
+          const prefix = `additionalApplicant${i}`;
 
-              // detect if applicant exists by checking name
-              if (data[`${prefix}Name`]) {
-                const obj = {};
+          // detect if applicant exists by checking name
+          if (data[`${prefix}Name`]) {
+            const obj = {};
 
-                Object.keys(data).forEach(key => {
-                  if (key.startsWith(prefix)) {
-                    const cleanKey = key.replace(prefix, "");
-                    obj[cleanKey] = data[key];
-                  }
-                });
-
-                applicants.push(obj);
+            Object.keys(data).forEach(key => {
+              if (key.startsWith(prefix)) {
+                const cleanKey = key.replace(prefix, "");
+                obj[cleanKey] = data[key];
               }
             });
 
-            if (applicants.length) {
-              data.additionalApplicants = applicants;
-            }
+            applicants.push(obj);
           }
+        });
+
+        if (applicants.length) {
+          data.additionalApplicants = applicants;
+        }
+      }
 
 
 
@@ -3727,11 +3727,11 @@ if (loanId) {
 
 
 
-              Object.keys(applicant).forEach(key => {
-                const fieldId = `additionalApplicant${visibleIndex}${key}`;
-                const el = document.getElementById(fieldId);
-                if (el) el.value = applicant[key];
-              });
+          Object.keys(applicant).forEach(key => {
+            const fieldId = `additionalApplicant${visibleIndex}${key}`;
+            const el = document.getElementById(fieldId);
+            if (el) el.value = applicant[key];
+          });
 
 
 
@@ -3746,10 +3746,10 @@ if (loanId) {
 
 
 
-              
+
           // After populating values, update remove button state
           if (typeof setupRemoveButtonBehavior === 'function') setupRemoveButtonBehavior(block);
-          
+
           // Re-apply validation to additional applicant fields
           enforceUppercase();
           enforceAlphabetsOnly();
@@ -3766,7 +3766,7 @@ if (loanId) {
       enforceUppercase();
       enforceAlphabetsOnly();
       enforceNumbersOnly();
-      
+
       // Disable form for view mode
       // disableFormForView();
     })
@@ -3918,9 +3918,9 @@ function initAdditionalApplicantSpouseField(index) {
   const maritalStatusSelect = document.getElementById(`additionalApplicant${index}MaritalStatus`);
   const spouseField = document.getElementById(`additionalApplicant${index}SpouseField`);
   const spouseInput = document.getElementById(`additionalApplicant${index}SpouseName`);
-  
+
   if (!maritalStatusSelect || !spouseField || !spouseInput) return;
-  
+
   function toggleSpouseField() {
     const needsSpouse = maritalStatusSelect.value === "Married" || maritalStatusSelect.value === "Divorced";
     spouseField.style.display = needsSpouse ? "block" : "none";
@@ -3929,7 +3929,7 @@ function initAdditionalApplicantSpouseField(index) {
       spouseInput.value = "";
     }
   }
-  
+
   maritalStatusSelect.addEventListener("change", toggleSpouseField);
   toggleSpouseField(); // Initialize on load
 }
@@ -3938,16 +3938,16 @@ function initAdditionalApplicantTypeField(index) {
   const applicantTypeSelect = document.getElementById(`additionalApplicant${index}Type`);
   const relationField = document.getElementById(`additionalApplicant${index}RelationField`);
   const relationSelect = document.getElementById(`additionalApplicant${index}Relation`);
-  
+
   if (!applicantTypeSelect || !relationField || !relationSelect) return;
-  
+
   function toggleRelationField() {
     const isCoApplicant = applicantTypeSelect.value === "Co-Applicant";
     relationField.style.display = isCoApplicant ? "block" : "none";
     relationSelect.required = isCoApplicant;
     if (!isCoApplicant) relationSelect.value = "";
   }
-  
+
   applicantTypeSelect.addEventListener("change", toggleRelationField);
   toggleRelationField();
 }
@@ -3956,16 +3956,16 @@ function initAdditionalApplicantProprietorshipField(index) {
   const employmentProfileSelect = document.getElementById(`additionalApplicant${index}EmploymentProfile`);
   const proprietorshipInfoField = document.getElementById(`additionalApplicant${index}ProprietorshipInfoField`);
   const proprietorshipInfoSelect = document.getElementById(`additionalApplicant${index}ProprietorshipInfo`);
-  
+
   if (!employmentProfileSelect || !proprietorshipInfoField || !proprietorshipInfoSelect) return;
-  
+
   function toggleProprietorshipInfoField() {
     const needsProprietorshipInfo = employmentProfileSelect.value === "Self-Employed";
     proprietorshipInfoField.classList.toggle("hidden", !needsProprietorshipInfo);
     proprietorshipInfoSelect.required = needsProprietorshipInfo;
     if (!needsProprietorshipInfo) proprietorshipInfoSelect.value = "";
   }
-  
+
   employmentProfileSelect.addEventListener("change", toggleProprietorshipInfoField);
   toggleProprietorshipInfoField();
 }
@@ -3973,7 +3973,7 @@ function initAdditionalApplicantProprietorshipField(index) {
 function initAdditionalApplicantAddressCopy(index) {
   const copyCheckbox = document.getElementById(`additionalApplicant${index}CopyPermanentFromCurrent`);
   if (!copyCheckbox) return;
-  
+
   // Field mappings for copying
   const fieldMappings = [
     ['CurrentProof', 'PermanentProof'],
@@ -3983,14 +3983,14 @@ function initAdditionalApplicantAddressCopy(index) {
     ['CurrentOhpProof', 'PermanentOhpProof'],
     ['CurrentRelation', 'PermanentRelation']
   ];
-  
+
   function copyPermanentFromCurrent() {
     const isChecked = copyCheckbox.checked;
-    
+
     fieldMappings.forEach(([source, target]) => {
       const sourceField = document.getElementById(`additionalApplicant${index}${source}`);
       const targetField = document.getElementById(`additionalApplicant${index}${target}`);
-      
+
       if (sourceField && targetField) {
         if (isChecked) {
           targetField.value = sourceField.value;
@@ -4005,7 +4005,7 @@ function initAdditionalApplicantAddressCopy(index) {
       }
     });
   }
-  
+
   copyCheckbox.addEventListener('change', copyPermanentFromCurrent);
   copyPermanentFromCurrent(); // Initialize on load
 }
@@ -4013,7 +4013,7 @@ function initAdditionalApplicantAddressCopy(index) {
 function initAdditionalApplicantBusinessProof(index) {
   const businessProofOptions = [
     "NIP",
-    "Pay slips", 
+    "Pay slips",
     "RTC",
     "GST",
     "ITR",
@@ -4024,14 +4024,14 @@ function initAdditionalApplicantBusinessProof(index) {
   const display = document.getElementById(`additionalApplicant${index}BusinessProofDisplay`);
   const dropdown = document.getElementById(`additionalApplicant${index}BusinessProofDropdown`);
   const hiddenInput = document.getElementById(`additionalApplicant${index}BusinessProof`);
-  
+
   if (!display || !dropdown || !hiddenInput) return;
-  
+
   let selectedBusinessProof = [];
 
   function renderBusinessProofDropdown() {
     dropdown.innerHTML = "";
-    
+
     businessProofOptions.forEach(option => {
       const optionDiv = document.createElement("div");
       optionDiv.className = "multi-select-option";
@@ -4039,7 +4039,7 @@ function initAdditionalApplicantBusinessProof(index) {
         optionDiv.classList.add("selected");
       }
       optionDiv.textContent = option;
-      
+
       optionDiv.addEventListener("click", () => toggleBusinessProofOption(option));
       dropdown.appendChild(optionDiv);
     });
@@ -4052,17 +4052,17 @@ function initAdditionalApplicantBusinessProof(index) {
     } else {
       selectedBusinessProof.push(option);
     }
-    
+
     updateBusinessProofDisplay();
     renderBusinessProofDropdown();
-    
+
     // Update hidden input value
     hiddenInput.value = selectedBusinessProof.join(", ");
   }
 
   function updateBusinessProofDisplay() {
     display.innerHTML = "";
-    
+
     if (selectedBusinessProof.length === 0) {
       display.innerHTML = '<span class="multi-select-placeholder">Select Business Proof...</span>';
     } else {
@@ -4160,7 +4160,7 @@ async function initializeBankDropdown() {
         datalist.appendChild(opt);
       });
       document.body.appendChild(datalist);
-      
+
       if (loanInput) {
         loanInput.setAttribute("list", "loginExecutiveDatalist");
         loanInput.value = "";
@@ -4220,7 +4220,7 @@ async function initializeBankDropdown() {
   // 3. Setup change listener to load branch options
   bankSelect.addEventListener("change", async () => {
     const bankName = bankSelect.value;
-    
+
     // Clear dynamic datalist and remove list attribute
     let datalist = document.getElementById("bankBranchDatalist");
     if (datalist) datalist.remove();
@@ -4271,7 +4271,7 @@ async function initializeBankDropdown() {
           datalist.appendChild(opt);
         });
         document.body.appendChild(datalist);
-        
+
         if (branchInput) {
           branchInput.setAttribute("list", "bankBranchDatalist");
           branchInput.value = "";
@@ -4324,7 +4324,7 @@ async function initializeBankDropdown() {
           if (branches.length > 1) {
             let datalist = document.getElementById("bankBranchDatalist");
             if (datalist) datalist.remove();
-            
+
             datalist = document.createElement("datalist");
             datalist.id = "bankBranchDatalist";
             branches.forEach(br => {

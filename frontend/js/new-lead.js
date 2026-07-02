@@ -13,12 +13,66 @@ document.getElementById("nextBtn").addEventListener("click", () => {
     return;
   }
 
-  // Save selected loan type (optional but useful)
+  // Only Used Car Loan is available; others are coming soon
+  if (loanType !== "used-car-loan") {
+    showComingSoon();
+    return;
+  }
+
+  // Save selected loan type
   localStorage.setItem("loanType", loanType);
 
   // Redirect to loan-specific page
   window.location.href = `/${loanType}.html`;
 });
+
+// Show Coming Soon modal/alert
+function showComingSoon() {
+  // Remove any existing modal
+  const existing = document.getElementById("comingSoonModal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "comingSoonModal";
+  modal.style.cssText = `
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+    animation: fadeIn 0.2s ease;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background: #fff; border-radius: 20px; padding: 48px 40px;
+      text-align: center; max-width: 360px; width: 90%;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+      animation: slideUp 0.3s ease;
+    ">
+      <div style="font-size: 56px; margin-bottom: 16px;">🚀</div>
+      <h2 style="margin: 0 0 12px; font-size: 26px; color: #1e293b; font-family: Inter, sans-serif;">Coming Soon...</h2>
+      <p style="margin: 0 0 28px; color: #64748b; font-size: 15px; font-family: Inter, sans-serif; line-height: 1.6;">
+        This loan type is under development.<br>We'll be launching it very soon!
+      </p>
+      <button onclick="document.getElementById('comingSoonModal').remove()" style="
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #fff; border: none; border-radius: 12px;
+        padding: 14px 36px; font-size: 15px; font-weight: 600;
+        cursor: pointer; font-family: Inter, sans-serif;
+        transition: transform 0.15s;
+      " onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+        OK, Got It!
+      </button>
+    </div>
+    <style>
+      @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+      @keyframes slideUp { from { transform:translateY(30px); opacity:0 } to { transform:translateY(0); opacity:1 } }
+    </style>
+  `;
+  // Close when clicking backdrop
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  document.body.appendChild(modal);
+}
 /* =========================document.getElementById("nextBtn").addEventListener("click", () => {
   const loanType = document.getElementById("loanType").value;
 

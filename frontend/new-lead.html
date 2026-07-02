@@ -547,6 +547,14 @@
                // Update select dropdown
                const loanType = this.getAttribute('data-loan');
                loanSelect.value = loanType;
+
+               // Show Coming Soon for all except Used Car Loan
+               if (loanType !== 'used-car-loan') {
+                 // small delay so the card selection is visible
+                 setTimeout(() => {
+                   if (typeof showComingSoon === 'function') showComingSoon();
+                 }, 150);
+               }
              });
            });
            

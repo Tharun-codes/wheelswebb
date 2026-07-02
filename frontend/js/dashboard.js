@@ -19,6 +19,7 @@ const adminMenu = document.getElementById("adminUsersMenu");
 const assignMenu = document.getElementById("assignEmployeesMenu");
 const dealerKhataMenu = document.getElementById("dealerKhataMenu");
 const bankManagementMenu = document.getElementById("bankManagementMenu");
+const policyManagementMenu = document.getElementById("policyManagementMenu");
 const myKhataMenu = document.getElementById("myKhataMenu");
 const profileMenu = document.getElementById("profileMenu");
 const startNewApplicationBtn = document.getElementById("startNewApplicationBtn");
@@ -31,6 +32,7 @@ if (user.role === "admin") {
   if (assignMenu) assignMenu.style.display = "block";
   if (dealerKhataMenu) dealerKhataMenu.style.display = "block";
   if (bankManagementMenu) bankManagementMenu.style.display = "block";
+  if (policyManagementMenu) policyManagementMenu.style.display = "block";
   if (profileMenu) profileMenu.style.display = "none";
   
   // Show notification bell for admins
@@ -65,6 +67,7 @@ if (user.role === "admin") {
   if (assignMenu) assignMenu.style.display = "none";
   if (dealerKhataMenu) dealerKhataMenu.style.display = "none";
   if (bankManagementMenu) bankManagementMenu.style.display = "none";
+  if (policyManagementMenu) policyManagementMenu.style.display = "none";
   if (myKhataMenu) myKhataMenu.style.display = "none";
 }
 

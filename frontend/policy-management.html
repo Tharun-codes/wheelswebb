@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Policy Management | WheelsWeb</title>
+  <meta name="description" content="Manage loan policies for each bank across different product types including Repurchase, Refinance and more." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+  <style>
+    /* =========  Layout  ========= */
+    .pm-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+      margin-top: 24px;
+      min-height: calc(100vh - 180px);
+    }
+
+    /* =========  Left Panel  ========= */
+    .pm-left {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(2,6,23,.05);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .pm-left h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -.01em;
+    }
+
+    .pm-search {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .pm-search:focus { border-color: var(--primary); }
+
+    .pm-bank-list {
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 600px;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .pm-bank-list::-webkit-scrollbar { width: 4px; }
+    .pm-bank-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+    .pm-bank-item {
+      padding: 11px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      background: #fcfdfe;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pm-bank-item .bank-icon { font-size: 18px; }
+    .pm-bank-item:hover { background: #f1f5f9; border-color: var(--primary); }
+    .pm-bank-item.active {
+      background: linear-gradient(135deg,#eff6ff,#dbeafe);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(37,99,235,.1);
+    }
+
+    /* =========  Right Panel  ========= */
+    .pm-right {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 8px 24px rgba(2,6,23,.05);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-height: 500px;
+    }
+
+    .pm-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 15px;
+      text-align: center;
+      height: 100%;
+      min-height: 400px;
+      gap: 14px;
+    }
+    .pm-placeholder .icon { font-size: 52px; opacity: .4; }
+
+    /* =========  Right Header  ========= */
+    .pm-right-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pm-right-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .pm-right-header .bank-badge {
+      background: linear-gradient(135deg,#4f46e5,#6366f1);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* =========  Product Type Selector  ========= */
+    .pm-product-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pm-product-row label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .pm-product-row select {
+      padding: 10px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      background: #f8fafc;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color .2s, box-shadow .2s;
+      max-width: 360px;
+    }
+    .pm-product-row select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+      background: #fff;
+    }
+
+    /* =========  Policy Form  ========= */
+    .pm-form-area {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: fadeSlideIn .25s ease;
+      max-width: 560px;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .pm-form-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 2px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pm-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .pm-field label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .pm-field label .req { color: var(--error); margin-left: 2px; }
+
+    .pm-field input,
+    .pm-field select {
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      background: #f8fafc;
+      color: var(--text);
+      transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+    }
+    .pm-field input:focus,
+    .pm-field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+      background: #fff;
+    }
+
+
+    /* Income Profile Checkboxes */
+    .pm-income-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pm-income-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .pm-income-checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pm-income-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      transition: all .18s;
+      user-select: none;
+    }
+    .pm-income-chip input[type="checkbox"] { display: none; }
+    .pm-income-chip.checked {
+      background: linear-gradient(135deg,#eff6ff,#dbeafe);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .pm-income-chip .check-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px;
+      transition: all .18s;
+    }
+    .pm-income-chip.checked .check-dot {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .pm-income-extras {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pm-income-extra-item {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg,#f0f9ff,#e0f2fe);
+      border-radius: 10px;
+      border: 1px solid #bae6fd;
+      animation: fadeSlideIn .2s ease;
+    }
+    .pm-income-extra-item.show { display: flex; }
+    .pm-income-extra-item label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #0c4a6e;
+    }
+    .pm-income-extra-item input {
+      padding: 8px 11px;
+      border-radius: 7px;
+      border: 1px solid #7dd3fc;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .pm-income-extra-item input:focus {
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14,165,233,.15);
+    }
+
+    /* Divider */
+    .pm-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Save btn row */
+    .pm-save-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .pm-btn-save {
+      padding: 11px 28px;
+      border-radius: 10px;
+      background: linear-gradient(120deg,#4f46e5,#6366f1);
+      color: #fff;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .2s;
+      box-shadow: 0 4px 14px rgba(79,70,229,.25);
+    }
+    .pm-btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79,70,229,.35); }
+    .pm-btn-save:active { transform: translateY(0); }
+
+    .pm-btn-reset {
+      padding: 11px 20px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .pm-btn-reset:hover { background: #e2e8f0; }
+
+    /* =========  Saved Policies  ========= */
+    .pm-saved-section {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .pm-saved-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pm-saved-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .pm-saved-count {
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 999px;
+    }
+
+    .pm-policy-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .pm-policy-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 16px 16px 20px;
+      background: #fafcff;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .pm-policy-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.06); transform: translateY(-2px); }
+    .pm-policy-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: linear-gradient(180deg,#4f46e5,#6366f1);
+    }
+
+    .pm-policy-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .pm-policy-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .pm-policy-type-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #ede9fe;
+      color: #5b21b6;
+      text-transform: uppercase;
+    }
+    .pm-policy-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pm-policy-details .dv { font-weight: 600; color: var(--text); }
+    .pm-policy-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .pm-del-btn {
+      padding: 5px 12px;
+      border-radius: 7px;
+      border: 1px solid #fee2e2;
+      background: #fef2f2;
+      color: var(--error);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .pm-del-btn:hover { background: #fee2e2; }
+
+    .pm-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 14px;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid #e2e8f0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+
+<body>
+  <div class="admin-container">
+    <div class="admin-header">
+      <div class="admin-title">
+        <h1>📋 Policy Management</h1>
+        <div class="admin-subtitle">Create and manage loan policies for each bank</div>
+      </div>
+      <div class="admin-actions">
+        <a href="/dashboard.html" class="back-button">← Back to Dashboard</a>
+      </div>
+    </div>
+
+    <div class="pm-layout">
+      <!-- Left: Bank List -->
+      <div class="pm-left">
+        <h3>🏦 Banks</h3>
+        <input type="text" id="pmBankSearch" class="pm-search" placeholder="Search banks..." />
+        <ul class="pm-bank-list" id="pmBankList">
+          <li class="pm-loading"><div class="spinner"></div> Loading banks...</li>
+        </ul>
+      </div>
+
+      <!-- Right: Policy Area -->
+      <div class="pm-right" id="pmRight">
+        <div class="pm-placeholder">
+          <div class="icon">📋</div>
+          <p>Select a bank from the left panel to manage its policies</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Action completed</div>
+  <script src="/js/policy-management.js"></script>
+</body>
+
+</html>

@@ -5084,6 +5084,99 @@ app.get("/api/ibb/price", async (req, res) => {
   }
 });
 
+// ==================== POLICY MANAGEMENT APIs ====================
+
+// Ensure loan_policies table exists
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS loan_policies (
+        id SERIAL PRIMARY KEY,
+        bank_id INTEGER NOT NULL,
+        bank_name TEXT NOT NULL,
+        product_type TEXT NOT NULL,
+        scheme_name TEXT NOT NULL,
+        loan_amt NUMERIC NOT NULL,
+        tenure INTEGER NOT NULL,
+        ohp TEXT NOT NULL,
+        income_profiles JSONB NOT NULL DEFAULT '[]',
+        pan_aadhar TEXT NOT NULL,
+        min_age INTEGER NOT NULL,
+        max_age INTEGER NOT NULL,
+        applicant TEXT NOT NULL,
+        abb NUMERIC NOT NULL,
+        ltv NUMERIC NOT NULL,
+        cibil INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    console.log("✅ loan_policies table ready");
+  } catch (err) {
+    console.error("❌ Could not create loan_policies table:", err.message);
+  }
+})();
+
+// GET /api/policies?bankId=X — list policies for a bank
+app.get("/api/policies", async (req, res) => {
+  try {
+    const { bankId } = req.query;
+    if (!bankId) return res.status(400).json({ error: "bankId is required" });
+    const { rows } = await pool.query(
+      "SELECT * FROM loan_policies WHERE bank_id = $1 ORDER BY created_at DESC",
+      [bankId]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("GET /api/policies error:", err);
+    res.status(500).json({ error: "Failed to load policies" });
+  }
+});
+
+// POST /api/policies — create a new policy
+app.post("/api/policies", async (req, res) => {
+  try {
+    const {
+      bankId, bankName, productType, schemeName, loanAmt,
+      tenure, ohp, incomeProfiles, panAadhar,
+      minAge, maxAge, applicant, abb, ltv, cibil
+    } = req.body;
+
+    if (!bankId || !productType || !schemeName) {
+      return res.status(400).json({ error: "bankId, productType and schemeName are required" });
+    }
+
+    const { rows } = await pool.query(`
+      INSERT INTO loan_policies
+        (bank_id, bank_name, product_type, scheme_name, loan_amt, tenure, ohp,
+         income_profiles, pan_aadhar, min_age, max_age, applicant, abb, ltv, cibil)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+      RETURNING *
+    `, [
+      bankId, bankName, productType, schemeName, loanAmt,
+      tenure, ohp, JSON.stringify(incomeProfiles || []),
+      panAadhar, minAge, maxAge, applicant, abb, ltv, cibil
+    ]);
+
+    res.status(201).json({ success: true, policy: rows[0] });
+  } catch (err) {
+    console.error("POST /api/policies error:", err);
+    res.status(500).json({ error: "Failed to save policy" });
+  }
+});
+
+// DELETE /api/policies/:id — delete a policy
+app.delete("/api/policies/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rowCount } = await pool.query("DELETE FROM loan_policies WHERE id = $1", [id]);
+    if (rowCount === 0) return res.status(404).json({ error: "Policy not found" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /api/policies error:", err);
+    res.status(500).json({ error: "Failed to delete policy" });
+  }
+});
+
 // Start server in non-production; also export app for tests
 
 const PORT = process.env.PORT || 3001;

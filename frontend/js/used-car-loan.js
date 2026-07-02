@@ -1725,6 +1725,48 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  // ── Click a price card → auto-fill Valuation Price field ──
+  const priceCards = document.querySelectorAll(".ibb-price-card");
+  priceCards.forEach(card => {
+    card.style.cursor = "pointer";
+    card.title = "Click to use this price as Valuation Price";
+
+    card.addEventListener("click", () => {
+      const priceEl = card.querySelector(".price-value");
+      if (!priceEl) return;
+
+      // Strip ₹, commas, spaces → get raw number
+      const rawText = priceEl.textContent.replace(/[₹,\s]/g, "").trim();
+      const numericValue = parseInt(rawText, 10);
+
+      if (!rawText || isNaN(numericValue) || numericValue === 0) {
+        alert("No valid price available to fill.");
+        return;
+      }
+
+      // Fill the Valuation Price field
+      const valuationPriceInput = document.getElementById("valuationPrice");
+      if (valuationPriceInput) {
+        valuationPriceInput.value = numericValue;
+
+        // Close the modal
+        if (ibbValuationModal) ibbValuationModal.classList.add("hidden");
+
+        // Flash green highlight on the field for feedback
+        valuationPriceInput.style.transition = "box-shadow 0.3s, background 0.3s";
+        valuationPriceInput.style.background = "#d1fae5";
+        valuationPriceInput.style.boxShadow = "0 0 0 3px #10b981";
+        setTimeout(() => {
+          valuationPriceInput.style.background = "";
+          valuationPriceInput.style.boxShadow = "";
+        }, 1800);
+
+        // Scroll smoothly to the field
+        valuationPriceInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  });
+
   if (vehicleMake && vehicleModel && vehicleVariant && mfgYear && mfgMonth) {
     vehicleMake.addEventListener("change", () => window.updateModelOptions());
     vehicleModel.addEventListener("change", () => window.updateVariantOptions());

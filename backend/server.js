@@ -5160,6 +5160,44 @@ app.delete("/api/policies/:id", async (req, res) => {
   }
 });
 
+// ── PUT /api/policies/:id ───────────────────────────────────────
+app.put("/api/policies/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      schemeName, loanAmt, tenure, ohp, incomeProfiles, panAadhar,
+      minAge, maxAge, applicant, abb, ltv, cibil,
+      customFieldValues
+    } = req.body;
+
+    if (!schemeName) {
+      return res.status(400).json({ error: "schemeName is required" });
+    }
+
+    const { rowCount, rows } = await pool.query(`
+      UPDATE loan_policies
+      SET scheme_name = $1, loan_amt = $2, tenure = $3, ohp = $4,
+          income_profiles = $5, pan_aadhar = $6, min_age = $7, max_age = $8,
+          applicant = $9, abb = $10, ltv = $11, cibil = $12,
+          custom_field_values = $13
+      WHERE id = $14
+      RETURNING *
+    `, [
+      schemeName, loanAmt, tenure, ohp,
+      JSON.stringify(incomeProfiles || []), panAadhar, minAge, maxAge,
+      applicant, abb, ltv, cibil,
+      JSON.stringify(customFieldValues || {}),
+      id
+    ]);
+
+    if (rowCount === 0) return res.status(404).json({ error: "Policy not found" });
+    res.json({ success: true, policy: rows[0] });
+  } catch (err) {
+    console.error("PUT /api/policies error:", err);
+    res.status(500).json({ error: "Failed to update policy" });
+  }
+});
+
 // ── GET /api/policy-fields?bankId=X&productType=Y ───────────────
 app.get("/api/policy-fields", async (req, res) => {
   try {

@@ -12,6 +12,8 @@ let selectedBankId = null;
 let selectedBankName = "";
 let currentProductType = "";
 let customFieldDefs = []; // field definitions for current bank+product
+let loadedPolicies = [];
+let editingPolicyId = null;
 
 // ---- Toast ----
 function showToast(msg, timeout = 3500) {
@@ -109,6 +111,7 @@ function renderRightPanel() {
 function onProductTypeChange(e) {
   const type = e.target.value;
   currentProductType = type;
+  editingPolicyId = null;
   const formArea = document.getElementById("pmFormArea");
   if (!type) { formArea.innerHTML = ""; return; }
   renderPolicyForm(type);
@@ -551,26 +554,33 @@ async function savePolicy(productType) {
 
   try {
     const btn = document.getElementById("pmSaveBtn");
-    btn.textContent = "Saving...";
+    btn.textContent = editingPolicyId ? "Updating..." : "Saving...";
     btn.disabled = true;
 
-    const res = await fetch("/api/policies", {
-      method: "POST",
+    const url = editingPolicyId ? `/api/policies/${editingPolicyId}` : "/api/policies";
+    const method = editingPolicyId ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json", "x-admin-id": user.id },
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error((await res.json()).error || "Failed to save policy");
 
-    showToast("✅ Policy saved successfully!");
+    showToast(editingPolicyId ? "✅ Policy updated successfully!" : "✅ Policy saved successfully!");
     document.getElementById("pmProductType").value = "";
     document.getElementById("pmFormArea").innerHTML = "";
     currentProductType = "";
     customFieldDefs = [];
+    editingPolicyId = null;
     loadSavedPolicies();
   } catch (err) {
     showToast("❌ " + (err.message || "Failed to save policy"));
     const btn = document.getElementById("pmSaveBtn");
-    if (btn) { btn.textContent = "💾 Save Policy"; btn.disabled = false; }
+    if (btn) {
+      btn.textContent = editingPolicyId ? "💾 Update Policy" : "💾 Save Policy";
+      btn.disabled = false;
+    }
   }
 }
 
@@ -586,6 +596,7 @@ async function loadSavedPolicies() {
     });
     if (!res.ok) throw new Error("Failed");
     const policies = await res.json();
+    loadedPolicies = policies;
     renderSavedPolicies(policies);
   } catch {
     section.innerHTML = `<div style="color:var(--error);font-size:13px;padding:12px;">Failed to load policies</div>`;
@@ -650,6 +661,7 @@ function renderSavedPolicies(policies) {
           ${customRows}
         </div>
         <div class="pm-policy-actions">
+          <button class="pm-edit-btn" data-id="${p.id}">✏️ Edit</button>
           <button class="pm-del-btn" data-id="${p.id}">🗑 Delete</button>
         </div>
       </div>`;
@@ -663,6 +675,10 @@ function renderSavedPolicies(policies) {
       </div>
       <div class="pm-policy-cards">${cards}</div>
     </div>`;
+
+  section.querySelectorAll(".pm-edit-btn").forEach(btn => {
+    btn.addEventListener("click", () => startEditPolicy(btn.dataset.id));
+  });
 
   section.querySelectorAll(".pm-del-btn").forEach(btn => {
     btn.addEventListener("click", () => deletePolicy(btn.dataset.id));
@@ -794,4 +810,73 @@ function setupMultiSelect(inputId) {
 
   // Run initial state setup
   updateState();
+}
+
+// ==================== Start Edit Policy ====================
+async function startEditPolicy(id) {
+  const policy = loadedPolicies.find(p => String(p.id) === String(id));
+  if (!policy) return;
+
+  editingPolicyId = policy.id;
+
+  // 1. Select the product type dropdown
+  const pmProductType = document.getElementById("pmProductType");
+  if (pmProductType) {
+    pmProductType.value = policy.product_type;
+  }
+  currentProductType = policy.product_type;
+
+  // 2. Render form
+  await renderPolicyForm(policy.product_type);
+
+  // 3. Pre-fill standard fields
+  document.getElementById("fSchemeName").value = policy.scheme_name || "";
+  document.getElementById("fLoanAmt").value = policy.loan_amt || "";
+  document.getElementById("fTenure").value = policy.tenure || "";
+  
+  // OHP multi-select:
+  document.getElementById("fOHP").value = policy.ohp || "";
+  setupMultiSelect("fOHP");
+
+  document.getElementById("fPanAadhar").value = policy.pan_aadhar || "";
+  document.getElementById("fMinAge").value = policy.min_age || "";
+  document.getElementById("fMaxAge").value = policy.max_age || "";
+
+  // Applicant Type multi-select:
+  document.getElementById("fApplicant").value = policy.applicant || "";
+  setupMultiSelect("fApplicant");
+
+  document.getElementById("fABB").value = policy.abb || "";
+  document.getElementById("fLTV").value = policy.ltv || "";
+  document.getElementById("fCibil").value = policy.cibil || "";
+
+  // Income profile:
+  const ip = Array.isArray(policy.income_profiles) && policy.income_profiles[0];
+  if (ip) {
+    document.getElementById("fIncomeProfile").value = ip.type || "";
+    // Trigger change event to show options
+    const event = new Event("change");
+    document.getElementById("fIncomeProfile").dispatchEvent(event);
+
+    if (ip.type === "Agri") document.getElementById("fAcre").value = ip.acre || "";
+    if (ip.type === "ITR") document.getElementById("fItrIncome").value = ip.itrIncome || "";
+    if (ip.type === "Salaried") document.getElementById("fNetSalary").value = ip.netSalary || "";
+  }
+
+  // Pre-fill custom fields
+  if (policy.custom_field_values && typeof policy.custom_field_values === "object") {
+    Object.entries(policy.custom_field_values).forEach(([fid, val]) => {
+      const inp = document.querySelector(`.cf-value-input[data-field-id="${fid}"]`);
+      if (inp) inp.value = val;
+    });
+  }
+
+  // Update save button text
+  const saveBtn = document.getElementById("pmSaveBtn");
+  if (saveBtn) {
+    saveBtn.innerHTML = "💾 Update Policy";
+  }
+
+  // Scroll to form smoothly
+  document.getElementById("pmFormArea").scrollIntoView({ behavior: "smooth", block: "start" });
 }

@@ -145,12 +145,28 @@ async function renderPolicyForm(productType) {
       </div>
       <div class="pm-field">
         <label>4. OHP <span class="req">*</span></label>
-        <select id="fOHP">
-          <option value="">-- Select --</option>
-          <option value="Applicant">Applicant</option>
-          <option value="Co-Applicant">Co-Applicant</option>
-          <option value="Guarantor">Guarantor</option>
-        </select>
+        <input type="hidden" id="fOHP" />
+        <div class="pm-multiselect-container" id="fOHP-container">
+          <div class="pm-multiselect-selected">
+            <span class="pm-multiselect-placeholder">-- Select --</span>
+            <div class="pm-multiselect-chips"></div>
+            <span class="pm-multiselect-arrow">▼</span>
+          </div>
+          <div class="pm-multiselect-dropdown">
+            <div class="pm-multiselect-option" data-value="Applicant">
+              <input type="checkbox" />
+              <span>Applicant</span>
+            </div>
+            <div class="pm-multiselect-option" data-value="Co-Applicant">
+              <input type="checkbox" />
+              <span>Co-Applicant</span>
+            </div>
+            <div class="pm-multiselect-option" data-value="Guarantor">
+              <input type="checkbox" />
+              <span>Guarantor</span>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="pm-field">
         <label>5. Income Profile <span class="req">*</span></label>
@@ -193,13 +209,32 @@ async function renderPolicyForm(productType) {
       </div>
       <div class="pm-field">
         <label>9. Applicant Type <span class="req">*</span></label>
-        <select id="fApplicant">
-          <option value="">-- Select --</option>
-          <option value="Single Lady">Single Lady</option>
-          <option value="Single Gents">Single Gents</option>
-          <option value="With Co-Applicant">With Co-Applicant</option>
-          <option value="With Guarantor">With Guarantor</option>
-        </select>
+        <input type="hidden" id="fApplicant" />
+        <div class="pm-multiselect-container" id="fApplicant-container">
+          <div class="pm-multiselect-selected">
+            <span class="pm-multiselect-placeholder">-- Select --</span>
+            <div class="pm-multiselect-chips"></div>
+            <span class="pm-multiselect-arrow">▼</span>
+          </div>
+          <div class="pm-multiselect-dropdown">
+            <div class="pm-multiselect-option" data-value="Single Lady">
+              <input type="checkbox" />
+              <span>Single Lady</span>
+            </div>
+            <div class="pm-multiselect-option" data-value="Single Gents">
+              <input type="checkbox" />
+              <span>Single Gents</span>
+            </div>
+            <div class="pm-multiselect-option" data-value="With Co-Applicant">
+              <input type="checkbox" />
+              <span>With Co-Applicant</span>
+            </div>
+            <div class="pm-multiselect-option" data-value="With Guarantor">
+              <input type="checkbox" />
+              <span>With Guarantor</span>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="pm-field">
         <label>10. ABB (digits) <span class="req">*</span></label>
@@ -315,6 +350,10 @@ async function renderPolicyForm(productType) {
 
   // Reset
   document.getElementById("pmResetBtn").addEventListener("click", () => renderPolicyForm(productType));
+
+  // Initialize multi-select fields
+  setupMultiSelect("fOHP");
+  setupMultiSelect("fApplicant");
 }
 
 // ==================== Render Custom Field Inputs ====================
@@ -648,3 +687,111 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchBanks();
   document.getElementById("pmBankSearch").addEventListener("input", e => renderBankList(e.target.value));
 });
+
+// ==================== Multi-Select Dropdown Helper ====================
+function setupMultiSelect(inputId) {
+  const container = document.getElementById(`${inputId}-container`);
+  if (!container) return;
+
+  const hiddenInput = document.getElementById(inputId);
+  const selectedBox = container.querySelector(".pm-multiselect-selected");
+  const dropdown = container.querySelector(".pm-multiselect-dropdown");
+  const options = container.querySelectorAll(".pm-multiselect-option");
+  const chipsContainer = container.querySelector(".pm-multiselect-chips");
+  const placeholder = container.querySelector(".pm-multiselect-placeholder");
+
+  // Initial selected values
+  let selectedValues = [];
+
+  // Parse any pre-existing value in the hidden input
+  if (hiddenInput && hiddenInput.value) {
+    selectedValues = hiddenInput.value.split(",").map(v => v.trim()).filter(v => v);
+  }
+
+  // Function to update visual state (checkboxes, chips, placeholder, hidden input value)
+  function updateState() {
+    // Clear chips
+    chipsContainer.innerHTML = "";
+
+    if (selectedValues.length === 0) {
+      placeholder.style.display = "block";
+    } else {
+      placeholder.style.display = "none";
+      selectedValues.forEach(val => {
+        const chip = document.createElement("span");
+        chip.className = "pm-multiselect-chip";
+        chip.textContent = val;
+
+        const removeBtn = document.createElement("span");
+        removeBtn.className = "pm-multiselect-chip-remove";
+        removeBtn.innerHTML = "&times;";
+        removeBtn.addEventListener("click", (event) => {
+          event.stopPropagation(); // Don't open the dropdown
+          selectedValues = selectedValues.filter(v => v !== val);
+          updateState();
+        });
+
+        chip.appendChild(removeBtn);
+        chipsContainer.appendChild(chip);
+      });
+    }
+
+    // Sync checkboxes
+    options.forEach(opt => {
+      const val = opt.getAttribute("data-value");
+      const checkbox = opt.querySelector("input[type='checkbox']");
+      if (selectedValues.includes(val)) {
+        opt.classList.add("selected");
+        if (checkbox) checkbox.checked = true;
+      } else {
+        opt.classList.remove("selected");
+        if (checkbox) checkbox.checked = false;
+      }
+    });
+
+    // Update hidden input
+    if (hiddenInput) {
+      hiddenInput.value = selectedValues.join(", ");
+    }
+  }
+
+  // Toggle dropdown on select box click
+  selectedBox.addEventListener("click", (event) => {
+    event.stopPropagation();
+    // Close other multiselects first
+    document.querySelectorAll(".pm-multiselect-container").forEach(c => {
+      if (c !== container) c.classList.remove("open");
+    });
+    container.classList.toggle("open");
+  });
+
+  // Handle option click
+  options.forEach(opt => {
+    opt.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const val = opt.getAttribute("data-value");
+      const checkbox = opt.querySelector("input[type='checkbox']");
+      
+      if (event.target !== checkbox) {
+        if (checkbox) checkbox.checked = !checkbox.checked;
+      }
+
+      if (checkbox && checkbox.checked) {
+        if (!selectedValues.includes(val)) {
+          selectedValues.push(val);
+        }
+      } else {
+        selectedValues = selectedValues.filter(v => v !== val);
+      }
+      updateState();
+    });
+  });
+
+  // Close dropdown on click outside
+  document.addEventListener("click", () => {
+    container.classList.remove("open");
+  });
+
+  // Run initial state setup
+  updateState();
+}

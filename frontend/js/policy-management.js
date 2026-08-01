@@ -93,9 +93,6 @@ function renderRightPanel() {
         <option value="Repurchase">Repurchase</option>
         <option value="Refinance">Refinance</option>
         <option value="BT Topup">BT Topup</option>
-        <option value="Refinance HP">Refinance HP</option>
-        <option value="Refinance Without HP">Refinance Without HP</option>
-        <option value="Int BT">Int BT</option>
       </select>
     </div>
 

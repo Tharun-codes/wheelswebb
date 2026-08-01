@@ -4709,8 +4709,6 @@ app.delete("/api/banks/:id", async (req, res) => {
 // Indian Blue Book (IBB) API Proxy endpoints
 // ==========================================
 const https = require("https");
-const querystring = require("querystring");
-
 let ibbSessionCookies = null;
 
 function parseIbbCookies(cookieHeaders) {
@@ -4729,85 +4727,60 @@ function stringifyIbbCookies(cookies) {
   return Object.keys(cookies).map(name => `${name}=${cookies[name]}`).join("; ");
 }
 
-function extractToken(html) {
-  let match = html.match(/name="_token"\s+(?:type="hidden"\s+)?value="([^"]+)"/);
-  if (match) return match[1];
-  match = html.match(/value="([^"]+)"\s+(?:type="hidden"\s+)?name="_token"/);
-  if (match) return match[1];
-  match = html.match(/_token"[^>]*value="([^"]+)"/);
-  if (match) return match[1];
-  match = html.match(/value="([^"]+)"[^>]*_token"/);
-  if (match) return match[1];
-  return null;
-}
-
 function loginToIbb() {
   return new Promise((resolve, reject) => {
     const email = process.env.IBB_EMAIL || "vineesh1.nair@tatacapital.com";
     const password = process.env.IBB_PASSWORD || "9539373355";
 
-    https.get("https://partner.indianbluebook.com/auth/login?return_to=/dealer", (res) => {
-      let data = "";
-      const initialCookies = parseIbbCookies(res.headers["set-cookie"]);
+    const postData = JSON.stringify({ email, password });
 
+    const reqOptions = {
+      hostname: "partner.indianbluebook.com",
+      port: 443,
+      path: "/api/auth/login",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(postData),
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      }
+    };
+
+    const req = https.request(reqOptions, (res) => {
+      let data = "";
       res.on("data", (chunk) => { data += chunk; });
       res.on("end", () => {
-        const token = extractToken(data);
-        if (!token) {
-          return reject(new Error("CSRF token not found on IBB login page"));
-        }
-
-        const postData = querystring.stringify({
-          _token: token,
-          email,
-          password
-        });
-
-        const reqOptions = {
-          hostname: "partner.indianbluebook.com",
-          port: 443,
-          path: "/auth/login",
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Content-Length": Buffer.byteLength(postData),
-            "Cookie": stringifyIbbCookies(initialCookies),
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          }
-        };
-
-        const postReq = https.request(reqOptions, (postRes) => {
-          const finalCookies = { ...initialCookies, ...parseIbbCookies(postRes.headers["set-cookie"]) };
-          postRes.on("data", () => { });
-          postRes.on("end", () => {
+        try {
+          const body = JSON.parse(data);
+          if (res.statusCode === 200 && body.success) {
             console.log("Logged in to IBB successfully");
-            ibbSessionCookies = finalCookies;
-            resolve(finalCookies);
-          });
-        });
-
-        postReq.on("error", (err) => {
-          reject(err);
-        });
-
-        postReq.write(postData);
-        postReq.end();
+            const cookies = parseIbbCookies(res.headers["set-cookie"]);
+            ibbSessionCookies = cookies;
+            resolve(cookies);
+          } else {
+            reject(new Error(body.error || `Login failed with status ${res.statusCode}`));
+          }
+        } catch (err) {
+          reject(new Error(`Failed to parse login response: ${err.message}`));
+        }
       });
-    }).on('error', (err) => {
-      reject(err);
     });
+
+    req.on("error", reject);
+    req.write(postData);
+    req.end();
   });
 }
 
-function requestIbbMaster(postData, cookies) {
-  const payload = querystring.stringify(postData);
+function requestIbbApi(postData, cookies) {
+  const payload = JSON.stringify(postData);
   const options = {
     hostname: "partner.indianbluebook.com",
     port: 443,
-    path: "/api/partnermasters",
+    path: "/api/partner",
     method: "POST",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Type": "application/json",
       "Content-Length": Buffer.byteLength(payload),
       "Cookie": stringifyIbbCookies(cookies),
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -4820,7 +4793,10 @@ function requestIbbMaster(postData, cookies) {
       res.on("data", (chunk) => { body += chunk; });
       res.on("end", () => {
         try {
-          resolve(JSON.parse(body));
+          resolve({
+            statusCode: res.statusCode,
+            data: JSON.parse(body)
+          });
         } catch (e) {
           reject(new Error("Invalid JSON response from IBB API"));
         }
@@ -4832,28 +4808,59 @@ function requestIbbMaster(postData, cookies) {
   });
 }
 
-async function callIbbMasterWithRetry(postData) {
+function requestIbbCities(cookies) {
+  const options = {
+    hostname: "partner.indianbluebook.com",
+    port: 443,
+    path: "/api/dealer/cities",
+    method: "GET",
+    headers: {
+      "Cookie": stringifyIbbCookies(cookies),
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+  };
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let body = "";
+      res.on("data", (chunk) => { body += chunk; });
+      res.on("end", () => {
+        try {
+          resolve({
+            statusCode: res.statusCode,
+            data: JSON.parse(body)
+          });
+        } catch (e) {
+          reject(new Error("Invalid JSON response from IBB API"));
+        }
+      });
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
+
+async function callIbbApiWithRetry(postData) {
   let cookies = ibbSessionCookies;
   if (!cookies) {
     cookies = await loginToIbb();
   }
   try {
-    let result = await requestIbbMaster(postData, cookies);
-    if (result.status === 422 && result.message === 'Invalid month.') {
-      return result;
-    }
-    if (result.status === 401 || (result.status !== 200 && result.status !== "success")) {
-      console.log("IBB API returned non-success status, retrying login...");
+    let result = await requestIbbApi(postData, cookies);
+    const isUnauthorized = result.statusCode === 401 || (result.data && result.data.status === 401);
+    if (isUnauthorized) {
+      console.log("IBB API returned 401 Unauthorized status, retrying login...");
       ibbSessionCookies = null;
       cookies = await loginToIbb();
-      result = await requestIbbMaster(postData, cookies);
+      result = await requestIbbApi(postData, cookies);
     }
-    return result;
+    return result.data;
   } catch (err) {
     console.log("Error in IBB API request, retrying login...", err);
     ibbSessionCookies = null;
     cookies = await loginToIbb();
-    return requestIbbMaster(postData, cookies);
+    const result = await requestIbbApi(postData, cookies);
+    return result.data;
   }
 }
 
@@ -4863,10 +4870,10 @@ app.get("/api/ibb/makes", async (req, res) => {
     if (!year || !month) {
       return res.status(400).json({ error: "year and month are required" });
     }
-    const result = await callIbbMasterWithRetry({
+    const result = await callIbbApiWithRetry({
       for: "make",
-      year,
-      month
+      year: parseInt(year, 10),
+      month: parseInt(month, 10)
     });
     if (result.status === 200 || result.status === "success") {
       res.json({ success: true, makes: result.make || [] });
@@ -4885,10 +4892,10 @@ app.get("/api/ibb/models", async (req, res) => {
     if (!year || !month || !make) {
       return res.status(400).json({ error: "year, month, and make are required" });
     }
-    const result = await callIbbMasterWithRetry({
+    const result = await callIbbApiWithRetry({
       for: "model",
-      year,
-      month,
+      year: parseInt(year, 10),
+      month: parseInt(month, 10),
       make
     });
     if (result.status === 200 || result.status === "success") {
@@ -4908,10 +4915,10 @@ app.get("/api/ibb/variants", async (req, res) => {
     if (!year || !month || !make || !model) {
       return res.status(400).json({ error: "year, month, make, and model are required" });
     }
-    const result = await callIbbMasterWithRetry({
+    const result = await callIbbApiWithRetry({
       for: "variant",
-      year,
-      month,
+      year: parseInt(year, 10),
+      month: parseInt(month, 10),
       make,
       model
     });
@@ -4926,119 +4933,9 @@ app.get("/api/ibb/variants", async (req, res) => {
   }
 });
 
-function extractCategoryPrices(html, paneId) {
-  const paneRegex = new RegExp(`<div\\s+id="${paneId}"[\\s\\S]*?<\\/table>`, "i");
-  const paneMatch = html.match(paneRegex);
-  if (!paneMatch) return null;
-
-  const paneHtml = paneMatch[0];
-  const priceRegex = /<strong>(Fair|Market|Best)\s+Price<\/strong>[\s\S]*?<td[^>]*>[\s\S]*?([\d,]+)/gi;
-  let match;
-  const prices = {};
-
-  while ((match = priceRegex.exec(paneHtml)) !== null) {
-    const type = match[1].toLowerCase();
-    const value = parseInt(match[2].replace(/,/g, ""), 10);
-    prices[type] = value;
-  }
-
-  return prices;
-}
-
-function fetchValuationPrice(params, cookies) {
-  const options = {
-    hostname: "partner.indianbluebook.com",
-    port: 443,
-    path: "/dealer/tools/price_check/premium",
-    method: "GET",
-    headers: {
-      "Cookie": stringifyIbbCookies(cookies),
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-  };
-
-  return new Promise((resolve, reject) => {
-    https.get(options, (res) => {
-      let data = "";
-      res.on("data", (chunk) => { data += chunk; });
-      res.on("end", () => {
-        console.log("fetchValuationPrice status:", res.statusCode);
-        console.log("fetchValuationPrice headers:", res.headers);
-        console.log("fetchValuationPrice data length:", data.length);
-        const token = extractToken(data);
-        if (!token) {
-          return reject(new Error("Could not find CSRF token on IBB price check page"));
-        }
-
-        const postData = {
-          _token: token,
-          pricefor: "0",
-          location: "KOTTAYAM",
-          manufacture_year: params.year,
-          manufacture_month: params.month,
-          make: params.make,
-          model: params.model,
-          variant: params.variant,
-          color: params.color,
-          kms: params.kms,
-          owner: params.owner
-        };
-
-        const payload = querystring.stringify(postData);
-        const postOptions = {
-          hostname: "partner.indianbluebook.com",
-          port: 443,
-          path: "/dealer/tools/getComprehensivePrice",
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Content-Length": Buffer.byteLength(payload),
-            "Cookie": stringifyIbbCookies(cookies),
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          }
-        };
-
-        const postReq = https.request(postOptions, (postRes) => {
-          let postBody = "";
-          postRes.on("data", (chunk) => { postBody += chunk; });
-          postRes.on("end", () => {
-            resolve(postBody);
-          });
-        });
-
-        postReq.on("error", reject);
-        postReq.write(payload);
-        postReq.end();
-      });
-    }).on("error", reject);
-  });
-}
-
-async function callIbbValuationWithRetry(params) {
-  let cookies = ibbSessionCookies;
-  if (!cookies) {
-    cookies = await loginToIbb();
-  }
-  try {
-    let html = await fetchValuationPrice(params, cookies);
-    if (html.includes("/auth/login") || html.length < 500) {
-      console.log("Valuation returned guest redirect, relogging...");
-      ibbSessionCookies = null;
-      cookies = await loginToIbb();
-      html = await fetchValuationPrice(params, cookies);
-    }
-    return html;
-  } catch (err) {
-    console.log("Error in valuation request, retrying login...", err);
-    ibbSessionCookies = null;
-    cookies = await loginToIbb();
-    return fetchValuationPrice(params, cookies);
-  }
-}
-
 app.get("/api/ibb/colors", async (req, res) => {
   try {
-    const result = await callIbbMasterWithRetry({
+    const result = await callIbbApiWithRetry({
       for: "color"
     });
     if (result.status === 200 || result.status === "success") {
@@ -5052,32 +4949,90 @@ app.get("/api/ibb/colors", async (req, res) => {
   }
 });
 
+app.get("/api/ibb/cities", async (req, res) => {
+  try {
+    let cookies = ibbSessionCookies;
+    if (!cookies) {
+      cookies = await loginToIbb();
+    }
+    let result;
+    try {
+      result = await requestIbbCities(cookies);
+      if (result.statusCode === 401 || (result.data && result.data.status === 401)) {
+        console.log("IBB cities API returned 401, retrying login...");
+        ibbSessionCookies = null;
+        cookies = await loginToIbb();
+        result = await requestIbbCities(cookies);
+      }
+    } catch (err) {
+      console.log("Error fetching IBB cities, retrying login...", err);
+      ibbSessionCookies = null;
+      cookies = await loginToIbb();
+      result = await requestIbbCities(cookies);
+    }
+    
+    if (result && result.data && (result.data.status === 200 || result.data.message === "success")) {
+      res.json({ success: true, cities: result.data.city || [] });
+    } else {
+      res.status(500).json({ error: result?.data?.message || "Failed to fetch cities" });
+    }
+  } catch (err) {
+    console.error("GET /api/ibb/cities error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.get("/api/ibb/price", async (req, res) => {
   try {
-    const { year, month, make, model, variant, color, kms, owner } = req.query;
+    const { year, month, make, model, variant, color, kms, owner, location } = req.query;
     if (!year || !month || !make || !model || !variant || !color || !kms || !owner) {
       return res.status(400).json({ error: "All parameters are required (year, month, make, model, variant, color, kms, owner)" });
     }
 
-    const htmlResponse = await callIbbValuationWithRetry({
-      year,
-      month,
+    const loc = (location && location.trim()) ? location.trim().toUpperCase() : "KOTTAYAM";
+
+    const result = await callIbbApiWithRetry({
+      for: "comprehensivePrice",
+      year: parseInt(year, 10),
+      month: parseInt(month, 10),
       make,
       model,
       variant,
+      location: loc,
       color,
-      kms,
-      owner
+      owner: parseInt(owner, 10),
+      kilometer: parseInt(kms, 10),
+      customer_ip: ""
     });
 
-    const valuation = {
-      tradeIn: extractCategoryPrices(htmlResponse, "Trade-In-Price"),
-      private: extractCategoryPrices(htmlResponse, "Private-Price"),
-      retail: extractCategoryPrices(htmlResponse, "Retail-Price"),
-      cpo: extractCategoryPrices(htmlResponse, "CPO-Price")
-    };
+    if (result && (result.status === 200 || result.status === "success")) {
+      const valuation = {
+        tradeIn: result.ForTradeinPrice ? {
+          fair: result.ForTradeinPrice[0] || null,
+          market: result.ForTradeinPrice[1] || null,
+          best: result.ForTradeinPrice[2] || null
+        } : null,
+        private: result.ForPrivatePrice ? {
+          fair: result.ForPrivatePrice[0] || null,
+          market: result.ForPrivatePrice[1] || null,
+          best: result.ForPrivatePrice[2] || null
+        } : null,
+        retail: result.ForRetailPrice ? {
+          fair: result.ForRetailPrice[0] || null,
+          market: result.ForRetailPrice[1] || null,
+          best: result.ForRetailPrice[2] || null
+        } : null,
+        cpo: result.ForCPOPrice ? {
+          fair: result.ForCPOPrice[0] || null,
+          market: result.ForCPOPrice[1] || null,
+          best: result.ForCPOPrice[2] || null
+        } : null
+      };
 
-    res.json({ success: true, valuation });
+      res.json({ success: true, valuation });
+    } else {
+      res.status(500).json({ error: result?.message || "Failed to calculate comprehensive price" });
+    }
   } catch (err) {
     console.error("GET /api/ibb/price error:", err);
     res.status(500).json({ error: "Internal server error" });

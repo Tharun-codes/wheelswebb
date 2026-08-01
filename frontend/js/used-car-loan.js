@@ -1629,6 +1629,33 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  const vehicleLocation = document.getElementById("vehicleLocation");
+  async function populateVehicleLocations(selectedLocation = "") {
+    if (!vehicleLocation) return;
+    vehicleLocation.innerHTML = '<option value="">Loading Locations...</option>';
+    try {
+      const res = await fetch("/api/ibb/cities");
+      const data = await res.json();
+      vehicleLocation.innerHTML = '<option value="">Select Location</option>';
+      if (data.success && data.cities) {
+        data.cities.forEach(loc => {
+          const opt = document.createElement("option");
+          opt.value = loc;
+          opt.textContent = loc;
+          vehicleLocation.appendChild(opt);
+        });
+        if (selectedLocation && data.cities.includes(selectedLocation)) {
+          vehicleLocation.value = selectedLocation;
+        }
+      } else {
+        vehicleLocation.innerHTML = '<option value="">Failed to load locations</option>';
+      }
+    } catch (e) {
+      console.error("Error loading locations:", e);
+      vehicleLocation.innerHTML = '<option value="">Error loading locations</option>';
+    }
+  }
+
   const btnCheckIbbPrice = document.getElementById("btnCheckIbbPrice");
   const ibbValuationModal = document.getElementById("ibbValuationModal");
   const btnCloseValuation = document.getElementById("btnCloseValuation");
@@ -1643,6 +1670,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const color = vehicleColor?.value;
       const kms = document.getElementById("kilometreReading")?.value;
       const ownerSelect = document.getElementById("osNo");
+      const location = document.getElementById("vehicleLocation")?.value;
 
       let ownerVal = "";
       if (ownerSelect) {
@@ -1652,8 +1680,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
 
-      if (!year || !month || !make || !model || !variant || !color || !kms || !ownerVal) {
-        alert("Please fill all required fields before checking price: Year, Month, Make, Model, Variant, Color, Odometer (KMS), and Owner Serial Number.");
+      if (!year || !month || !make || !model || !variant || !color || !kms || !ownerVal || !location) {
+        alert("Please fill all required fields before checking price: Year, Month, Make, Model, Variant, Color, Odometer (KMS), Owner Serial Number, and Vehicle Location.");
         return;
       }
 
@@ -1662,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', function () {
       btnCheckIbbPrice.innerHTML = "⏳ Calculating Valuation...";
 
       try {
-        const url = `/api/ibb/price?year=${year}&month=${month}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&variant=${encodeURIComponent(variant)}&color=${encodeURIComponent(color)}&kms=${kms}&owner=${ownerVal}`;
+        const url = `/api/ibb/price?year=${year}&month=${month}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&variant=${encodeURIComponent(variant)}&color=${encodeURIComponent(color)}&kms=${kms}&owner=${ownerVal}&location=${encodeURIComponent(location)}`;
         const res = await fetch(url);
         const data = await res.json();
 
@@ -1780,6 +1808,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     populateVehicleMakes();
     populateVehicleColors();
+    populateVehicleLocations();
   }
 
   // Initialize input validations
@@ -3647,6 +3676,7 @@ if (loanId) {
         populateVehicleMakes(data.vehicleMake || "", data.vehicleModel || "", data.vehicleVariant || "");
       }
       populateVehicleColors(data.vehicleColor || "");
+      populateVehicleLocations(data.vehicleLocation || "");
 
       // =========================
       // 5️⃣ Apply field visibility based on Source

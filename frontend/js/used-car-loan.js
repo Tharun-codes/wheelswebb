@@ -1672,6 +1672,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // IBB toggle icon — show/hide the IBB check panel
+  const ibbToggleIcon = document.getElementById("ibbToggleIcon");
+  const ibbPriceCheckPanel = document.getElementById("ibbPriceCheckPanel");
+
+  if (ibbToggleIcon && ibbPriceCheckPanel) {
+    let ibbPanelOpen = false;
+    ibbToggleIcon.addEventListener("click", () => {
+      ibbPanelOpen = !ibbPanelOpen;
+      if (ibbPanelOpen) {
+        ibbPriceCheckPanel.style.maxHeight = "200px";
+        ibbPriceCheckPanel.style.opacity = "1";
+        ibbToggleIcon.style.transform = "scale(1.12)";
+        ibbToggleIcon.style.boxShadow = "0 6px 18px rgba(79,70,229,0.55)";
+        ibbToggleIcon.title = "Hide IBB Valuation Price";
+      } else {
+        ibbPriceCheckPanel.style.maxHeight = "0";
+        ibbPriceCheckPanel.style.opacity = "0";
+        ibbToggleIcon.style.transform = "scale(1)";
+        ibbToggleIcon.style.boxShadow = "0 4px 12px rgba(79,70,229,0.4)";
+        ibbToggleIcon.title = "Check IBB Valuation Price";
+      }
+    });
+  }
+
   const btnCheckIbbPrice = document.getElementById("btnCheckIbbPrice");
   const ibbValuationModal = document.getElementById("ibbValuationModal");
   const btnCloseValuation = document.getElementById("btnCloseValuation");

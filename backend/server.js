@@ -5147,7 +5147,20 @@ app.post("/api/policies", async (req, res) => {
   }
 });
 
-// ── DELETE /api/policies/:id ────────────────────────────────────
+// ── GET /api/policies/all ── returns all policies across all banks for matching
+app.get("/api/policies/all", async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT * FROM loan_policies ORDER BY bank_name, created_at DESC"
+    );
+    res.json({ success: true, policies: rows });
+  } catch (err) {
+    console.error("GET /api/policies/all error:", err);
+    res.status(500).json({ error: "Failed to load policies" });
+  }
+});
+
+
 app.delete("/api/policies/:id", async (req, res) => {
   try {
     const { id } = req.params;

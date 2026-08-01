@@ -1855,7 +1855,280 @@ document.addEventListener('DOMContentLoaded', function () {
   enforceUppercase();
   enforceAlphabetsOnly();
   enforceNumbersOnly();
+
+  // ── CHECK POLICY FEATURE ────────────────────────────────────────
+  const btnCheckPolicy = document.getElementById("btnCheckPolicy");
+  const policyMatchResults = document.getElementById("policyMatchResults");
+
+  if (btnCheckPolicy && policyMatchResults) {
+    btnCheckPolicy.addEventListener("click", async () => {
+      // --- 1. Gather form data ---
+      const loanAmount = parseFloat(document.getElementById("loanAmount")?.value) || 0;
+      const loanTenure = parseInt(document.getElementById("loanTenure")?.value) || 0;
+      const cibilScore = parseInt(document.getElementById("cibilScore")?.value) || 0;
+      const monthlyIncome = parseFloat(document.getElementById("monthlyIncome")?.value) || 0;
+      const loanNature = (document.getElementById("loanNature")?.value || "").toLowerCase();
+      const osNoRaw = (document.getElementById("osNo")?.value || "").trim();
+      const osNoNum = osNoRaw === "" || osNoRaw.toLowerCase() === "none" ? 0 : parseInt(osNoRaw) || 0;
+
+      // Age from DOB
+      let applicantAge = 0;
+      const dobInput = document.getElementById("applicantDob");
+      if (dobInput && dobInput.value) {
+        const dob = new Date(dobInput.value);
+        const today = new Date();
+        applicantAge = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) applicantAge--;
+      }
+
+      // Product type mapping
+      const productTypeMap = {
+        "sale & purchase": "used car loan",
+        "refinance": "used car loan",
+        "bt topup": "used car loan",
+        "refinance hp": "used car loan",
+        "refinance without hp": "used car loan",
+        "int bt": "used car loan"
+      };
+      const applicantProductType = productTypeMap[loanNature] || "used car loan";
+
+      // --- 2. UI feedback while loading ---
+      btnCheckPolicy.disabled = true;
+      btnCheckPolicy.innerHTML = "⏳ Checking...";
+      policyMatchResults.style.display = "block";
+      policyMatchResults.innerHTML = `<div style="text-align:center;padding:1.5rem;color:#6b7280;font-size:0.9rem;">⏳ Fetching and matching policies...</div>`;
+
+      try {
+        const res = await fetch("/api/policies/all");
+        const data = await res.json();
+
+        if (!data.success || !data.policies || data.policies.length === 0) {
+          policyMatchResults.innerHTML = `<div style="text-align:center;padding:2rem;color:#9ca3af;border:1.5px dashed #e5e7eb;border-radius:12px;">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">📭</div>
+            <p style="font-weight:600;color:#374151;">No policies found</p>
+            <p style="font-size:0.82rem;">Please add policies in 📋 Policy Management first.</p>
+          </div>`;
+          return;
+        }
+
+        // --- 3. Score each policy ---
+        const WEIGHTS = {
+          loanAmt: 20,
+          tenure: 15,
+          cibil: 20,
+          age: 15,
+          income: 15,
+          productType: 10,
+          osNo: 5
+        };
+
+        const scored = data.policies.map(policy => {
+          const scores = {};
+          const reasons = [];
+
+          // Loan Amount: applicant asks for loanAmount, policy allows up to loan_amt
+          if (loanAmount > 0 && policy.loan_amt > 0) {
+            if (loanAmount <= policy.loan_amt) {
+              scores.loanAmt = WEIGHTS.loanAmt;
+              reasons.push(`✅ Loan ₹${(loanAmount/100000).toFixed(1)}L within limit ₹${(policy.loan_amt/100000).toFixed(1)}L`);
+            } else {
+              scores.loanAmt = 0;
+              reasons.push(`❌ Loan ₹${(loanAmount/100000).toFixed(1)}L exceeds limit ₹${(policy.loan_amt/100000).toFixed(1)}L`);
+            }
+          } else {
+            scores.loanAmt = WEIGHTS.loanAmt * 0.5; // partial if not filled
+          }
+
+          // Tenure: applicant loanTenure in months, policy max tenure
+          if (loanTenure > 0 && policy.tenure > 0) {
+            if (loanTenure <= policy.tenure) {
+              scores.tenure = WEIGHTS.tenure;
+              reasons.push(`✅ Tenure ${loanTenure}m within ${policy.tenure}m`);
+            } else {
+              scores.tenure = 0;
+              reasons.push(`❌ Tenure ${loanTenure}m exceeds ${policy.tenure}m`);
+            }
+          } else {
+            scores.tenure = WEIGHTS.tenure * 0.5;
+          }
+
+          // CIBIL: applicant score >= policy minimum
+          if (cibilScore > 0 && policy.cibil > 0) {
+            if (cibilScore >= policy.cibil) {
+              scores.cibil = WEIGHTS.cibil;
+              reasons.push(`✅ CIBIL ${cibilScore} ≥ min ${policy.cibil}`);
+            } else {
+              scores.cibil = 0;
+              reasons.push(`❌ CIBIL ${cibilScore} < min ${policy.cibil}`);
+            }
+          } else {
+            scores.cibil = WEIGHTS.cibil * 0.5;
+          }
+
+          // Age: within min_age and max_age
+          if (applicantAge > 0 && policy.min_age > 0 && policy.max_age > 0) {
+            if (applicantAge >= policy.min_age && applicantAge <= policy.max_age) {
+              scores.age = WEIGHTS.age;
+              reasons.push(`✅ Age ${applicantAge} within ${policy.min_age}–${policy.max_age}`);
+            } else {
+              scores.age = 0;
+              reasons.push(`❌ Age ${applicantAge} outside ${policy.min_age}–${policy.max_age}`);
+            }
+          } else {
+            scores.age = WEIGHTS.age * 0.5;
+          }
+
+          // Income (ABB): monthly income vs policy ABB (treated as minimum required)
+          if (monthlyIncome > 0 && policy.abb > 0) {
+            if (monthlyIncome >= policy.abb) {
+              scores.income = WEIGHTS.income;
+              reasons.push(`✅ Income ₹${monthlyIncome.toLocaleString()} ≥ min ₹${policy.abb.toLocaleString()}`);
+            } else {
+              scores.income = 0;
+              reasons.push(`❌ Income ₹${monthlyIncome.toLocaleString()} < min ₹${policy.abb.toLocaleString()}`);
+            }
+          } else {
+            scores.income = WEIGHTS.income * 0.5;
+          }
+
+          // Product type: broad match
+          const policyType = (policy.product_type || "").toLowerCase();
+          if (policyType.includes(applicantProductType) || applicantProductType.includes(policyType) || policyType.includes("used car")) {
+            scores.productType = WEIGHTS.productType;
+          } else {
+            scores.productType = 0;
+            reasons.push(`❌ Product type mismatch: "${policy.product_type}"`);
+          }
+
+          // O.S. Number vs OHP limit: OHP = "1,2,3" or "Upto 3" etc — try numeric parse
+          const policyOhp = (policy.ohp || "").replace(/[^0-9]/g, "");
+          const policyOhpNum = policyOhp ? parseInt(policyOhp) : 99;
+          if (osNoNum === 0 || policyOhpNum === 0 || osNoNum <= policyOhpNum) {
+            scores.osNo = WEIGHTS.osNo;
+          } else {
+            scores.osNo = 0;
+            reasons.push(`❌ O.S. No ${osNoNum} exceeds policy OHP ${policy.ohp}`);
+          }
+
+          const totalScore = Math.round(Object.values(scores).reduce((a, b) => a + b, 0));
+
+          return { policy, totalScore, reasons };
+        });
+
+        // Sort by match % descending, filter out 0%
+        const sorted = scored
+          .filter(s => s.totalScore > 0)
+          .sort((a, b) => b.totalScore - a.totalScore);
+
+        if (sorted.length === 0) {
+          policyMatchResults.innerHTML = `<div style="text-align:center;padding:2rem;color:#9ca3af;border:1.5px dashed #e5e7eb;border-radius:12px;">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">😞</div>
+            <p style="font-weight:600;color:#374151;">No matching policies found</p>
+            <p style="font-size:0.82rem;">Try filling in more details like Loan Amount, CIBIL score, and Date of Birth.</p>
+          </div>`;
+          return;
+        }
+
+        // --- 4. Render result cards ---
+        const getScoreColor = (pct) => {
+          if (pct >= 70) return { bg: "linear-gradient(135deg,#d1fae5,#a7f3d0)", text: "#065f46", border: "#10b981" };
+          if (pct >= 40) return { bg: "linear-gradient(135deg,#fef3c7,#fde68a)", text: "#92400e", border: "#f59e0b" };
+          return { bg: "linear-gradient(135deg,#fee2e2,#fecaca)", text: "#991b1b", border: "#ef4444" };
+        };
+
+        const topScore = sorted[0].totalScore;
+
+        const html = `
+          <div style="margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-weight:600;color:#374151;font-size:0.95rem;">Found ${sorted.length} matching polic${sorted.length === 1 ? "y" : "ies"}</p>
+            <span style="font-size:0.78rem;color:#6b7280;">Click a card to highlight it as your selection</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.85rem;" id="policyCardList">
+            ${sorted.map((s, idx) => {
+              const p = s.policy;
+              const pct = s.totalScore;
+              const colors = getScoreColor(pct);
+              const isTop = idx === 0;
+              return `
+                <div class="policy-match-card" data-bank-name="${p.bank_name}" data-idx="${idx}"
+                  style="border:1.5px solid ${colors.border}; border-radius:12px; padding:1rem 1.2rem; background:#fff; cursor:pointer; transition:all 0.2s; position:relative; box-shadow: ${isTop ? "0 4px 16px rgba(0,0,0,0.1)" : "0 1px 4px rgba(0,0,0,0.06)"};"
+                  onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.12)'"
+                  onmouseleave="this.style.transform='';this.style.boxShadow='${isTop ? "0 4px 16px rgba(0,0,0,0.1)" : "0 1px 4px rgba(0,0,0,0.06)"}'">
+
+                  ${isTop ? `<div style="position:absolute;top:-10px;right:14px;background:#7c3aed;color:white;font-size:0.7rem;font-weight:700;padding:2px 10px;border-radius:20px;">🏆 Best Match</div>` : ""}
+
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:160px;">
+                      <p style="font-size:0.95rem;font-weight:700;color:#1e293b;margin:0;">${p.bank_name}</p>
+                      <p style="font-size:0.82rem;color:#475569;margin:2px 0 0;">${p.scheme_name} <span style="color:#94a3b8;">•</span> ${p.product_type}</p>
+                    </div>
+                    <div style="background:${colors.bg};border:1px solid ${colors.border};border-radius:50px;padding:4px 14px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+                      <span style="font-size:1.1rem;font-weight:800;color:${colors.text};">${pct}%</span>
+                      <span style="font-size:0.72rem;font-weight:600;color:${colors.text};">match</span>
+                    </div>
+                  </div>
+
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.5rem;margin-top:0.75rem;">
+                    ${p.loan_amt ? `<div style="background:#f8fafc;border-radius:8px;padding:6px 10px;"><div style="font-size:0.68rem;color:#94a3b8;font-weight:600;">MAX LOAN</div><div style="font-size:0.85rem;font-weight:700;color:#1e293b;">₹${(p.loan_amt/100000).toFixed(1)}L</div></div>` : ""}
+                    ${p.tenure ? `<div style="background:#f8fafc;border-radius:8px;padding:6px 10px;"><div style="font-size:0.68rem;color:#94a3b8;font-weight:600;">MAX TENURE</div><div style="font-size:0.85rem;font-weight:700;color:#1e293b;">${p.tenure} months</div></div>` : ""}
+                    ${p.cibil ? `<div style="background:#f8fafc;border-radius:8px;padding:6px 10px;"><div style="font-size:0.68rem;color:#94a3b8;font-weight:600;">MIN CIBIL</div><div style="font-size:0.85rem;font-weight:700;color:#1e293b;">${p.cibil}</div></div>` : ""}
+                    ${p.min_age && p.max_age ? `<div style="background:#f8fafc;border-radius:8px;padding:6px 10px;"><div style="font-size:0.68rem;color:#94a3b8;font-weight:600;">AGE RANGE</div><div style="font-size:0.85rem;font-weight:700;color:#1e293b;">${p.min_age}–${p.max_age} yrs</div></div>` : ""}
+                    ${p.ltv ? `<div style="background:#f8fafc;border-radius:8px;padding:6px 10px;"><div style="font-size:0.68rem;color:#94a3b8;font-weight:600;">LTV</div><div style="font-size:0.85rem;font-weight:700;color:#1e293b;">${p.ltv}%</div></div>` : ""}
+                    ${p.abb ? `<div style="background:#f8fafc;border-radius:8px;padding:6px 10px;"><div style="font-size:0.68rem;color:#94a3b8;font-weight:600;">MIN INCOME (ABB)</div><div style="font-size:0.85rem;font-weight:700;color:#1e293b;">₹${Number(p.abb).toLocaleString()}</div></div>` : ""}
+                    ${p.applicant ? `<div style="background:#f8fafc;border-radius:8px;padding:6px 10px;"><div style="font-size:0.68rem;color:#94a3b8;font-weight:600;">APPLICANT</div><div style="font-size:0.85rem;font-weight:700;color:#1e293b;">${p.applicant}</div></div>` : ""}
+                    ${p.ohp ? `<div style="background:#f8fafc;border-radius:8px;padding:6px 10px;"><div style="font-size:0.68rem;color:#94a3b8;font-weight:600;">OHP</div><div style="font-size:0.85rem;font-weight:700;color:#1e293b;">${p.ohp}</div></div>` : ""}
+                  </div>
+
+                  <details style="margin-top:0.65rem;">
+                    <summary style="font-size:0.78rem;color:#7c3aed;cursor:pointer;font-weight:600;">View match details</summary>
+                    <ul style="margin:0.5rem 0 0;padding-left:1.1rem;display:flex;flex-direction:column;gap:3px;">
+                      ${s.reasons.map(r => `<li style="font-size:0.78rem;color:#374151;">${r}</li>`).join("")}
+                    </ul>
+                  </details>
+                </div>`;
+            }).join("")}
+          </div>`;
+
+        policyMatchResults.innerHTML = html;
+
+        // --- 5. Card click = highlight as selected ---
+        policyMatchResults.querySelectorAll(".policy-match-card").forEach(card => {
+          card.addEventListener("click", () => {
+            // Deselect all
+            policyMatchResults.querySelectorAll(".policy-match-card").forEach(c => {
+              c.style.outline = "";
+              c.style.background = "#fff";
+            });
+            // Highlight selected
+            card.style.outline = "3px solid #7c3aed";
+            card.style.background = "#faf5ff";
+
+            // Flash a note
+            const bankName = card.dataset.bankName;
+            let note = policyMatchResults.querySelector("#policySelectedNote");
+            if (!note) {
+              note = document.createElement("div");
+              note.id = "policySelectedNote";
+              note.style.cssText = "margin-top:0.75rem;padding:0.6rem 1rem;background:#f5f3ff;border:1.5px solid #7c3aed;border-radius:8px;font-size:0.85rem;color:#5b21b6;font-weight:600;text-align:center;";
+              policyMatchResults.appendChild(note);
+            }
+            note.textContent = `✅ Selected: ${bankName}`;
+          });
+        });
+
+      } catch (err) {
+        console.error("Check Policy error:", err);
+        policyMatchResults.innerHTML = `<div style="text-align:center;padding:1.5rem;color:#ef4444;font-size:0.9rem;">❌ Failed to load policies. Make sure the server is running.</div>`;
+      } finally {
+        btnCheckPolicy.disabled = false;
+        btnCheckPolicy.innerHTML = "📋 Check Policy";
+      }
+    });
+  }
+  // ── END CHECK POLICY ────────────────────────────────────────────
 });
+
 
 // Populate BT dropdowns
 function populateBtDropdowns() {

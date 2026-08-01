@@ -572,31 +572,54 @@ document.addEventListener('DOMContentLoaded', function () {
   // Initialize EMI / IRR calculation display
   try { initEmiCalculator(); } catch (e) { /* ignore */ }
 
+  // Datalist population helpers
+  function initDatalistHelper(elem, listId) {
+    if (!elem) return;
+    const list = document.getElementById(listId);
+    if (!list) return;
+
+    elem.clearOptions = (placeholder) => {
+      list.innerHTML = "";
+      if (placeholder) {
+        elem.placeholder = placeholder;
+      }
+    };
+    
+    elem.addOption = (val, text) => {
+      const opt = document.createElement("option");
+      opt.value = val;
+      if (text) {
+        opt.textContent = text;
+      }
+      list.appendChild(opt);
+    };
+  }
+
   // Initialize MFG dropdowns
   const mfgMonth = document.getElementById("mfgMonth");
   const mfgYear = document.getElementById("mfgYear");
   const vehicleAgeInput = document.getElementById("vehicleAge");
 
-  if (mfgMonth) {
+  initDatalistHelper(mfgMonth, "mfgMonthList");
+  initDatalistHelper(mfgYear, "mfgYearList");
+  initDatalistHelper(document.getElementById("osNo"), "osNoList");
+
+  if (mfgMonth && mfgMonth.clearOptions) {
+    mfgMonth.clearOptions("Select or type MFG Month");
     const monthNames = [
       "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
       "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
     ];
     monthNames.forEach((name, index) => {
-      const opt = document.createElement("option");
       const monthNumber = String(index + 1).padStart(2, "0");
-      opt.value = monthNumber;
-      opt.textContent = `${monthNumber} - ${name}`;
-      mfgMonth.appendChild(opt);
+      mfgMonth.addOption(monthNumber, `${monthNumber} - ${name}`);
     });
   }
 
-  if (mfgYear) {
+  if (mfgYear && mfgYear.clearOptions) {
+    mfgYear.clearOptions("Select or type MFG Year");
     for (let y = 2010; y <= 2030; y++) {
-      const opt = document.createElement("option");
-      opt.value = y;
-      opt.textContent = y;
-      mfgYear.appendChild(opt);
+      mfgYear.addOption(y, y);
     }
   }
 
@@ -1444,6 +1467,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const vehicleModel = document.getElementById("vehicleModel");
   const vehicleVariant = document.getElementById("vehicleVariant");
 
+  initDatalistHelper(vehicleMake, "vehicleMakeList");
+  initDatalistHelper(vehicleModel, "vehicleModelList");
+  initDatalistHelper(vehicleVariant, "vehicleVariantList");
+
   async function populateVehicleMakes(selectedMake = "", selectedModel = "", selectedVariant = "") {
     if (!vehicleMake) return;
 
@@ -1451,33 +1478,30 @@ document.addEventListener('DOMContentLoaded', function () {
     const monthValue = mfgMonth?.value ? Number(mfgMonth.value) : "";
 
     if (!yearValue || !monthValue) {
-      vehicleMake.innerHTML = '<option value="">Select Make</option>';
+      if (vehicleMake.clearOptions) vehicleMake.clearOptions("Select Make");
       vehicleMake.disabled = true;
-      if (vehicleModel) {
-        vehicleModel.innerHTML = '<option value="">Select Model</option>';
+      if (vehicleModel && vehicleModel.clearOptions) {
+        vehicleModel.clearOptions("Select Model");
         vehicleModel.disabled = true;
       }
-      if (vehicleVariant) {
-        vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+      if (vehicleVariant && vehicleVariant.clearOptions) {
+        vehicleVariant.clearOptions("Select Variant");
         vehicleVariant.disabled = true;
       }
       return;
     }
 
     vehicleMake.disabled = true;
-    vehicleMake.innerHTML = '<option value="">Loading Makes...</option>';
+    if (vehicleMake.clearOptions) vehicleMake.clearOptions("Loading Makes...");
 
     try {
       const res = await fetch(`/api/ibb/makes?year=${yearValue}&month=${monthValue}`);
       const data = await res.json();
 
-      vehicleMake.innerHTML = '<option value="">Select Make</option>';
+      if (vehicleMake.clearOptions) vehicleMake.clearOptions("Select Make");
       if (data.success && data.makes) {
         data.makes.forEach((make) => {
-          const opt = document.createElement("option");
-          opt.value = make;
-          opt.textContent = make;
-          vehicleMake.appendChild(opt);
+          if (vehicleMake.addOption) vehicleMake.addOption(make);
         });
         vehicleMake.disabled = false;
 
@@ -1486,21 +1510,21 @@ document.addEventListener('DOMContentLoaded', function () {
           await window.updateModelOptions(selectedModel, selectedVariant);
         } else {
           vehicleMake.value = "";
-          if (vehicleModel) {
-            vehicleModel.innerHTML = '<option value="">Select Model</option>';
+          if (vehicleModel && vehicleModel.clearOptions) {
+            vehicleModel.clearOptions("Select Model");
             vehicleModel.disabled = true;
           }
-          if (vehicleVariant) {
-            vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+          if (vehicleVariant && vehicleVariant.clearOptions) {
+            vehicleVariant.clearOptions("Select Variant");
             vehicleVariant.disabled = true;
           }
         }
       } else {
-        vehicleMake.innerHTML = '<option value="">Failed to load makes</option>';
+        if (vehicleMake.clearOptions) vehicleMake.clearOptions("Failed to load makes");
       }
     } catch (e) {
       console.error("Error loading makes:", e);
-      vehicleMake.innerHTML = '<option value="">Error loading makes</option>';
+      if (vehicleMake.clearOptions) vehicleMake.clearOptions("Error loading makes");
     }
   }
 
@@ -1511,10 +1535,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const yearVal = mfgYear.value;
     const monthVal = mfgMonth.value ? Number(mfgMonth.value) : "";
 
-    vehicleModel.innerHTML = '<option value="">Select Model</option>';
+    if (vehicleModel.clearOptions) vehicleModel.clearOptions("Select Model");
     vehicleModel.disabled = true;
-    if (vehicleVariant) {
-      vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+    if (vehicleVariant && vehicleVariant.clearOptions) {
+      vehicleVariant.clearOptions("Select Variant");
       vehicleVariant.disabled = true;
     }
 
@@ -1522,19 +1546,16 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    vehicleModel.innerHTML = '<option value="">Loading Models...</option>';
+    if (vehicleModel.clearOptions) vehicleModel.clearOptions("Loading Models...");
 
     try {
       const res = await fetch(`/api/ibb/models?year=${yearVal}&month=${monthVal}&make=${encodeURIComponent(makeVal)}`);
       const data = await res.json();
 
-      vehicleModel.innerHTML = '<option value="">Select Model</option>';
+      if (vehicleModel.clearOptions) vehicleModel.clearOptions("Select Model");
       if (data.success && data.models) {
         data.models.forEach(model => {
-          const opt = document.createElement("option");
-          opt.value = model;
-          opt.textContent = model;
-          vehicleModel.appendChild(opt);
+          if (vehicleModel.addOption) vehicleModel.addOption(model);
         });
         vehicleModel.disabled = false;
 
@@ -1543,17 +1564,17 @@ document.addEventListener('DOMContentLoaded', function () {
           await window.updateVariantOptions(selectedVariant);
         } else {
           vehicleModel.value = "";
-          if (vehicleVariant) {
-            vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+          if (vehicleVariant && vehicleVariant.clearOptions) {
+            vehicleVariant.clearOptions("Select Variant");
             vehicleVariant.disabled = true;
           }
         }
       } else {
-        vehicleModel.innerHTML = '<option value="">Failed to load models</option>';
+        if (vehicleModel.clearOptions) vehicleModel.clearOptions("Failed to load models");
       }
     } catch (e) {
       console.error("Error loading models:", e);
-      vehicleModel.innerHTML = '<option value="">Error loading models</option>';
+      if (vehicleModel.clearOptions) vehicleModel.clearOptions("Error loading models");
     }
   };
 
@@ -1565,26 +1586,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const yearVal = mfgYear.value;
     const monthVal = mfgMonth.value ? Number(mfgMonth.value) : "";
 
-    vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+    if (vehicleVariant.clearOptions) vehicleVariant.clearOptions("Select Variant");
     vehicleVariant.disabled = true;
 
     if (!makeVal || !modelVal || !yearVal || !monthVal) {
       return;
     }
 
-    vehicleVariant.innerHTML = '<option value="">Loading Variants...</option>';
+    if (vehicleVariant.clearOptions) vehicleVariant.clearOptions("Loading Variants...");
 
     try {
       const res = await fetch(`/api/ibb/variants?year=${yearVal}&month=${monthVal}&make=${encodeURIComponent(makeVal)}&model=${encodeURIComponent(modelVal)}`);
       const data = await res.json();
 
-      vehicleVariant.innerHTML = '<option value="">Select Variant</option>';
+      if (vehicleVariant.clearOptions) vehicleVariant.clearOptions("Select Variant");
       if (data.success && data.variants) {
         data.variants.forEach(variant => {
-          const opt = document.createElement("option");
-          opt.value = variant;
-          opt.textContent = variant;
-          vehicleVariant.appendChild(opt);
+          if (vehicleVariant.addOption) vehicleVariant.addOption(variant);
         });
         vehicleVariant.disabled = false;
 
@@ -1594,65 +1612,63 @@ document.addEventListener('DOMContentLoaded', function () {
           vehicleVariant.value = "";
         }
       } else {
-        vehicleVariant.innerHTML = '<option value="">Failed to load variants</option>';
+        if (vehicleVariant.clearOptions) vehicleVariant.clearOptions("Failed to load variants");
       }
     } catch (e) {
       console.error("Error loading variants:", e);
-      vehicleVariant.innerHTML = '<option value="">Error loading variants</option>';
+      if (vehicleVariant.clearOptions) vehicleVariant.clearOptions("Error loading variants");
     }
   };
 
   const vehicleColor = document.getElementById("vehicleColor");
+  initDatalistHelper(vehicleColor, "vehicleColorList");
+
   async function populateVehicleColors(selectedColor = "") {
     if (!vehicleColor) return;
-    vehicleColor.innerHTML = '<option value="">Loading Colors...</option>';
+    if (vehicleColor.clearOptions) vehicleColor.clearOptions("Loading Colors...");
     try {
       const res = await fetch("/api/ibb/colors");
       const data = await res.json();
-      vehicleColor.innerHTML = '<option value="">Select Color</option>';
+      if (vehicleColor.clearOptions) vehicleColor.clearOptions("Select Color");
       if (data.success && data.colors) {
         data.colors.forEach(col => {
-          const opt = document.createElement("option");
-          opt.value = col;
-          opt.textContent = col;
-          vehicleColor.appendChild(opt);
+          if (vehicleColor.addOption) vehicleColor.addOption(col);
         });
         if (selectedColor && data.colors.includes(selectedColor)) {
           vehicleColor.value = selectedColor;
         }
       } else {
-        vehicleColor.innerHTML = '<option value="">Failed to load colors</option>';
+        if (vehicleColor.clearOptions) vehicleColor.clearOptions("Failed to load colors");
       }
     } catch (e) {
       console.error("Error loading colors:", e);
-      vehicleColor.innerHTML = '<option value="">Error loading colors</option>';
+      if (vehicleColor.clearOptions) vehicleColor.clearOptions("Error loading colors");
     }
   }
 
   const vehicleLocation = document.getElementById("vehicleLocation");
+  initDatalistHelper(vehicleLocation, "vehicleLocationList");
+
   async function populateVehicleLocations(selectedLocation = "") {
     if (!vehicleLocation) return;
-    vehicleLocation.innerHTML = '<option value="">Loading Locations...</option>';
+    if (vehicleLocation.clearOptions) vehicleLocation.clearOptions("Loading Locations...");
     try {
       const res = await fetch("/api/ibb/cities");
       const data = await res.json();
-      vehicleLocation.innerHTML = '<option value="">Select Location</option>';
+      if (vehicleLocation.clearOptions) vehicleLocation.clearOptions("Select Location");
       if (data.success && data.cities) {
         data.cities.forEach(loc => {
-          const opt = document.createElement("option");
-          opt.value = loc;
-          opt.textContent = loc;
-          vehicleLocation.appendChild(opt);
+          if (vehicleLocation.addOption) vehicleLocation.addOption(loc);
         });
         if (selectedLocation && data.cities.includes(selectedLocation)) {
           vehicleLocation.value = selectedLocation;
         }
       } else {
-        vehicleLocation.innerHTML = '<option value="">Failed to load locations</option>';
+        if (vehicleLocation.clearOptions) vehicleLocation.clearOptions("Failed to load locations");
       }
     } catch (e) {
       console.error("Error loading locations:", e);
-      vehicleLocation.innerHTML = '<option value="">Error loading locations</option>';
+      if (vehicleLocation.clearOptions) vehicleLocation.clearOptions("Error loading locations");
     }
   }
 

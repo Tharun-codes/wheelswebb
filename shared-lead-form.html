@@ -44,22 +44,25 @@
       </div>
       <div class="form-field">
         <label for="osNo">O. S NO *</label>
-        <select id="osNo" required>
-          <option value="">O. S NO *</option>
-          <option>None</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-        </select>
+        <input id="osNo" list="osNoList" required placeholder="Select or type O. S NO" />
+        <datalist id="osNoList">
+          <option value="None"></option>
+          <option value="1"></option>
+          <option value="2"></option>
+          <option value="3"></option>
+          <option value="4"></option>
+          <option value="5"></option>
+        </datalist>
       </div>
       <div class="form-field">
         <label for="mfgMonth">MFG MONTH *</label>
-        <select id="mfgMonth" required>
-          <option value="">MFG MONTH *</option>
-        </select>
+        <input id="mfgMonth" list="mfgMonthList" required placeholder="Select or type MFG Month" />
+        <datalist id="mfgMonthList"></datalist>
       </div>
       <div class="form-field">
         <label for="mfgYear">MFG YEAR *</label>
-        <select id="mfgYear" required>
-          <option value="">MFG YEAR *</option>
-        </select>
+        <input id="mfgYear" list="mfgYearList" required placeholder="Select or type MFG Year" />
+        <datalist id="mfgYearList"></datalist>
       </div>
       <div class="form-field">
         <label for="vehicleAge">VEHICLE AGE</label>
@@ -75,9 +78,8 @@
       </div>
       <div class="form-field">
         <label for="vehicleLocation">VEHICLE LOCATION *</label>
-        <select id="vehicleLocation" required>
-          <option value="">Select Location</option>
-        </select>
+        <input id="vehicleLocation" list="vehicleLocationList" required placeholder="Select or type Location" />
+        <datalist id="vehicleLocationList"></datalist>
       </div>
     </div>
   </div>

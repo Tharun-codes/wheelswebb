@@ -1511,19 +1511,27 @@
                   <option value="2"></option>
                   <option value="3"></option>
                   <option value="4"></option>
-                  <option value="4+"></option>
+                  <option value="5"></option>
+                  <option value="6+"></option>
                 </datalist>
               </div>
 
+
               <div class="form-field">
-                <label for="vehicleOwnerContact">VEHICLE VALUATION MOBILE NO *</label>
+                <label for="vehicleLocation">LOCATION *</label>
+                <input id="vehicleLocation" list="vehicleLocationList" required placeholder="Select or type Location" />
+                <datalist id="vehicleLocationList"></datalist>
+              </div>
+
+
+              <div class="form-field">
+                <label for="vehicleOwnerContact">VEHICLE VALUATION CONTACT*</label>
                 <input id="vehicleOwnerContact" name="vehicleOwnerContact" required data-numbers maxlength="10" />
               </div>
 
-              <div class="form-field">
-                <label for="vehicleLocation">VEHICLE LOCATION *</label>
-                <input id="vehicleLocation" list="vehicleLocationList" required placeholder="Select or type Location" />
-                <datalist id="vehicleLocationList"></datalist>
+              <div class="form field">
+                <label for="Vehicle Inspection Address">VEHICLE INSPECTION ADDRESS *</label>
+                <input id="Vehicle Inspection Address" name="Vehicle Inspection Address" required />
               </div>
 
 
@@ -2321,142 +2329,6 @@
             </div>
 
           </div>
-
-
-
-          <!-- REF CONTACT -->
-
-          <div class="section dealer-hidden">
-
-            <h3>Ref Contact</h3>
-
-
-
-            <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
-
-
-
-              <div class="form-field">
-
-                <label for="refMob1">MOBILE NO *</label>
-
-                <input id="refMob1" required data-numbers maxlength="10" />
-
-              </div>
-
-
-
-              <div class="form-field">
-
-                <label for="refName1">NAME *</label>
-
-                <input id="refName1" required data-uppercase data-alphabets />
-
-              </div>
-
-
-
-              <div class="form-field">
-
-                <label for="refMob2">MOBILE NO</label>
-
-                <input id="refMob2" data-numbers maxlength="10" />
-
-              </div>
-
-
-
-              <div class="form-field">
-
-                <label for="refName2">NAME</label>
-
-                <input id="refName2" data-uppercase data-alphabets />
-
-              </div>
-
-
-
-            </div>
-
-          </div>
-
-
-
-
-
-
-
-          <!-- NOMINEE -->
-
-          <div class="section dealer-hidden">
-
-            <h3>Nominee Information</h3>
-
-
-
-            <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
-
-
-
-              <div class="form-field">
-
-                <label for="nomineeName">NOMINEE NAME *</label>
-
-                <input id="nomineeName" required data-uppercase data-alphabets />
-
-              </div>
-
-
-
-              <div class="form-field">
-
-                <label for="nomineeDob">NOMINEE DATE OF BIRTH *</label>
-
-                <input id="nomineeDob" type="date" required />
-
-              </div>
-
-
-
-              <div class="form-field">
-
-                <label for="nomineeRelationship">RELATIONSHIP *</label>
-
-                <select id="nomineeRelationship" required>
-
-                  <option value="">RELATIONSHIP *</option>
-
-                  <option>None</option>
-
-                  <option>Spouse</option>
-
-                  <option>Father</option>
-
-                  <option>Mother</option>
-
-                  <option>Brother</option>
-
-                  <option>Sister</option>
-
-                  <option>Son</option>
-
-                  <option>Daughter</option>
-
-                  <option>Grand Father</option>
-
-                  <option>Grand Mother</option>
-
-                </select>
-
-              </div>
-
-
-
-            </div>
-
-          </div>
-
-
 
 
 

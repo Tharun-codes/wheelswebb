@@ -1611,68 +1611,33 @@
 
 
 
-              <div class="form-field">
-
-                <label for="loanAmount">LOAN AMOUNT *</label>
-
-                <input id="loanAmount" type="number" required />
-
-                <div id="emiDisplay" style="font-size:0.85rem;color:#374151;margin-top:6px;font-weight:600;"></div>
-
-              </div>
-
-
-
-              <div class="form-field">
-
-                <label for="loanTenure">TENURE *</label>
-
-                <select id="loanTenure" required>
-
-                  <option value="">TENURE *</option>
-
-                </select>
-
-              </div>
-
-
-
-              <div class="form-field">
-
-                <label for="irr">IRR</label>
-
-                <input id="irr" type="number" step="0.01" placeholder="e.g. 12.5" />
-
-                <div id="irrDisplay" style="font-size:0.85rem;color:#374151;margin-top:6px;font-weight:600;"></div>
-
-              </div>
-
               <!-- BT Toggle Button -->
-              <div class="form-field">
+              <div class="form-field" style="justify-content: flex-end;">
+                <label style="visibility: hidden; user-select: none;">VEHICLE BT</label>
                 <button type="button" id="btToggleBtn"
-                  style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                  Vehicle BT
+                  style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; height: 42px; padding: 0 1.25rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
+                  🚗 Vehicle BT
                 </button>
               </div>
 
               <!-- BT Fields (hidden by default) -->
-              <div id="btFields" class="grid-2 hidden">
+              <div id="btFields" class="grid-4 hidden" style="grid-column: 1 / -1; margin-top: 0.5rem; padding: 1.25rem; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; transition: all 0.3s ease;">
 
                 <div class="form-field">
-                  <label for="btBankFinance">Bank/Finance *</label>
+                  <label for="btBankFinance">BANK/FINANCE *</label>
                   <select id="btBankFinance" data-bt-required="true">
                     <option value="">Select Bank/Finance</option>
                   </select>
                 </div>
 
                 <div class="form-field">
-                  <label for="btLoanAmount">Loan Amount *</label>
-                  <input id="btLoanAmount" type="number" data-bt-required="true" />
+                  <label for="btLoanAmount">LOAN AMOUNT *</label>
+                  <input id="btLoanAmount" type="number" data-bt-required="true" placeholder="Enter loan amount" />
                   <div id="btEmiDisplay" style="font-size:0.85rem;color:#374151;margin-top:6px;font-weight:600;"></div>
                 </div>
 
                 <div class="form-field">
-                  <label for="btTenure">Tenure *</label>
+                  <label for="btTenure">TENURE *</label>
                   <select id="btTenure" data-bt-required="true">
                     <option value="">Select Tenure</option>
                   </select>
@@ -1684,7 +1649,7 @@
                 </div>
 
                 <div class="form-field">
-                  <label for="btPaidTenure">Paid Tenure *</label>
+                  <label for="btPaidTenure">PAID TENURE *</label>
                   <select id="btPaidTenure" data-bt-required="true">
                     <option value="">Select Paid Tenure</option>
                   </select>

@@ -122,7 +122,39 @@ function enforceNumbersOnly() {
 // Initialize all validations
 enforceUppercase();
 enforceAlphabetsOnly();
-enforceNumbersOnly();
+// Filter Current & Permanent Address OHP Owner Relation based on Gender (Hide Mother In Law and Father In Law if Male)
+function updateOhpRelationOptions() {
+  const genderSelect = document.getElementById('gender');
+  if (!genderSelect) return;
+
+  const genderVal = (genderSelect.value || '').trim().toUpperCase();
+  const isMale = (genderVal === 'MALE');
+
+  const targetSelectIds = ['currentOhpRelation', 'permanentOhpRelation'];
+
+  targetSelectIds.forEach(id => {
+    const select = document.getElementById(id);
+    if (!select) return;
+
+    Array.from(select.options).forEach(opt => {
+      const val = (opt.value || opt.text || '').trim().toLowerCase().replace(/\s+/g, '');
+      if (val === 'motherinlaw' || val === 'fatherinlaw') {
+        if (isMale) {
+          opt.hidden = true;
+          opt.disabled = true;
+          opt.style.display = 'none';
+          if ((select.value || '').trim().toLowerCase().replace(/\s+/g, '') === val) {
+            select.value = '';
+          }
+        } else {
+          opt.hidden = false;
+          opt.disabled = false;
+          opt.style.display = '';
+        }
+      }
+    });
+  });
+}
 
 // Toggle Basic 'Case Dealer' and 'Ref Name / Mob No' visibility based on Source
 function toggleBasicFieldsBySource() {
@@ -551,6 +583,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Initialize basic field visibility based on Source selection
   try { toggleBasicFieldsBySource(); } catch (e) { /* ignore if elements missing */ }
+
+  // Initialize Gender -> OHP Owner Relation filtering
+  const genderSelect = document.getElementById('gender');
+  if (genderSelect) {
+    genderSelect.addEventListener('change', updateOhpRelationOptions);
+  }
+  try { updateOhpRelationOptions(); } catch (e) { /* ignore if elements missing */ }
 
   // 🎯 Load dealer options only if not in edit mode (edit mode loads them separately)
   if (!loanId) {
@@ -3995,6 +4034,7 @@ if (loanId) {
       // 5️⃣ Apply field visibility based on Source
       // =========================
       toggleBasicFieldsBySource();
+      try { updateOhpRelationOptions(); } catch (e) {}
       loadDealers(data.basicCaseDealerSelect);
 
 

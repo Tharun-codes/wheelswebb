@@ -2225,7 +2225,7 @@ app.patch("/api/admin/users/:id", async (req, res) => {
 
     const adminId = parseInt(req.headers["x-admin-id"]);
 
-    const { username, password } = req.body;
+    const { username, password, role, profile, employeeProfile, rtoProfile } = req.body;
 
 
 
@@ -2283,53 +2283,709 @@ app.patch("/api/admin/users/:id", async (req, res) => {
 
 
 
-    // Build update query dynamically
+    // Update username, and password if provided
 
-    let updateFields = [];
+    if (password && password.trim()) {
 
-    let updateValues = [];
+      await pool.query(
 
-    let paramIndex = 1;
+        "UPDATE users SET username = $1, password = $2 WHERE id = $3",
 
+        [username, password.trim(), userId]
 
+      );
 
-    if (username) {
+    } else {
 
-      updateFields.push(`username = $${paramIndex++}`);
+      await pool.query(
 
-      updateValues.push(username);
+        "UPDATE users SET username = $1 WHERE id = $2",
 
-    }
+        [username, userId]
 
-
-
-    if (password) {
-
-      updateFields.push(`password = $${paramIndex++}`);
-
-      updateValues.push(password);
+      );
 
     }
 
 
 
-    if (updateFields.length === 0) {
+    const targetRole = (role || userRes.rows[0].role).toLowerCase();
 
-      return res.status(400).json({ error: 'No fields to update' });
+
+
+    // 1. Manager Profile Update
+
+    if (targetRole === "manager" && profile) {
+
+      const mgrCheck = await pool.query("SELECT id FROM manager_profiles WHERE user_id = $1", [userId]);
+
+      if (mgrCheck.rows.length > 0) {
+
+        await pool.query(
+
+          `UPDATE manager_profiles SET
+
+            first_name = $1,
+
+            last_name = $2,
+
+            dob = $3,
+
+            joining_date = $4,
+
+            pan = $5,
+
+            aadhar = $6,
+
+            mobile = $7,
+
+            father_mobile_no = $8,
+
+            mother_mobile_no = $9,
+
+            personal_email = $10,
+
+            office_email = $11,
+
+            location = $12,
+
+            account_no = $13,
+
+            ifsc = $14,
+
+            bank_name = $15,
+
+            bank_branch = $16
+
+          WHERE user_id = $17`,
+
+          [
+
+            profile.firstName,
+
+            profile.lastName,
+
+            profile.dob || null,
+
+            profile.joiningDate || null,
+
+            profile.pan,
+
+            profile.aadhar,
+
+            profile.mobile,
+
+            profile.fatherMobile || null,
+
+            profile.motherMobile || null,
+
+            profile.personalEmail,
+
+            profile.officeEmail,
+
+            profile.location,
+
+            profile.bank ? profile.bank.accountNo : null,
+
+            profile.bank ? profile.bank.ifsc : null,
+
+            profile.bank ? profile.bank.bankName : null,
+
+            profile.bank ? profile.bank.bankBranch : null,
+
+            userId
+
+          ]
+
+        );
+
+      } else {
+
+        await pool.query(
+
+          `INSERT INTO manager_profiles
+
+            (user_id, first_name, last_name, dob, joining_date, pan, aadhar, mobile, father_mobile_no, mother_mobile_no, personal_email, office_email, location, account_no, ifsc, bank_name, bank_branch)
+
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+
+          [
+
+            userId,
+
+            profile.firstName,
+
+            profile.lastName,
+
+            profile.dob || null,
+
+            profile.joiningDate || null,
+
+            profile.pan,
+
+            profile.aadhar,
+
+            profile.mobile,
+
+            profile.fatherMobile || null,
+
+            profile.motherMobile || null,
+
+            profile.personalEmail,
+
+            profile.officeEmail,
+
+            profile.location,
+
+            profile.bank ? profile.bank.accountNo : null,
+
+            profile.bank ? profile.bank.ifsc : null,
+
+            profile.bank ? profile.bank.bankName : null,
+
+            profile.bank ? profile.bank.bankBranch : null
+
+          ]
+
+        );
+
+      }
 
     }
 
 
 
-    updateValues.push(userId); // Add userId for WHERE clause
+    // 2. Employee Profile Update
+
+    if (targetRole === "employee" && employeeProfile) {
+
+      const empCheck = await pool.query("SELECT id FROM employee_profiles WHERE user_id = $1", [userId]);
+
+      let employeeProfileId;
+
+      if (empCheck.rows.length > 0) {
+
+        employeeProfileId = empCheck.rows[0].id;
+
+        await pool.query(
+
+          `UPDATE employee_profiles SET
+
+            employee_id = $1,
+
+            first_name = $2,
+
+            last_name = $3,
+
+            pan_no = $4,
+
+            aadhar_no = $5,
+
+            dob = $6,
+
+            joining_date = $7,
+
+            mobile_no = $8,
+
+            father_mobile_no = $9,
+
+            mother_mobile_no = $10,
+
+            personal_email = $11,
+
+            office_email = $12,
+
+            location = $13
+
+          WHERE id = $14`,
+
+          [
+
+            employeeProfile.employeeId,
+
+            employeeProfile.firstName,
+
+            employeeProfile.lastName,
+
+            employeeProfile.panNo,
+
+            employeeProfile.aadharNo,
+
+            employeeProfile.dob && employeeProfile.dob !== "" ? employeeProfile.dob : null,
+
+            employeeProfile.joiningDate && employeeProfile.joiningDate !== "" ? employeeProfile.joiningDate : null,
+
+            employeeProfile.mobileNo,
+
+            employeeProfile.fatherMobileNo || null,
+
+            employeeProfile.motherMobileNo || null,
+
+            employeeProfile.personalEmail,
+
+            employeeProfile.officeEmail,
+
+            employeeProfile.location,
+
+            employeeProfileId
+
+          ]
+
+        );
+
+      } else {
+
+        const empRes = await pool.query(
+
+          `INSERT INTO employee_profiles
+
+            (user_id, employee_id, first_name, last_name, pan_no, aadhar_no, dob, joining_date, mobile_no, father_mobile_no, mother_mobile_no, personal_email, office_email, location)
+
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+
+           RETURNING id`,
+
+          [
+
+            userId,
+
+            employeeProfile.employeeId,
+
+            employeeProfile.firstName,
+
+            employeeProfile.lastName,
+
+            employeeProfile.panNo,
+
+            employeeProfile.aadharNo,
+
+            employeeProfile.dob && employeeProfile.dob !== "" ? employeeProfile.dob : null,
+
+            employeeProfile.joiningDate && employeeProfile.joiningDate !== "" ? employeeProfile.joiningDate : null,
+
+            employeeProfile.mobileNo,
+
+            employeeProfile.fatherMobileNo || null,
+
+            employeeProfile.motherMobileNo || null,
+
+            employeeProfile.personalEmail,
+
+            employeeProfile.officeEmail,
+
+            employeeProfile.location
+
+          ]
+
+        );
+
+        employeeProfileId = empRes.rows[0].id;
+
+      }
 
 
 
-    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramIndex}`;
+      if (employeeProfile.bank) {
+
+        const bankCheck = await pool.query(
+
+          "SELECT id FROM employee_bank_details WHERE employee_profile_id = $1",
+
+          [employeeProfileId]
+
+        );
+
+        if (bankCheck.rows.length > 0) {
+
+          await pool.query(
+
+            `UPDATE employee_bank_details SET
+
+              account_no = $1,
+
+              ifsc = $2,
+
+              bank_name = $3,
+
+              bank_branch = $4
+
+            WHERE employee_profile_id = $5`,
+
+            [
+
+              employeeProfile.bank.accountNo,
+
+              employeeProfile.bank.ifsc,
+
+              employeeProfile.bank.bankName,
+
+              employeeProfile.bank.bankBranch,
+
+              employeeProfileId
+
+            ]
+
+          );
+
+        } else {
+
+          await pool.query(
+
+            `INSERT INTO employee_bank_details
+
+              (employee_profile_id, account_no, ifsc, bank_name, bank_branch)
+
+             VALUES ($1,$2,$3,$4,$5)`,
+
+            [
+
+              employeeProfileId,
+
+              employeeProfile.bank.accountNo,
+
+              employeeProfile.bank.ifsc,
+
+              employeeProfile.bank.bankName,
+
+              employeeProfile.bank.bankBranch
+
+            ]
+
+          );
+
+        }
+
+      }
+
+    }
 
 
 
-    await pool.query(updateQuery, updateValues);
+    // 3. Dealer Profile Update
+
+    if (targetRole === "dealer" && profile) {
+
+      const dealerCheck = await pool.query("SELECT id FROM dealer_profiles WHERE user_id = $1", [userId]);
+
+      let dealerProfileId;
+
+      if (dealerCheck.rows.length > 0) {
+
+        dealerProfileId = dealerCheck.rows[0].id;
+
+        await pool.query(
+
+          `UPDATE dealer_profiles SET
+
+            dealer_name = $1,
+
+            pan_no = $2,
+
+            aadhar_no = $3,
+
+            dob = $4,
+
+            mobile_no = $5,
+
+            father_mobile_no = $6,
+
+            mother_mobile_no = $7,
+
+            email = $8,
+
+            location = $9
+
+          WHERE id = $10`,
+
+          [
+
+            profile.dealerName,
+
+            profile.pan,
+
+            profile.aadhar,
+
+            profile.dob || null,
+
+            profile.mobile,
+
+            profile.fatherMobile || null,
+
+            profile.motherMobile || null,
+
+            profile.email,
+
+            profile.location,
+
+            dealerProfileId
+
+          ]
+
+        );
+
+      } else {
+
+        const dealerCode = generateDealerCode();
+
+        const dealerRes = await pool.query(
+
+          `INSERT INTO dealer_profiles
+
+            (user_id, dealer_code, dealer_name, pan_no, aadhar_no, dob, mobile_no, father_mobile_no, mother_mobile_no, email, location)
+
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+
+           RETURNING id`,
+
+          [
+
+            userId,
+
+            dealerCode,
+
+            profile.dealerName,
+
+            profile.pan,
+
+            profile.aadhar,
+
+            profile.dob || null,
+
+            profile.mobile,
+
+            profile.fatherMobile || null,
+
+            profile.motherMobile || null,
+
+            profile.email,
+
+            profile.location
+
+          ]
+
+        );
+
+        dealerProfileId = dealerRes.rows[0].id;
+
+      }
+
+
+
+      if (profile.bank) {
+
+        const bankCheck = await pool.query(
+
+          "SELECT id FROM dealer_bank_details WHERE dealer_profile_id = $1",
+
+          [dealerProfileId]
+
+        );
+
+        if (bankCheck.rows.length > 0) {
+
+          await pool.query(
+
+            `UPDATE dealer_bank_details SET
+
+              account_no = $1,
+
+              ifsc = $2,
+
+              bank_name = $3,
+
+              bank_branch = $4
+
+            WHERE dealer_profile_id = $5`,
+
+            [
+
+              profile.bank.accountNo,
+
+              profile.bank.ifsc,
+
+              profile.bank.bankName,
+
+              profile.bank.bankBranch,
+
+              dealerProfileId
+
+            ]
+
+          );
+
+        } else {
+
+          await pool.query(
+
+            `INSERT INTO dealer_bank_details
+
+              (dealer_profile_id, account_no, ifsc, bank_name, bank_branch)
+
+             VALUES ($1,$2,$3,$4,$5)`,
+
+            [
+
+              dealerProfileId,
+
+              profile.bank.accountNo,
+
+              profile.bank.ifsc,
+
+              profile.bank.bankName,
+
+              profile.bank.bankBranch
+
+            ]
+
+          );
+
+        }
+
+      }
+
+    }
+
+
+
+    // 4. RTO Agent Profile Update
+
+    if (targetRole === "rto_agent" && rtoProfile) {
+
+      const rtoCheck = await pool.query("SELECT id FROM rto_agent_profiles WHERE user_id = $1", [userId]);
+
+      if (rtoCheck.rows.length > 0) {
+
+        await pool.query(
+
+          `UPDATE rto_agent_profiles SET
+
+            first_name = $1,
+
+            last_name = $2,
+
+            pan_no = $3,
+
+            aadhar_no = $4,
+
+            dob = $5,
+
+            joining_date = $6,
+
+            mobile_no = $7,
+
+            father_mobile_no = $8,
+
+            mother_mobile_no = $9,
+
+            personal_email = $10,
+
+            office_email = $11,
+
+            location = $12,
+
+            account_no = $13,
+
+            ifsc = $14,
+
+            bank_name = $15,
+
+            bank_branch = $16
+
+          WHERE user_id = $17`,
+
+          [
+
+            rtoProfile.firstName,
+
+            rtoProfile.lastName,
+
+            rtoProfile.pan,
+
+            rtoProfile.aadhar,
+
+            rtoProfile.dob || null,
+
+            rtoProfile.joiningDate || null,
+
+            rtoProfile.mobile,
+
+            rtoProfile.fatherMobile || null,
+
+            rtoProfile.motherMobile || null,
+
+            rtoProfile.personalEmail,
+
+            rtoProfile.officeEmail,
+
+            rtoProfile.location,
+
+            rtoProfile.bank ? rtoProfile.bank.accountNo : null,
+
+            rtoProfile.bank ? rtoProfile.bank.ifsc : null,
+
+            rtoProfile.bank ? rtoProfile.bank.bankName : null,
+
+            rtoProfile.bank ? rtoProfile.bank.bankBranch : null,
+
+            userId
+
+          ]
+
+        );
+
+      } else {
+
+        await pool.query(
+
+          `INSERT INTO rto_agent_profiles
+
+            (user_id, first_name, last_name, pan_no, aadhar_no, dob, joining_date, mobile_no, father_mobile_no, mother_mobile_no, personal_email, office_email, location, account_no, ifsc, bank_name, bank_branch)
+
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+
+          [
+
+            userId,
+
+            rtoProfile.firstName,
+
+            rtoProfile.lastName,
+
+            rtoProfile.pan,
+
+            rtoProfile.aadhar,
+
+            rtoProfile.dob || null,
+
+            rtoProfile.joiningDate || null,
+
+            rtoProfile.mobile,
+
+            rtoProfile.fatherMobile || null,
+
+            rtoProfile.motherMobile || null,
+
+            rtoProfile.personalEmail,
+
+            rtoProfile.officeEmail,
+
+            rtoProfile.location,
+
+            rtoProfile.bank ? rtoProfile.bank.accountNo : null,
+
+            rtoProfile.bank ? rtoProfile.bank.ifsc : null,
+
+            rtoProfile.bank ? rtoProfile.bank.bankName : null,
+
+            rtoProfile.bank ? rtoProfile.bank.bankBranch : null
+
+          ]
+
+        );
+
+      }
+
+    }
 
 
 

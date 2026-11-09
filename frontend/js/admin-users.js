@@ -221,14 +221,27 @@ function closeModal() {
 
   document.getElementById("modalUsername").value = "";
   document.getElementById("modalPassword").value = "";
-  document.getElementById("modalRole").value = "employee";
+  const roleSelect = document.getElementById("modalRole");
+  if (roleSelect) {
+    roleSelect.value = "employee";
+    roleSelect.disabled = false;
+  }
   editingUserId = null; // Reset editing state
+
+  const modal = document.querySelector(".admin-modal");
+  if (modal) {
+    modal.querySelectorAll("input").forEach(inp => {
+      inp.value = "";
+    });
+  }
 }
 
 function openCreate() {
+  const roleSelect = document.getElementById("modalRole");
+  if (roleSelect) roleSelect.disabled = false;
   openModal("Create User");
 
-  const role = document.getElementById("modalRole").value;
+  const role = roleSelect ? roleSelect.value : "employee";
   toggleRoleSections(role);
 }
 
@@ -241,18 +254,28 @@ async function openEdit(id) {
 
   document.getElementById("modalUsername").value = u.username;
   document.getElementById("modalPassword").value = "";
-  document.getElementById("modalRole").value = u.role || "employee";
+  const roleSelect = document.getElementById("modalRole");
+  if (roleSelect) {
+    roleSelect.value = u.role || "employee";
+    roleSelect.disabled = true;
+  }
 
   toggleRoleSections(u.role);
 
   try {
 
     if (u.role === "manager") {
-      const res = await fetch(`/api/user/manager-info/${id}`)
+      const res = await fetch(`/api/user/manager-info/${id}`);
       const data = await res.json();
 
       document.getElementById("mgrFirstName").value = data.first_name || "";
       document.getElementById("mgrLastName").value = data.last_name || "";
+      if (document.getElementById("mgrDob")) {
+        document.getElementById("mgrDob").value = data.dob ? data.dob.split('T')[0] : "";
+      }
+      if (document.getElementById("mgrJoiningDate")) {
+        document.getElementById("mgrJoiningDate").value = data.joining_date ? data.joining_date.split('T')[0] : "";
+      }
       document.getElementById("mgrPan").value = data.pan || "";
       document.getElementById("mgrAadhar").value = data.aadhar || "";
       document.getElementById("mgrMobile").value = data.mobile || "";
@@ -276,6 +299,12 @@ async function openEdit(id) {
       document.getElementById("last_name").value = data.last_name || "";
       document.getElementById("pan_no").value = data.pan_no || "";
       document.getElementById("aadhar_no").value = data.aadhar_no || "";
+      if (document.getElementById("dob")) {
+        document.getElementById("dob").value = data.dob ? data.dob.split('T')[0] : "";
+      }
+      if (document.getElementById("joining_date")) {
+        document.getElementById("joining_date").value = data.joining_date ? data.joining_date.split('T')[0] : "";
+      }
       document.getElementById("mobile_no").value = data.mobile_no || "";
       document.getElementById("father_mobile_no").value = data.father_mobile_no || "";
       document.getElementById("mother_mobile_no").value = data.mother_mobile_no || "";
@@ -292,12 +321,13 @@ async function openEdit(id) {
       const res = await fetch(`/api/admin/dealer-info/${id}`);
       const data = await res.json();
 
+      if (document.getElementById("dealer_code")) {
+        document.getElementById("dealer_code").value = data.dealer_code || "";
+      }
       document.getElementById("dealer_name").value = data.dealer_name || "";
       document.getElementById("dealer_pan").value = data.pan_no || "";
       document.getElementById("dealer_aadhar").value = data.aadhar_no || "";
       document.getElementById("dealer_mobile").value = data.mobile_no || "";
-      document.getElementById("dealer_father_mobile").value = data.father_mobile_no || "";
-      document.getElementById("dealer_mother_mobile").value = data.mother_mobile_no || "";
       document.getElementById("dealer_email").value = data.email || "";
       document.getElementById("dealer_location").value = data.location || "";
       document.getElementById("dealer_account").value = data.account_no || "";
@@ -310,10 +340,19 @@ async function openEdit(id) {
       const res = await fetch(`/api/admin/rto-info/${id}`);
       const data = await res.json();
 
+      if (document.getElementById("rto_agent_id")) {
+        document.getElementById("rto_agent_id").value = data.agent_id || "";
+      }
       document.getElementById("rto_first_name").value = data.first_name || "";
       document.getElementById("rto_last_name").value = data.last_name || "";
       document.getElementById("rto_pan").value = data.pan_no || "";
       document.getElementById("rto_aadhar").value = data.aadhar_no || "";
+      if (document.getElementById("rto_dob")) {
+        document.getElementById("rto_dob").value = data.dob ? data.dob.split('T')[0] : "";
+      }
+      if (document.getElementById("rto_joining")) {
+        document.getElementById("rto_joining").value = data.joining_date ? data.joining_date.split('T')[0] : "";
+      }
       document.getElementById("rto_mobile").value = data.mobile_no || "";
       document.getElementById("rto_father_mobile").value = data.father_mobile_no || "";
       document.getElementById("rto_mother_mobile").value = data.mother_mobile_no || "";
@@ -441,10 +480,10 @@ if (role === "dealer") {
     dealerName: document.getElementById("dealer_name").value.trim(),
     pan: document.getElementById("dealer_pan").value.trim(),
     aadhar: document.getElementById("dealer_aadhar").value.trim(),
-    dob: document.getElementById("dealer_dob").value || null,
+    dob: null,
     mobile: document.getElementById("dealer_mobile").value.trim(),
-    fatherMobile: document.getElementById("dealer_father_mobile").value.trim(),
-    motherMobile: document.getElementById("dealer_mother_mobile").value.trim(),
+    fatherMobile: "",
+    motherMobile: "",
     email: document.getElementById("dealer_email").value.trim(),
     location: document.getElementById("dealer_location").value.trim(),
     bank: {
@@ -454,6 +493,16 @@ if (role === "dealer") {
       bankBranch: document.getElementById("dealer_branch").value.trim()
     }
   };
+
+  if (
+    !profile.dealerName ||
+    !profile.mobile ||
+    !profile.bank.accountNo ||
+    !profile.bank.ifsc ||
+    !profile.bank.bankName
+  ) {
+    return showToast("Dealer & bank details are required");
+  }
 }
 
 
@@ -461,7 +510,7 @@ let rtoProfile = null;
 
 if (role === "rto_agent") {
   rtoProfile = {
-    agentId: document.getElementById("rto_agent_id").value,
+    agentId: document.getElementById("rto_agent_id") ? document.getElementById("rto_agent_id").value : "",
     firstName: document.getElementById("rto_first_name").value,
     lastName: document.getElementById("rto_last_name").value,
     pan: document.getElementById("rto_pan").value,
@@ -489,7 +538,7 @@ if (role === "rto_agent") {
     
     if (editingUserId) {
       // EDIT existing user
-      console.log("EDITING USER:", { id: editingUserId, username, password, role });
+      console.log("EDITING USER:", { id: editingUserId, username, role, profile, employeeProfile, rtoProfile });
       
       res = await fetch(`/api/admin/users/${editingUserId}`, {
         method: "PATCH",
@@ -497,7 +546,14 @@ if (role === "rto_agent") {
           "Content-Type": "application/json",
           "x-admin-id": user.id 
         },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({
+          username,
+          password: password ? password : "",
+          role,
+          profile,
+          employeeProfile,
+          rtoProfile
+        })
       });
 
       data = await res.json();

@@ -156,6 +156,73 @@ function updateOhpRelationOptions() {
   });
 }
 
+/* =========================
+   RC NO DEDUPE CHECK
+========================= */
+(function initRcDedupe() {
+  const rcInput = document.getElementById('rcNo');
+  const alertBox = document.getElementById('dedupeAlert');
+  const matchList = document.getElementById('dedupeMatchList');
+
+  if (!rcInput || !alertBox || !matchList) return;
+
+  let debounceTimer = null;
+
+  rcInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    const val = this.value.trim().toUpperCase();
+
+    // Hide alert immediately when user clears or types short value
+    if (val.length < 4) {
+      alertBox.style.display = 'none';
+      matchList.innerHTML = '';
+      return;
+    }
+
+    debounceTimer = setTimeout(() => checkRcDedupe(val), 600);
+  });
+
+  rcInput.addEventListener('blur', function () {
+    const val = this.value.trim().toUpperCase();
+    if (val.length >= 4) checkRcDedupe(val);
+  });
+
+  function checkRcDedupe(rcNo) {
+    fetch('/api/dedupe/rc?rcNo=' + encodeURIComponent(rcNo))
+      .then(r => r.json())
+      .then(data => {
+        if (!data.matched) {
+          alertBox.style.display = 'none';
+          matchList.innerHTML = '';
+          return;
+        }
+
+        // Build match cards
+        matchList.innerHTML = data.leads.map((lead, i) => {
+          const loginDate = lead.loginDate
+            ? new Date(lead.loginDate).toLocaleDateString('en-IN', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+              })
+            : '-';
+
+          return `<div style="background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:0.65rem 1rem; display:grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap:0.4rem 1rem; font-size:0.82rem;">
+            <div><span style="color:#78350f; font-weight:600;">LOAN ID</span><br><span style="color:#1e293b;">${lead.loanId}</span></div>
+            <div><span style="color:#78350f; font-weight:600;">LOGIN DATE</span><br><span style="color:#1e293b;">${loginDate}</span></div>
+            <div><span style="color:#78350f; font-weight:600;">APPLICANT NAME</span><br><span style="color:#1e293b;">${lead.applicantName}</span></div>
+            <div><span style="color:#78350f; font-weight:600;">LOGIN EXECUTIVE</span><br><span style="color:#1e293b;">${lead.loginExecutive}</span></div>
+            <div><span style="color:#78350f; font-weight:600;">DEALER NAME</span><br><span style="color:#1e293b;">${lead.dealerName}</span></div>
+          </div>`;
+        }).join('');
+
+        alertBox.style.display = 'block';
+      })
+      .catch(err => {
+        console.error('Dedupe check failed:', err);
+      });
+  }
+})();
+
 // Toggle Basic 'Case Dealer' and 'Ref Name / Mob No' visibility based on Source
 function toggleBasicFieldsBySource() {
   const source = document.getElementById('source');

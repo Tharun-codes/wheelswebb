@@ -1146,6 +1146,51 @@ app.get("/api/leads/:loanId", async (req, res) => {
 
 });
 
+// ----------------- RC Dedupe Check -----------------
+
+app.get("/api/dedupe/rc", async (req, res) => {
+  try {
+    const { rcNo } = req.query;
+    if (!rcNo || rcNo.trim().length < 3) {
+      return res.json({ matched: false, leads: [] });
+    }
+
+    const normalised = rcNo.trim().toUpperCase();
+
+    // Search for all leads whose data->>'rcNo' matches (case-insensitive)
+    const result = await pool.query(
+      `SELECT
+         l.loan_id,
+         l.created_at,
+         l.data->>'name'            AS applicant_name,
+         l.data->>'loginExecutive'  AS login_executive,
+         l.data->>'basicDealerName' AS dealer_name,
+         l.data->>'basicCaseDealer' AS dealer_name_manual
+       FROM leads l
+       WHERE UPPER(l.data->>'rcNo') = $1
+       ORDER BY l.created_at DESC`,
+      [normalised]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({ matched: false, leads: [] });
+    }
+
+    const leads = result.rows.map(row => ({
+      loanId:            row.loan_id,
+      loginDate:         row.created_at,
+      applicantName:     row.applicant_name  || '-',
+      loginExecutive:    row.login_executive || '-',
+      dealerName:        row.dealer_name || row.dealer_name_manual || '-'
+    }));
+
+    res.json({ matched: true, leads });
+  } catch (err) {
+    console.error("RC Dedupe error:", err);
+    res.status(500).json({ error: "Dedupe check failed" });
+  }
+});
+
 app.put("/api/leads/:loanId", async (req, res) => {
 
   try {

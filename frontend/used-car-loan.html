@@ -1376,9 +1376,8 @@
                 <option>Dealer</option>
                 <option>Bank Emp</option>
                 <option>WheelsWeb</option>
-                <option>Telecall</option>
                 <option>Online</option>
-                <option>Others</option>
+
 
               </select>
 
@@ -1444,6 +1443,16 @@
 
 
 
+              <!-- DEDUPE MATCH ALERT (shown when RC matches existing case) -->
+              <div id="dedupeAlert" style="display:none; grid-column: span 4; background: linear-gradient(135deg,#fff3cd,#ffeaa7); border: 2px solid #f59e0b; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 0.25rem;">
+                <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.75rem;">
+                  <span style="font-size:1.3rem;">⚠️</span>
+                  <strong style="color:#92400e; font-size:1rem; letter-spacing:0.03em;">DEDUPE MATCHED</strong>
+                  <span style="color:#78350f; font-size:0.85rem;">– RC No. already exists in a previous case</span>
+                </div>
+                <div id="dedupeMatchList" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+              </div>
+
               <div class="form-field">
 
                 <label for="rcNo">RC NO *</label>
@@ -1452,7 +1461,14 @@
 
               </div>
 
-
+              <div class="form-field">
+                <label for="board">BOARD *</label>
+                <select id="board" name="board" required>
+                  <option value="" disabled selected>Select Board</option>
+                  <option value="WHITE BOARD">WHITE BOARD</option>
+                  <option value="YELLOW BOARD">YELLOW BOARD</option>
+                </select>
+              </div>
 
 
 

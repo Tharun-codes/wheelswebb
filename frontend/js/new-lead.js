@@ -6,7 +6,9 @@ console.log("New Lead JS loaded");
 ========================= */
     // viji
 document.getElementById("nextBtn").addEventListener("click", () => {
-  const loanType = document.getElementById("loanType").value;
+  const inputEl = document.getElementById("loanType");
+  const selectedCard = document.querySelector(".loan-option.selected");
+  const loanType = (inputEl && inputEl.value) || (selectedCard ? selectedCard.getAttribute("data-loan") : "");
 
   if (!loanType) {
     alert("Please select a loan type");

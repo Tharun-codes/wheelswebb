@@ -1407,6 +1407,12 @@
 
             </div>
 
+            <div id="basicCaseDealerMobileWrapper" class="form-field hidden">
+              <label for="basicCaseDealerMobile">Dealer Mob</label>
+              <input id="basicCaseDealerMobile" name="basicCaseDealerMobile" type="tel"
+                inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="Enter dealer mobile number" />
+            </div>
+
 
 
             <div id="basicDealerNameWrapper" class="form-field hidden">
@@ -1622,22 +1628,15 @@
 
                   <option>BT Topup</option>
 
+                  <option>Internal Topup</option>
+
                 </select>
 
               </div>
 
 
 
-              <!-- BT Toggle Button -->
-              <div class="form-field" style="justify-content: flex-end;">
-                <label style="visibility: hidden; user-select: none;">VEHICLE BT</label>
-                <button type="button" id="btToggleBtn"
-                  style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; height: 42px; padding: 0 1.25rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
-                  🚗 Vehicle BT
-                </button>
-              </div>
-
-              <!-- BT Fields (hidden by default) -->
+              <!-- BT fields appear for BT Topup and Internal Topup -->
               <div id="btFields" class="grid-4 hidden"
                 style="grid-column: 1 / -1; margin-top: 0.5rem; padding: 1.25rem; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; transition: all 0.3s ease;">
 
@@ -2235,6 +2234,18 @@
 
                 <input id="businessName" required data-uppercase />
 
+              </div>
+
+              <div class="form-field">
+                <label for="rtcOwnerRelation">RTC OWNER RELATION</label>
+                <select id="rtcOwnerRelation" name="rtcOwnerRelation">
+                  <option value="">Select RTC Owner Relation</option>
+                  <option>Self</option>
+                  <option>Co-Applicant</option>
+                  <option>Parents</option>
+                  <option>Grand Parents</option>
+                  <option>Guarantor</option>
+                </select>
               </div>
 
 

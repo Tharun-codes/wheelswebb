@@ -769,6 +769,48 @@ app.delete("/api/users/:id", async (req, res) => {
 
 
 
+// Register the specific dealer-list route before /api/users/:id.
+app.get("/api/users/dealers", async (req, res) => {
+
+  try {
+
+    const userId = parseInt(req.headers["x-user-id"]);
+
+    if (!userId) return res.status(403).json({ error: "Unauthorized" });
+
+    const userCheck = await pool.query(
+      "SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL",
+      [userId]
+    );
+    if (!userCheck.rows.length) return res.status(403).json({ error: "Unauthorized" });
+
+    const role = (userCheck.rows[0].role || '').toLowerCase();
+    if (!['admin', 'manager', 'employee', 'rto_agent'].includes(role)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT
+         u.id,
+         u.username,
+         u.status,
+         COALESCE(dp.dealer_name, u.username) AS display_name,
+         dp.mobile_no
+       FROM users u
+       LEFT JOIN dealer_profiles dp ON dp.user_id = u.id
+       WHERE u.role = 'dealer'
+         AND u.deleted_at IS NULL
+         AND (u.status IS NULL OR u.status <> 'inactive')
+       ORDER BY COALESCE(dp.dealer_name, u.username)`
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("FETCH DEALERS ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch dealers" });
+  }
+});
+
 app.get("/api/users/:id", async (req, res) => {
 
   try {
@@ -1622,80 +1664,6 @@ ORDER BY u.id DESC;
     console.error("FETCH USERS ERROR:", err);
 
     res.status(500).json({ error: "Failed to fetch users" });
-
-  }
-
-});
-
-
-
-// ----------------- Dealers list (admin/manager/employee) -----------------
-
-app.get("/api/users/dealers", async (req, res) => {
-
-  try {
-
-    const userId = parseInt(req.headers["x-user-id"]);
-
-    if (!userId) return res.status(403).json({ error: "Unauthorized" });
-
-
-
-    const userCheck = await pool.query(
-
-      "SELECT role FROM users WHERE id = $1 AND deleted_at IS NULL",
-
-      [userId]
-
-    );
-
-    if (!userCheck.rows.length) return res.status(403).json({ error: "Unauthorized" });
-
-
-
-    const role = (userCheck.rows[0].role || '').toLowerCase();
-    if (!['admin', 'manager', 'employee'].includes(role)) {
-      return res.status(403).json({ error: "Access denied" });
-
-    }
-
-
-
-    const { rows } = await pool.query(
-
-      `SELECT
-
-         u.id,
-
-         u.username,
-
-         u.status,
-
-         COALESCE(dp.dealer_name, u.username) AS display_name
-
-       FROM users u
-
-       LEFT JOIN dealer_profiles dp ON dp.user_id = u.id
-
-       WHERE u.role = 'dealer'
-
-         AND u.deleted_at IS NULL
-
-         AND (u.status IS NULL OR u.status <> 'inactive')
-
-       ORDER BY COALESCE(dp.dealer_name, u.username)`
-
-    );
-
-
-
-    res.json(rows);
-
-  } catch (err) {
-
-    console.error("FETCH DEALERS ERROR:", err);
-
-    res.status(500).json({ error: "Failed to fetch dealers" });
 
   }
 
@@ -4483,11 +4451,15 @@ app.get("/api/all-users", async (req, res) => {
 
     const { rows } = await pool.query(`
 
-      SELECT id, username, role FROM users
-
-      WHERE deleted_at IS NULL AND status='active'
-
-      ORDER BY username
+      SELECT
+        u.id,
+        u.username,
+        u.role,
+        COALESCE(dp.dealer_name, u.username) AS display_name
+      FROM users u
+      LEFT JOIN dealer_profiles dp ON dp.user_id = u.id
+      WHERE u.deleted_at IS NULL AND u.status = 'active'
+      ORDER BY u.username
 
     `);
 

@@ -231,11 +231,13 @@ function toggleBasicFieldsBySource() {
   const caseDealer = document.getElementById('basicCaseDealer');
   const ref = document.getElementById('basicRefNameMobile');
   const dealerSelect = document.getElementById('basicCaseDealerSelect');
+  const dealerMobile = document.getElementById('basicCaseDealerMobile');
   const dealerNameInput = document.getElementById('basicDealerName');
 
   const wrapperCase = document.getElementById('basicCaseDealerWrapper') || (caseDealer && (caseDealer.closest('div') || caseDealer.parentElement));
   const wrapperRef = document.getElementById('basicRefWrapper') || (ref && (ref.closest('div') || ref.parentElement));
   const wrapperSelect = document.getElementById('basicCaseDealerSelectWrapper') || (dealerSelect && (dealerSelect.closest('div') || dealerSelect.parentElement));
+  const wrapperDealerMobile = document.getElementById('basicCaseDealerMobileWrapper') || (dealerMobile && (dealerMobile.closest('div') || dealerMobile.parentElement));
   const wrapperDealerName = document.getElementById('basicDealerNameWrapper') || (dealerNameInput && (dealerNameInput.closest('div') || dealerNameInput.parentElement));
 
   function applyVisibility() {
@@ -256,6 +258,7 @@ function toggleBasicFieldsBySource() {
       if (wrapperCase) wrapperCase.classList.remove('hidden');
       if (wrapperRef) wrapperRef.classList.remove('hidden');
       if (wrapperSelect) wrapperSelect.classList.add('hidden');
+      if (wrapperDealerMobile) wrapperDealerMobile.classList.add('hidden');
       if (wrapperDealerName) wrapperDealerName.classList.add('hidden');
       if (caseDealer) caseDealer.required = true;
       if (ref) ref.required = true;
@@ -267,6 +270,7 @@ function toggleBasicFieldsBySource() {
         // Dealer logged in - show dealer name field (auto-populated)
         if (wrapperDealerName) wrapperDealerName.classList.remove('hidden');
         if (wrapperSelect) wrapperSelect.classList.add('hidden');
+        if (wrapperDealerMobile) wrapperDealerMobile.classList.add('hidden');
         if (wrapperCase) wrapperCase.classList.add('hidden');
         if (dealerNameInput) dealerNameInput.required = true;
         if (dealerSelect) dealerSelect.required = false;
@@ -274,6 +278,7 @@ function toggleBasicFieldsBySource() {
       } else {
         // Non-dealer user - show dealer dropdown
         if (wrapperSelect) wrapperSelect.classList.remove('hidden');
+        if (wrapperDealerMobile) wrapperDealerMobile.classList.remove('hidden');
         if (wrapperDealerName) wrapperDealerName.classList.add('hidden');
         if (wrapperCase) wrapperCase.classList.add('hidden');
         if (dealerSelect) dealerSelect.required = true;
@@ -281,7 +286,7 @@ function toggleBasicFieldsBySource() {
         if (caseDealer) caseDealer.required = false;
 
         // Ensure dealer list is loaded/refreshed when switching Source to Dealer
-        try { loadDealerOptions(); } catch (e) { /* ignore */ }
+        if (dealerSelect && dealerSelect.options.length <= 1) loadDealerOptions();
       }
       // Show Ref Name / Mob No for manual editing when dealer selected
       if (wrapperRef) wrapperRef.classList.remove('hidden');
@@ -290,6 +295,7 @@ function toggleBasicFieldsBySource() {
       if (wrapperCase) wrapperCase.classList.add('hidden');
       if (wrapperRef) wrapperRef.classList.add('hidden');
       if (wrapperSelect) wrapperSelect.classList.add('hidden');
+      if (wrapperDealerMobile) wrapperDealerMobile.classList.add('hidden');
       if (wrapperDealerName) wrapperDealerName.classList.add('hidden');
       if (caseDealer) caseDealer.required = false;
       if (ref) ref.required = false;
@@ -625,17 +631,6 @@ document.addEventListener('DOMContentLoaded', function () {
     input.addEventListener('change', updateProgress);
   });
 
-  // Initialize BT toggle functionality
-  const btToggleBtn = document.getElementById('btToggleBtn');
-  const btFields = document.getElementById('btFields');
-  if (btToggleBtn && btFields) {
-    btToggleBtn.addEventListener('click', function () {
-      btFields.classList.toggle('hidden');
-      // Update button text based on visibility
-      this.textContent = btFields.classList.contains('hidden') ? 'Vehicle BT' : 'Hide BT Fields';
-    });
-  }
-
   // Populate BT dropdowns
   populateBtDropdowns();
 
@@ -651,6 +646,18 @@ document.addEventListener('DOMContentLoaded', function () {
   // Initialize basic field visibility based on Source selection
   try { toggleBasicFieldsBySource(); } catch (e) { /* ignore if elements missing */ }
 
+  const dealerSelect = document.getElementById('basicCaseDealerSelect');
+  const dealerMobile = document.getElementById('basicCaseDealerMobile');
+  if (dealerSelect) {
+    dealerSelect.addEventListener('change', syncDealerMobileFromSelection);
+  }
+  if (dealerMobile) {
+    dealerMobile.addEventListener('input', () => {
+      dealerMobile.value = dealerMobile.value.replace(/\D/g, '').slice(0, 10);
+      syncDealerSelectionFromMobile();
+    });
+  }
+
   // Initialize Gender -> OHP Owner Relation filtering
   const genderSelect = document.getElementById('gender');
   if (genderSelect) {
@@ -660,13 +667,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // 🎯 Load dealer options only if not in edit mode (edit mode loads them separately)
   if (!loanId) {
-    loadDealerOptions().then(() => {
+    const user = getUserFromStorage();
+    const dealerOptionsLoaded = user?.role === 'dealer' ? Promise.resolve() : loadDealerOptions();
+    dealerOptionsLoaded.then(() => {
       // Auto-populate dealer name on page load if dealer is logged in and source is "Dealer"
       const user = getUserFromStorage();
       const source = document.getElementById('source');
       const dealerNameInput = document.getElementById('basicDealerName');
 
-      if (user && user.role === 'dealer' && source && source.value === 'dealer' && dealerNameInput) {
+      if (user && user.role === 'dealer' && source && source.value.toLowerCase() === 'dealer' && dealerNameInput) {
         dealerNameInput.value = user.username;
         dealerNameInput.style.backgroundColor = '#f8fafc';
         dealerNameInput.style.color = '#6b7280';
@@ -2482,77 +2491,64 @@ function initBtEmiCalculator() {
   computeAndShowBtPrincipal();
 }
 
-// Fetch dealers (users with role 'dealer') and populate dealer select
-async function loadDealerOptions() {
+// Fetch dealers and populate the dealer select.
+async function loadDealerOptions(selectedDealerId = null) {
   const dealerSelect = document.getElementById('basicCaseDealerSelect');
   if (!dealerSelect) {
     console.error('Dealer select element not found');
     return;
   }
 
-  // Always clear hardcoded options immediately (DSA list in HTML)
-  dealerSelect.innerHTML = '';
-  const loadingOpt = document.createElement('option');
-  loadingOpt.value = '';
-  loadingOpt.textContent = 'Loading dealers...';
-  dealerSelect.appendChild(loadingOpt);
-
-  console.log('Loading dealers using /api/all-users endpoint...');
-
+  const selectedId = selectedDealerId ?? dealerSelect.value;
+  const user = getUserFromStorage();
+  dealerSelect.innerHTML = '<option value="">Loading dealers...</option>';
   try {
-    // Use the same API as view-cases to get all users
-    const res = await fetch('/api/all-users');
-    console.log('All users API response status:', res.status);
-
-    if (!res.ok) {
-      console.error('All users API error:', res.status);
-      dealerSelect.innerHTML = '';
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = 'Error loading dealers';
-      dealerSelect.appendChild(opt);
-      return;
+    let dealers;
+    let dealerListResponse;
+    if (user?.id) {
+      dealerListResponse = await fetch('/api/users/dealers', {
+        headers: { 'x-user-id': String(user.id) }
+      });
     }
 
-    const allUsers = await res.json();
-    console.log('All users received:', allUsers);
+    if (dealerListResponse?.ok) {
+      dealers = await dealerListResponse.json();
+    } else {
+      console.warn('Authorized dealer list unavailable; using the users list endpoint.');
+      const usersResponse = await fetch('/api/all-users');
+      if (!usersResponse.ok) {
+        throw new Error(`Failed to load users (${usersResponse.status})`);
+      }
+      const users = await usersResponse.json();
+      dealers = users.filter(candidate => candidate.role === 'dealer');
+    }
 
-    // Filter only users with role 'dealer'
-    const dealers = allUsers.filter(user => user.role === 'dealer');
-    console.log('Filtered dealers:', dealers);
+    dealerSelect.innerHTML = '<option value="">Select Dealer</option>';
 
     if (dealers.length === 0) {
-      console.warn('No dealers found in user list');
-      dealerSelect.innerHTML = '';
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = 'No dealers available';
-      dealerSelect.appendChild(opt);
+      dealerSelect.innerHTML = '<option value="">No dealers available</option>';
       return;
     }
 
-    dealerSelect.innerHTML = '';
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = 'Select Dealer';
-    dealerSelect.appendChild(placeholder);
-
-    // Add dealers to dropdown
-    dealers.forEach(d => {
-      const opt = document.createElement('option');
-      opt.textContent = d.username || 'Dealer';
-      opt.value = d.id;
-      dealerSelect.appendChild(opt);
+    dealers.forEach(dealer => {
+      const option = document.createElement('option');
+      option.value = dealer.id;
+      option.textContent = dealer.display_name || dealer.username || 'Dealer';
+      option.dataset.mobile = dealer.mobile_no || '';
+      dealerSelect.appendChild(option);
     });
 
-    console.log('Dealer options populated:', dealers.length, 'dealers');
-  } catch (err) {
-    console.error('Failed to load dealers:', err);
-    dealerSelect.innerHTML = '';
-    const opt = document.createElement('option');
-    opt.value = '';
-    opt.textContent = 'Error loading dealers';
-    dealerSelect.appendChild(opt);
+    if (selectedId) {
+      dealerSelect.value = String(selectedId);
+      syncDealerMobileFromSelection();
+    } else if (document.getElementById('basicCaseDealerMobile')?.value) {
+      syncDealerSelectionFromMobile();
+    } else {
+      syncDealerMobileFromSelection();
+    }
+  } catch (error) {
+    console.error('Failed to load dealers:', error);
+    dealerSelect.innerHTML = '<option value="">Error loading dealers</option>';
   }
 }
 
@@ -2755,8 +2751,8 @@ for (let t = 1; t <= 96; t++) {
   }
 }
 
-// Show BT-specific fields when type is BT Topup or Int BT
-const loanTypeSelect = document.getElementById("loanType");
+// Show BT-specific fields for BT Topup and Internal Topup.
+const loanNatureSelect = document.getElementById("loanNature");
 const btFields = document.getElementById("btFields");
 const btInputs = document.querySelectorAll("[data-bt-required='true']");
 const dsaSelect = document.getElementById("loanDsa");
@@ -2850,8 +2846,8 @@ if (cibilToggleBtn && cibilDetailsSection) {
 
 function toggleBtFields() {
   const isBt =
-    loanTypeSelect &&
-    (loanTypeSelect.value === "BT Topup" || loanTypeSelect.value === "Int BT");
+    loanNatureSelect &&
+    (loanNatureSelect.value === "BT Topup" || loanNatureSelect.value === "Internal Topup");
   if (btFields) {
     btFields.classList.toggle("hidden", !isBt);
   }
@@ -2861,8 +2857,8 @@ function toggleBtFields() {
   });
 }
 
-if (loanTypeSelect) {
-  loanTypeSelect.addEventListener("change", toggleBtFields);
+if (loanNatureSelect) {
+  loanNatureSelect.addEventListener("change", toggleBtFields);
   toggleBtFields();
 }
 
@@ -4048,7 +4044,9 @@ if (rtoDisplay && rtoDropdown) {
 
 if (loanId) {
   // Load dealer options FIRST, then load existing data
-  loadDealerOptions().then(() => {
+  const user = getUserFromStorage();
+  const dealerOptionsLoaded = user?.role === 'dealer' ? Promise.resolve() : loadDealerOptions();
+  dealerOptionsLoaded.then(() => {
     return fetch(`/api/leads/${loanId}`);
   }).then(res => res.json())
     .then(lead => {
@@ -4091,6 +4089,8 @@ if (loanId) {
         if (el) el.value = data[key];
       });
 
+      toggleBtFields();
+
       if (data.mfgYear && data.mfgMonth) {
         populateVehicleMakes(data.vehicleMake || "", data.vehicleModel || "", data.vehicleVariant || "");
       }
@@ -4102,7 +4102,9 @@ if (loanId) {
       // =========================
       toggleBasicFieldsBySource();
       try { updateOhpRelationOptions(); } catch (e) {}
-      loadDealers(data.basicCaseDealerSelect);
+      if (getUserFromStorage()?.role !== 'dealer') {
+        loadDealerOptions(data.basicCaseDealerSelect);
+      }
 
 
 
@@ -4592,35 +4594,31 @@ function initAdditionalApplicantBusinessProof(index) {
   renderBusinessProofDropdown();
   updateBusinessProofDisplay();
 }
-async function loadDealers(selectedDealerId = null) {
-  try {
+let dealerOptionsPromise = null;
 
-    const res = await fetch("/api/all-users");
-    const users = await res.json();
+function normalizeDealerMobile(value) {
+  return String(value || '').replace(/\D/g, '');
+}
 
-    const dealers = users.filter(u => u.role === "dealer");
+function syncDealerMobileFromSelection() {
+  const dealerSelect = document.getElementById('basicCaseDealerSelect');
+  const dealerMobile = document.getElementById('basicCaseDealerMobile');
+  if (!dealerSelect || !dealerMobile) return;
 
-    const select = document.getElementById("basicCaseDealerSelect");
+  const selectedOption = dealerSelect.selectedOptions[0];
+  dealerMobile.value = selectedOption?.dataset.mobile || '';
+}
 
-    if (!select) return;
+function syncDealerSelectionFromMobile() {
+  const dealerSelect = document.getElementById('basicCaseDealerSelect');
+  const dealerMobile = document.getElementById('basicCaseDealerMobile');
+  if (!dealerSelect || !dealerMobile) return;
 
-    select.innerHTML = `<option value="">Select Dealer</option>`;
-
-    dealers.forEach(dealer => {
-      const option = document.createElement("option");
-      option.value = dealer.id;
-      option.textContent = dealer.username || dealer.display_name || "Dealer";
-      select.appendChild(option);
-    });
-
-    // restore saved dealer
-    if (selectedDealerId) {
-      select.value = selectedDealerId;
-    }
-
-  } catch (err) {
-    console.error("Dealer load error:", err);
-  }
+  const mobile = normalizeDealerMobile(dealerMobile.value);
+  const matchingOption = Array.from(dealerSelect.options).find(option =>
+    option.value && normalizeDealerMobile(option.dataset.mobile) === mobile
+  );
+  dealerSelect.value = mobile && matchingOption ? matchingOption.value : '';
 }
 
 // Dynamic Bank dropdown and Branch/Loan auto-population
